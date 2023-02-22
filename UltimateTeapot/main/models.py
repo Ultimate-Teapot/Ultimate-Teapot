@@ -4,6 +4,16 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 class Author(AbstractBaseUser):
     author_id = models.UUIDField()
+    username = None
+    identifier = models.CharField(max_length=40, unique=True)
+    followers = models.ManyToManyField("Author", related_name='Authors_followers', blank=True)
+    following = models.ManyToManyField("Author", related_name='Authors_following', blank=True)
+
+    USERNAME_FIELD = "identifier"
+
+class FollowRequest(models.Model):
+    from_user = models.ForeignKey(Author, related_name='from_user', on_delete=models.CASCADE)
+    to_user = models.ForeignKey(Author, related_name='to_user', on_delete=models.CASCADE)
 
 class Post(models.Model):
     post_id = models.UUIDField()
