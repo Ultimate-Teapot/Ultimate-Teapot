@@ -1,15 +1,24 @@
+from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 
 class Author(AbstractBaseUser):
-    author_id = models.UUIDField()
-    username = None
-    identifier = models.CharField(max_length=40, unique=True)
+    id = models.UUIDField(primary_key=True)
+    display_name = models.CharField(max_length=100)
+
     followers = models.ManyToManyField("Author", related_name='Authors_followers', blank=True)
     following = models.ManyToManyField("Author", related_name='Authors_following', blank=True)
 
-    USERNAME_FIELD = "identifier"
+    USERNAME_FIELD = "id"
+
+class UserManager(BaseUserManager):
+    def create_author(self, id, display_name, password):
+        user = self.model(id=id)
+        user.set_password(password)
+        user.set_display_name(display_name)
+        user.save()
+        return user
 
 class FollowRequest(models.Model):
     from_user = models.ForeignKey(Author, related_name='from_user', on_delete=models.CASCADE)
