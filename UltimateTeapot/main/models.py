@@ -13,11 +13,11 @@ class Post(models.Model):
     #user = models.ForeignKey(AbstractBaseUser)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     text = models.CharField(max_length=255)
-    image = models.ImageField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True, upload_to = "images/")
     pub_date = models.DateTimeField('date posted')
     #link = models.CharField(max_length=255, default=None)
     visibility = models.TextField()
-    likes = models.IntegerField(default=0) 
+    likes = models.IntegerField(default=0)
 
     def __str__(self):
         return(f"{self.author} "
