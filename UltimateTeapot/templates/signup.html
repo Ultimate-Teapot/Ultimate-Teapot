@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Sign up </title>
+    </head>
+<h1>Sign Up Page</h1>
+
+<body>
+    <div>
+        <style>
+            h5{
+                color: red;
+            }
+        </style>
+        {% for message in messages%}
+            <h5>{{message}}</h5>
+        {% endfor%}
+    </div>
+
+    <form action="" method="POST">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username" class="bg-gray-200 mb-2 shadow-none  dark:bg-gray-800" style="border: 1px solid #d3d5d8 !important;">
+        <input type="email" name="email" placeholder="Email" class="bg-gray-200 mb-2 shadow-none  dark:bg-gray-800" style="border: 1px solid #d3d5d8 !important;">
+        <input type="text" name="password" placeholder="Password" class="bg-gray-200 mb-2 shadow-none  dark:bg-gray-800" style="border: 1px solid #d3d5d8 !important;">
+        <input type="text" name="confirmpassword" placeholder="Confirm Password" class="bg-gray-200 mb-2 shadow-none  dark:bg-gray-800" style="border: 1px solid #d3d5d8 !important;">
+        <button type="submit" class="bg-gradient-to-br from-pink-500 py-3 rounded-md text-white text-xl to-red-400 w-full">Sign Up</button>
+        <div class="text-center mt-5 space-x-2">
+            <p class="text-base"> Do you have an account? <a href="/signin"> Login </a></p>
+        </div>
+    </form>
+</body>
