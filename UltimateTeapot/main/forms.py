@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from .models import Post, Author
 
@@ -23,4 +23,16 @@ class AuthorCreationForm(UserCreationForm):
 
     class Meta:
         model = Author
-        fields = ("display_name", "password")
+        fields = ("username", "password")
+
+    def save(self, commit=True):
+        user = super(AuthorCreationForm, self).save(commit=False)
+        if commit:
+            user.save()
+        return user
+
+class AuthorChangeForm(UserChangeForm):
+
+    class Meta:
+        model = Author
+        fields = ("username", "password")
