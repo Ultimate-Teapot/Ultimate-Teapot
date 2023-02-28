@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-8">
+
+    <h1>Ultimate Teapot!</h1>
+<br/>
+    {% for post in posts%}
+        <div class="alert alert-dark" role="alert">
+            {{post}}
+            {% if post.image %}
+                <img src="{{ post.image.url }}" alt="{{post.title}}" width="50%">
+            {% endif%}
+        </div><br/><br/>
+    {% endfor %}
+            </div></div></div>
+
+<div class="col-4">
+    <br/><br/><br/>
+    {% if form %}
+    <form method=POST>
+        {% csrf_token %}
+        {{ form.as_p}}
+        <button type="submit" class="btn btn-secondary">Post!</button>
+    </form>
+    {% endif %}
+</div>
+{% else %}
+  <p>You are not logged in</p>
+  <a href="{% url 'login' %}">Log In</a> |
+  <a href="{% url 'signup' %}">Sign Up</a>
+{% endif %}
+{% endblock %}
