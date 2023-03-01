@@ -1,8 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
-from .models import Post, Author
-
+from .models import Post
 
 class PostForm(forms.ModelForm):
     text = forms.CharField(required=True, 
@@ -18,21 +17,3 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         exclude = ("user", "visibility", "likes")
-
-class AuthorCreationForm(UserCreationForm):
-
-    class Meta:
-        model = Author
-        fields = ("username", "password")
-
-    def save(self, commit=True):
-        user = super(AuthorCreationForm, self).save(commit=False)
-        if commit:
-            user.save()
-        return user
-
-class AuthorChangeForm(UserChangeForm):
-
-    class Meta:
-        model = Author
-        fields = ("username", "password")

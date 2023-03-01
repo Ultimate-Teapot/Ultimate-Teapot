@@ -1,37 +1,42 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, AbstractUser
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 
+class Profile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    #id_user = models.IntegerField()
+    following = models.ManyToManyField("self", related_name="users_followed", symmetrical=False, blank=True)
+    followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
 
-# class Profile(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     id_user = models.IntegerField()
-
-
-class Author(AbstractUser):
-    # id = models.UUIDField(primary_key=True)
-
-    followers = models.ManyToManyField("Author", related_name='Authors_followers', blank=True)
-    following = models.ManyToManyField("Author", related_name='Authors_following', blank=True)
 
     def __str__(self):
-        return self.username
+        return self.user.username
 
 
-class FollowRequest(models.Model):
-    from_user = models.ForeignKey(Author, related_name='from_user', on_delete=models.CASCADE)
-    to_user = models.ForeignKey(Author, related_name='to_user', on_delete=models.CASCADE)
+# def create_profile(sender, instance, created, **kwargs):
+#     if created:
+#         user_profile = Profile(user=instance)
+#         user_profile.save()
+#         user_profile.following.set([instance.profile.id])
+#         user_profile.save()
 
+#post_save.connect(create_profile, sender=User)
+
+# class Author(AbstractBaseUser):
+#     author_id = models.UUIDField()
+#     username = None
+#     identifier = models.CharField(max_length=40, unique=True, default=0)
+#     USERNAME_FIELD = "identifier"
 
 class Post(models.Model):
-    post_id = models.UUIDField()
-    #user = models.ForeignKey(AbstractBaseUser)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    post_id = models.CharField(max_length=40)
+    # user = models.ForeignKey(AbstractBaseUser)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
     text = models.CharField(max_length=255)
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
     pub_date = models.DateTimeField('date posted')
-    #link = models.CharField(max_length=255, default=None)
+    # link = models.CharField(max_length=255, default=None, null=True)
     visibility = models.TextField()
     likes = models.IntegerField(default=0)
 
@@ -48,11 +53,11 @@ class Comment(models.Model):
 
 class PostLike(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='author_post_like')
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_post_like')
 
 class CommentLike(models.Model):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='author_comment_like')
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_comment_like')
 
 class Inbox(models.Model):
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
