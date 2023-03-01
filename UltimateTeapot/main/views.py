@@ -74,7 +74,6 @@ def posts(request):
     return HttpResponse(posts)
 
 def home(request):
-    if request.user.is_authenticated:
         form = PostForm(request.POST or None)
         if request.method == "POST":
             if form.is_valid():
@@ -86,9 +85,6 @@ def home(request):
 
         posts = Post.objects.all().order_by("-pub_date")
         return render(request, 'home.html', {"posts":posts, "form":form})
-    else:
-        # posts = Post.objects.all().order_by("-pub_date")
-        return redirect('signin')
 
 def authors(request):
     authors = Profile.objects.exclude(user=request.user)
