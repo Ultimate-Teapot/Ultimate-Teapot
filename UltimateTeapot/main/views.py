@@ -35,7 +35,7 @@ def signup(request):
                 
                 #create a Profile object for the new user
                 user_model = User.objects.get(username=username)
-                new_profile = Profile.objects.create(user=user_model, id_user=user_model.id)
+                new_profile = Profile.objects.create(user=user_model)
                 new_profile.save()
                 return redirect('signup')
                 
@@ -55,7 +55,7 @@ def signin(request):
         
         if user is not None:
             auth.login(request, user)
-            return redirect('/')
+            return redirect('/home/')
         else:
             messages.info(request, 'Credentials invalid')
             return redirect('signin')
@@ -86,5 +86,10 @@ def home(request):
         posts = Post.objects.all().order_by("-pub_date")
         return render(request, 'home.html', {"posts":posts, "form":form})
     else:
-        posts = Post.objects.all().order_by("-pub_date")
-        return render(request, 'home.html', {"posts":posts})
+        # posts = Post.objects.all().order_by("-pub_date")
+        return redirect('signin')
+
+def authors(request):
+    authors = Profile.objects.exclude(user=request.user)
+
+    return render(request, 'authors.html', {"authors":authors})
