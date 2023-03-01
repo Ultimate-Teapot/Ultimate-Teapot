@@ -1,8 +1,9 @@
+from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Profile
+
 from django.http import HttpResponse
 from .models import Post
 from django.shortcuts import render, redirect
@@ -93,3 +94,4 @@ def authors(request):
     authors = Profile.objects.exclude(user=request.user)
 
     return render(request, 'authors.html', {"authors":authors})
+
