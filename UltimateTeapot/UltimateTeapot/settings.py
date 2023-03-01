@@ -38,10 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
     'django_extensions',
-=======
->>>>>>> ad1926ecf0d1ff4fb6d7a8217639b99e69aa56a7
     'main.apps.MainConfig',
 ]
 
@@ -86,8 +83,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-AUTH_USER_MODEL = 'main.Author'
 
 
 # Password validation

@@ -9,8 +9,10 @@ class Profile(models.Model):
     following = models.ManyToManyField("self", related_name="users_followed", symmetrical=False, blank=True)
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
 
+
     def __str__(self):
         return self.user.username
+
 
 # def create_profile(sender, instance, created, **kwargs):
 #     if created:
