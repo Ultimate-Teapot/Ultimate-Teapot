@@ -87,7 +87,16 @@ def home(request):
         return render(request, 'home.html', {"posts":posts, "form":form})
 
 def authors(request):
-    authors = Profile.objects.exclude(user=request.user)
+    author_list = Profile.objects.all()
 
-    return render(request, 'authors.html', {"authors":authors})
+    return render(request, 'authors.html', {"authors":author_list})
+
+def profile(request, username):
+    if request.user.is_authenticated:
+        user = User.objects.get(username=username)
+        profile = Profile.objects.get(user=user)
+        return render(request, "profile.html", {"profile":profile})
+    else:
+        messages.success(request, ("You must be logged in to view this page"))
+        return redirect('home')
 

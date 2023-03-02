@@ -1,0 +1,17 @@
+<!-- django_project/users/templates/users/profile.html -->
+{% extends "base.html" %}
+{% block content %}
+
+{% if profile %}
+    <h1>{{ profile.user.username }} Profile</h1>
+
+    <strong>Followers</strong>
+    {% for follower in profile.followers.all %}
+        @{{ following }}<br/>
+
+    {% endfor %}
+
+
+{% endif %}
+
+{% endblock content %}
