@@ -2,36 +2,45 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-
-    <div class="container text-center">
-        <div class="row">
-            <div class="col-8">
-
-    <h1>Ultimate Teapot!</h1>
-<br/>
-    {% for post in posts%}
-        <div class="alert alert-dark" role="alert">
-            {{post}}
-            {% if post.image %}
-                <img src="{{ post.image.url }}" alt="{{post.title}}" width="50%">
-            {% endif%}
-        </div><br/><br/>
-    {% endfor %}
-            </div></div></div>
-
-<div class="col-4">
-    <br/><br/><br/>
-    {% if form %}
-    <form method=POST>
+<title>Homepage</title>
+<div class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <h1 class="text-center">Ultimate Teapot!</h1>
+      <br>
+      {% for post in posts %}
+      <div class="card mb-4">
+        <div class="card-body">
+          <p class="card-text">{{ post }}</p>
+          {% if post.image %}
+          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="col-md-4">
+      <h3 class="text-center">Post something!</h3>
+      <br>
+      {% if form %}
+      <form method="POST">
         {% csrf_token %}
-        {{ form.as_p}}
-        <button type="submit" class="btn btn-secondary">Post!</button>
-    </form>
-    {% endif %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary btn-block">Post!</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
 </div>
+
 {% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">Log In</a> |
-  <a href="{% url 'signup' %}">Sign Up</a>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+      <p class="lead">You are not logged in.</p>
+      <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'signup' %}">sign up</a>.</p>
+    </div>
+  </div>
+</div>
 {% endif %}
 {% endblock %}
