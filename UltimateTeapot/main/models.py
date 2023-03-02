@@ -4,11 +4,10 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 
 class Profile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    #id_user = models.IntegerField()
-    following = models.ManyToManyField("self", related_name="users_followed", symmetrical=False, blank=True)
-    followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
+    # following = models.ManyToManyField("self", related_name="users_followed", symmetrical=False, blank=True)
+    followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
 
     def __str__(self):
         return self.user.username
