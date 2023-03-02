@@ -38,7 +38,7 @@ def signup(request):
                 user_model = User.objects.get(username=username)
                 new_profile = Profile.objects.create(user=user_model)
                 new_profile.save()
-                return redirect('signup')
+                return redirect('home')
                 
         else:
             messages.info(request, 'Password Not Matching')
