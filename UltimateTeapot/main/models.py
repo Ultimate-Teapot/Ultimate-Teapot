@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-    following = models.ManyToManyField("self", related_name="users_followed", symmetrical=False, blank=True)
+    # following = models.ManyToManyField("self", related_name="users_followed", symmetrical=False, blank=True)
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
 
     def __str__(self):

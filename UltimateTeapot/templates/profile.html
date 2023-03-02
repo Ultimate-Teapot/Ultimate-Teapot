@@ -7,11 +7,23 @@
 
     <strong>Followers</strong>
     {% for follower in profile.followers.all %}
-        @{{ following }}<br/>
-
+        @{{ follower.user.username }}<br/>
     {% endfor %}
 
+<div class="Follow button">
+        <form method=POST>
+            {% csrf_token %}
+            {% if profile.user.username != user.username %}
+            <button class="btn btn-outline-success" name="follow" value="follow" type="submit">
+                Follow @{{ profile.user.username }}
+            </button>
+
+
+            {% endif %}
+        </form>
+    </div>
 
 {% endif %}
+
 
 {% endblock content %}

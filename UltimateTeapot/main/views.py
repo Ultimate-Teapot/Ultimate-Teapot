@@ -95,8 +95,25 @@ def profile(request, username):
     if request.user.is_authenticated:
         user = User.objects.get(username=username)
         profile = Profile.objects.get(user=user)
+
+        if request.method == "POST":
+            current_user = request.user.profile
+
+            action = request.POST['follow']
+            if action == "follow":
+                profile.followers.add(current_user)
+
+            profile.save()
+
         return render(request, "profile.html", {"profile":profile})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
+
+def followers(request, username):
+    if request.user.is_authenticated:
+        user = User.objects.get(username=username)
+        profile = Profile.objects.get(user=user)
+        followers = profile.followers
+        return render(request, "followers.html", {""})
 
