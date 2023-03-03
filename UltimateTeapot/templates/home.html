@@ -3,6 +3,21 @@
 {% block content %}
 {% if user.is_authenticated %}
 <title>Homepage</title>
+<style>
+    button{
+        border: none;
+        cursor: pointer;
+        appearance: none;
+        background-color: inherit;
+         transition: transform .7s ease-in-out;
+        margin-left:10px;
+
+      }
+      button:hover{
+        transform: rotate(360deg);
+
+      }
+</style>
 <div class="container">
   <div class="row">
     <div class="col-md-8">
@@ -15,6 +30,16 @@
           {% if post.image %}
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %}
+          <br>
+          <button type="submit">
+            <img src="https://thenounproject.com/api/private/icons/901801/edit/?backgroundShape=SQUARE&backgroundShapeColor=%23000000&backgroundShapeOpacity=0&exportSize=752&flipX=false&flipY=false&foregroundColor=%23000000&foregroundOpacity=1&imageFormat=png&rotation=0&token=gAAAAABkAT3uZlixk85_7krTLR0v31twI9UTlAp3dVcAnWrRc0XGteJ-o2onQK46Zt_A_SdWLTQT-8FXZDkD2KIpFyDeDd9kAg%3D%3D" alt="like" border="0" width="70px" height="70px"/>
+          </button>
+          <button type="submit">
+            <img src="https://thenounproject.com/api/private/icons/4997801/edit/?backgroundShape=SQUARE&backgroundShapeColor=%23000000&backgroundShapeOpacity=0&exportSize=752&flipX=false&flipY=false&foregroundColor=%23000000&foregroundOpacity=1&imageFormat=png&rotation=0&token=gAAAAABkAT3uZlixk85_7krTLR0v31twI9UTlAp3dVcAnWrRc0XGteJ-o2onQK46Zt_A_SdWLTQT-8FXZDkD2KIpFyDeDd9kAg%3D%3D" alt="comment" border="0" width="70px" height="70px"/>
+          </button>
+          <button type="submit">
+            <img src="https://thenounproject.com/api/private/icons/5553669/edit/?backgroundShape=SQUARE&backgroundShapeColor=%23000000&backgroundShapeOpacity=0&exportSize=752&flipX=false&flipY=false&foregroundColor=%23000000&foregroundOpacity=1&imageFormat=png&rotation=0&token=gAAAAABkAT3uZlixk85_7krTLR0v31twI9UTlAp3dVcAnWrRc0XGteJ-o2onQK46Zt_A_SdWLTQT-8FXZDkD2KIpFyDeDd9kAg%3D%3D" alt="delete" border="0" width="70px" height="70px"/>
+          </button>
         </div>
       </div>
       {% endfor %}
