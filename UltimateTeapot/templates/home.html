@@ -23,7 +23,7 @@
       <h3 class="text-center">Post something!</h3>
       <br>
       {% if form %}
-      <form method="POST">
+      <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary btn-block">Post!</button>

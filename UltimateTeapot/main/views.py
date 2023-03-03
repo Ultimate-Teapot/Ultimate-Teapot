@@ -74,7 +74,7 @@ def posts(request):
     return HttpResponse(posts)
 
 def home(request):
-        form = PostForm(request.POST or None)
+        form = PostForm(request.POST or None, request.FILES)
         if request.method == "POST":
             if form.is_valid():
                 post = form.save(commit=False)
