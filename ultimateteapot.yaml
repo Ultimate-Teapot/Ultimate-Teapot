@@ -1,0 +1,110 @@
+openapi: 3.1.0
+x-stoplight:
+  id: 5s0f5nndok02g
+info:
+  title: ultimateteapot
+  version: '1.0'
+  description: 'A social media service. Gives the user, as an Author, the ability to create posts which are seen by other authors. Posts can include text or images. Authors can follow other authors, and if two Authors follow each other, they are considered friends. Authors can set the privacy of their posts to be private, only visible to friends, or public to anyone on the server. Additionaly, a Server Admin would be in charge of private data on a server, and are given the ability to decide whether a user can freely join their server as an Author without permission, or be required to ask the admin first. '
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+  contact:
+    name: Gerard van Genderen
+    email: vangenderengerard@gmail.com
+    url: 'https://github.com/Gerrinator'
+  summary: A social media service.
+servers:
+  - url: 'http://localhost:8000'
+paths:
+  /main/authors:
+    get:
+      summary: GET list of authors
+      tags:
+        - authors
+        - home
+        - authentication
+      responses: {}
+      operationId: get-authors
+      description: Displays a List of authors.
+    parameters: []
+  '/main/authors/{AUTHOR_ID}':
+    parameters:
+      - schema:
+          type: string
+        name: AUTHOR_ID
+        in: path
+        required: true
+    get:
+      summary: GET author profile
+      responses: {}
+      operationId: get-authors-AUTHOR_ID
+      description: 'Retrieve AUTHOR_ID''s profile. If viewing an profile that is not the current user''s, has the option to POST a follow request.'
+      tags:
+        - authors
+    post:
+      summary: POST author profile
+      operationId: postmain-authors-AUTHOR_ID
+      responses:
+        '200':
+          description: OK
+      description: 'Follows or unfollows AUTHOR_ID, depending on whether they are currently followed'
+  /main/home/:
+    post:
+      summary: Make a post
+      tags: []
+      responses: {}
+      operationId: post-service-home
+      description: 'Create a post. '
+    get:
+      summary: Get all posts
+      operationId: get-service-home
+      responses:
+        '200':
+          description: OK
+      description: 'Returns a list of ALL posts on the server, and contains a POST form to create a post.'
+      parameters:
+        - schema:
+            type: string
+          in: cookie
+      tags:
+        - home
+    parameters: []
+  /main/login:
+    get:
+      summary: GET login page
+      tags:
+        - authentication
+      responses: {}
+      operationId: get-home-login
+      description: Returns a form for the user to submit credentials
+    post:
+      summary: POST login info
+      tags: []
+      responses: {}
+      operationId: post-home-login
+      description: Submits the user's credentials and authenticates them.
+  /main/logout:
+    get:
+      summary: GET logout
+      tags:
+        - authentication
+      responses: {}
+      operationId: get-main-logout
+      description: Logs the current user out.
+  /main/signup:
+    get:
+      summary: GET signup page
+      tags:
+        - authentication
+      responses: {}
+      operationId: get-main-signup
+      description: Returns the signup page. Users can input information.
+    post:
+      summary: POST signup form
+      tags: []
+      responses: {}
+      operationId: post-main-signup
+      description: 'POSTS the information the user submitted in the form, creates their account, profile, and logs them in.'
+components:
+  schemas: {}
+  securitySchemes: {}
