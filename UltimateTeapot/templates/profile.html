@@ -3,25 +3,44 @@
 {% block content %}
 
 {% if profile %}
-    <h1>{{ profile.user.username }} Profile</h1>
-
-    <strong>Followers</strong>
+    <h1>{{ profile.user.username }}'s Profile</h1>
+    <strong>{{ profile.followers.all|length }} Followers</strong></br>
     {% for follower in profile.followers.all %}
-        @{{ follower.user.username }}<br/>
+        <a href="{% url 'profile' follower.user.username %}">@{{ follower }}</a><br/>
+    {% endfor %}
+    <br/>
+
+    <strong>{{ profile.users_following.all|length }} Following</strong></br>
+    {% for following in profile.users_following.all %}
+        <a href="{% url 'profile' following.user.username %}">@{{ following }}</a><br/>
     {% endfor %}
 
+    </br><strong>{{ profile.friends.all|length }} Friends</strong></br>
+    {% for friend in profile.friends.all %}
+    @{{ friend }}</a><br/>
+    {% endfor %}
+
+    </br>    
 <div class="Follow button">
         <form method=POST>
             {% csrf_token %}
-            {% if profile.user.username != user.username %}
-            <button class="btn btn-outline-success" name="follow" value="follow" type="submit">
-                Follow @{{ profile.user.username }}
-            </button>
-
-
+            {% if profile.user.username != user.profile.user.username %}
+                {% if profile in user.profile.users_following.all %}
+                    
+                <button class="btn btn-outline-danger" name="follow" value="unfollow" type="submit">
+                    Unfollow @{{ profile.user.username }}
+                </button>
+                {% else %}
+                        <button class="btn btn-outline-success" name="follow" value="follow" type="submit">
+                            Follow @{{ profile.user.username }}
+                        </button>
+                    
+                {% endif %}
             {% endif %}
         </form>
-    </div>
+</div>
+
+
 
 {% endif %}
 

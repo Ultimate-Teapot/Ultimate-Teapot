@@ -38,7 +38,7 @@ def signup(request):
                 user_model = User.objects.get(username=username)
                 new_profile = Profile.objects.create(user=user_model)
                 new_profile.save()
-                return redirect('signup')
+                return redirect('login')
                 
         else:
             messages.info(request, 'Password Not Matching')
@@ -102,6 +102,16 @@ def profile(request, username):
             action = request.POST['follow']
             if action == "follow":
                 profile.followers.add(current_user)
+                
+                if current_user in profile.users_following.all():
+                    profile.friends.add(current_user)
+                    current_user.friends.add(profile)
+                    
+            elif action == "unfollow":
+                profile.followers.remove(current_user)
+                if current_user in profile.friends.all():
+                    profile.friends.remove(current_user)
+                    current_user.friends.remove(profile)
 
             profile.save()
 
@@ -110,10 +120,10 @@ def profile(request, username):
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
 
-def followers(request, username):
-    if request.user.is_authenticated:
-        user = User.objects.get(username=username)
-        profile = Profile.objects.get(user=user)
-        followers = profile.followers
-        return render(request, "followers.html", {""})
+# def followers(request, username):
+#     if request.user.is_authenticated:
+#         user = User.objects.get(username=username)
+#         profile = Profile.objects.get(user=user)
+#         followers = profile.followers
+#         return render(request, "followers.html", {""})
 
