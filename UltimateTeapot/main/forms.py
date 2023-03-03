@@ -16,4 +16,5 @@ class PostForm(forms.ModelForm):
     
     class Meta:
         model = Post
+        fields = ('text', 'image', 'pub_date', 'post_id', 'author')
         exclude = ("user", "visibility", "likes")
