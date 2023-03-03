@@ -7,7 +7,7 @@ Ultimate Teapot is a distributed social network.
 
 Usage
 =====
-Clone the project, then use a virtual python environment with the latest version of Django and Django Extensions installed, then run manage.py with the runserver command.
+Clone the project, then use a virtual python environment with the latest version of Django, Django Extensions and pillow installed, then run manage.py with the runserver command.
 
 One may also run ./manage.py tests to run the unit tests.
 
