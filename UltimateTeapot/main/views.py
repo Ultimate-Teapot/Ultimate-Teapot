@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-from .models import Post, Profile
+from .models import Post, Profile, FollowRequest
 from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
@@ -86,6 +86,27 @@ def home(request):
         posts = Post.objects.all().order_by("-pub_date")
         return render(request, 'home.html', {"posts":posts, "form":form})
 
+def inbox(request):
+    followRequests = FollowRequest.objects.filter(receiver=request.user)
+
+    if request.method == "POST":
+        senderName = request.POST['accept']
+        sender = User.objects.get(username=senderName)
+        followRequest = FollowRequest.objects.get(sender=sender, receiver=request.user)
+        senderProfile = followRequest.sender.profile
+        receiverProfile = followRequest.receiver.profile
+        receiverProfile.followers.add(senderProfile)
+
+        if receiverProfile in senderProfile.users_following.all():
+            receiverProfile.friends.add(senderProfile)
+            senderProfile.friends.add(receiverProfile)
+
+        followRequest.delete()
+        return render(request, 'inbox.html', {"followRequests":followRequests})
+
+
+    return render(request, 'inbox.html', {"followRequests":followRequests})
+
 def authors(request):
     author_list = Profile.objects.all()
 
@@ -101,12 +122,14 @@ def profile(request, username):
 
             action = request.POST['follow']
             if action == "follow":
-                profile.followers.add(current_user)
-                
-                if current_user in profile.users_following.all():
-                    profile.friends.add(current_user)
-                    current_user.friends.add(profile)
-                    
+                # profile.followers.add(current_user)
+                #
+                # if current_user in profile.users_following.all():
+                #     profile.friends.add(current_user)
+                #     current_user.friends.add(profile)
+                if not FollowRequest.objects.filter(sender=request.user, receiver=user).exists():
+                    FollowRequest.objects.create(sender=request.user, receiver=user)
+
             elif action == "unfollow":
                 profile.followers.remove(current_user)
                 if current_user in profile.friends.all():

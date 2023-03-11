@@ -11,4 +11,5 @@ urlpatterns = [
   path('posts/', views.posts, name='posts'),
   path('authors/', views.authors, name='authors'),
   path('authors/<str:username>', views.profile, name='profile'),
+  path('inbox/', views.inbox, name='inbox'),
 ]

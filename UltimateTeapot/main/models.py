@@ -6,11 +6,14 @@ from django.db.models.signals import post_save
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
-    friends =  models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
+    friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
     
     def __str__(self):
         return self.user.username
 
+class FollowRequest(models.Model):
+    sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
 # def create_profile(sender, instance, created, **kwargs):
 #     if created:
