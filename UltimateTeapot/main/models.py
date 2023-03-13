@@ -5,9 +5,17 @@ from django.db.models.signals import post_save
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    id = models.CharField(max_length=100, unique=True, primary_key=True)
+    host = models.URLField()
+    displayName = models.CharField(max_length=100)
+    url = models.URLField()
+    github = models.URLField()
+    profileImage = models.URLField()
+
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
     friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
-    
+
     def __str__(self):
         return self.user.username
 

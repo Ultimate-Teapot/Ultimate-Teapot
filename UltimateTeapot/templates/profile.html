@@ -3,7 +3,8 @@
 {% block content %}
 
 {% if profile %}
-    <h1>{{ profile.user.username }}'s Profile</h1>
+    <h1>{{ profile.displayName }}'s Profile</h1>
+    <p>Github: {{ profile.github }}</p>
     <strong>{{ profile.followers.all|length }} Followers</strong></br>
     {% for follower in profile.followers.all %}
         <a href="{% url 'profile' follower.user.username %}">@{{ follower }}</a><br/>

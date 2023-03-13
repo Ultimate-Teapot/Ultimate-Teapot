@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
@@ -16,10 +18,20 @@ def index(request):
 
 def signup(request):
     if request.method == 'POST':
+        host = request.get_host()
+        uniqueID = uuid.uuid4()
+        authorID = "http//" + host + "/main/authors/" + str(uniqueID)
+
+        # For the User class
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         confirmpassword = request.POST['confirmpassword']
+
+        # For the Profile class
+        display_name = request.POST['displayName']
+        github = request.POST["github"]
+        profile_image = request.POST["profileImage"]
         
         if password == confirmpassword:
             if User.objects.filter(email=email).exists():
@@ -36,7 +48,15 @@ def signup(request):
                 
                 #create a Profile object for the new user
                 user_model = User.objects.get(username=username)
-                new_profile = Profile.objects.create(user=user_model)
+                new_profile = Profile.objects.create(
+                    user=user_model,
+                    id=authorID,
+                    url=authorID,
+                    host="http//"+host+"/",
+                    displayName=display_name,
+                    github=github,
+                    profileImage=profile_image
+                )
                 new_profile.save()
                 return redirect('login')
                 
@@ -112,10 +132,11 @@ def authors(request):
 
     return render(request, 'authors.html', {"authors":author_list})
 
-def profile(request, username):
+def profile(request, id):
     if request.user.is_authenticated:
-        user = User.objects.get(username=username)
-        profile = Profile.objects.get(user=user)
+        # user = User.objects.get(username=username)
+        uri = request.build_absolute_uri()
+        profile = Profile.objects.get(id=uri)
 
         if request.method == "POST":
             current_user = request.user.profile
