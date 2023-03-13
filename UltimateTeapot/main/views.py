@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User, auth
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -9,6 +9,12 @@ from .models import Post, Profile
 from django.shortcuts import render, redirect
 from .forms import PostForm
 from django.contrib import messages
+
+# rest stuff
+from rest_framework import viewsets
+from rest_framework import permissions
+from main.serializers import ProfileSerializer, PostSerializer, UserSerializer
+
 
 @login_required(login_url='signin')
 def index(request):
@@ -119,6 +125,24 @@ def profile(request, username):
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
+
+# class ProfileViewSet(viewsets.ModelViewSet):
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+# class PostViewSet(viewsets.ModelViewSet):
+#     queryset = Post.objects.all()
+#     serializer_class = PostSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+# class UserViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
 
 # def followers(request, username):
 #     if request.user.is_authenticated:
