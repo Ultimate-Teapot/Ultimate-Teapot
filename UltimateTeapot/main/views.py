@@ -20,7 +20,7 @@ def signup(request):
     if request.method == 'POST':
         host = request.get_host()
         uniqueID = uuid.uuid4()
-        authorID = "http//" + host + "/main/authors/" + str(uniqueID)
+        authorID = "http://" + host + "/main/authors/" + str(uniqueID)
 
         # For the User class
         username = request.POST['username']
@@ -52,11 +52,14 @@ def signup(request):
                     user=user_model,
                     id=authorID,
                     url=authorID,
-                    host="http//"+host+"/",
+                    host="http://"+host+"/",
                     displayName=display_name,
                     github=github,
-                    profileImage=profile_image
+                    profileImage=profile_image,
                 )
+                new_profile.followers.clear()
+                new_profile.friends.clear()
+
                 new_profile.save()
                 return redirect('login')
                 
@@ -117,7 +120,7 @@ def inbox(request):
         receiverProfile = followRequest.receiver.profile
         receiverProfile.followers.add(senderProfile)
 
-        if receiverProfile in senderProfile.users_following.all():
+        if senderProfile in receiverProfile.users_following.all():
             receiverProfile.friends.add(senderProfile)
             senderProfile.friends.add(receiverProfile)
 
@@ -135,8 +138,8 @@ def authors(request):
 def profile(request, id):
     if request.user.is_authenticated:
         # user = User.objects.get(username=username)
-        uri = request.build_absolute_uri()
-        profile = Profile.objects.get(id=uri)
+        uri = request.build_absolute_uri('?')
+        profile = Profile.objects.get(id=str(uri))
 
         if request.method == "POST":
             current_user = request.user.profile
@@ -148,8 +151,8 @@ def profile(request, id):
                 # if current_user in profile.users_following.all():
                 #     profile.friends.add(current_user)
                 #     current_user.friends.add(profile)
-                if not FollowRequest.objects.filter(sender=request.user, receiver=user).exists():
-                    FollowRequest.objects.create(sender=request.user, receiver=user)
+                if not FollowRequest.objects.filter(sender=request.user, receiver=profile.user).exists():
+                    FollowRequest.objects.create(sender=request.user, receiver=profile.user)
 
             elif action == "unfollow":
                 profile.followers.remove(current_user)
