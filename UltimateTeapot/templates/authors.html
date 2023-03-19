@@ -6,7 +6,6 @@
 
 {% if authors %}
     {% for author in authors %}
-   
         <a href="{% url 'profile' author.user.username %}">Username: @{{ author.user.username }}</a>
         <br/>
         {% comment %} <a href="{% url 'main/authors' author.user.username %}" >Join Hood</a> {% endcomment %}

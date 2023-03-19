@@ -3,13 +3,15 @@
 {% block content %}
 {% if user.is_authenticated %}
 <title>Homepage</title>
+
 <style>
     button{
-        border: none;
+        border-style: solid;
+        border-radius: 5px;
         cursor: pointer;
         appearance: none;
         background-color: inherit;
-         transition: transform .7s ease-in-out;
+        transition: transform .7s ease-in-out;
         margin-left:10px;
 
       }
@@ -17,42 +19,85 @@
         transform: rotate(360deg);
 
       }
+      input[type="text"] {
+        text-align: top;
+      }
+
+      .col-md-8 {
+        margin: 25px;
+      }
+      
 </style>
 <div class="container">
   <div class="row">
+
     <div class="col-md-8">
-      <h1 class="text-center">Ultimate Teapot!</h1>
-      <br>
+      <h1 class="text-center">Welcome <span style="color: red">{{user.username}}</span> to Ultimate Teapot!!!</h1>
+    </div>
+  </br>
+  </br>
+
+  <div class="col-md-4">
+    <h3 class="text-center">Post something!</h3>
+    <br>
+    {% if upload_form %}
+      <form action="/main/upload" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ upload_form.as_p }}
+        <button type="submit" class="btn btn-primary btn-block">Post!</button>
+      </form> 
+    {% endif %}
+  </div>
+  
+    {% comment %} <div class="col-md-8" style=" background-color: pink">
+      <form action="/main/upload" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="padding: 20px">
+          <h5>Share your thoughts!</h5>
+          <input type="text" style="width: 100%;" name="text_post" placeholder="What is in your mind?"></textarea></br></br>
+          <input type="file" name="image_upload"></br></br>
+          <button type="submit">Upload</button>
+        </div>
+      </form>
+    </div> {% endcomment %}
+
+    <div class="col-md-8">
       {% for post in posts %}
-      
       <div class="card mb-4">
         <div class="card-body">
-          <p class="card-text">{{ post }}
+          <p class="card-text">
+            <p><a href="{% url 'profile' post.author %}">{{ post.author }}</a> posted<p>
+            <p>Created: {{ post.pub_date }}</p>
+            <p>Tweeted: {{ post.text_post }}</p>
+            {% if post.is_public %}
+              This post is public
+            {% else %}
+              This post is private
+            {% endif %}
             <button type="submit" class="btn btn-primary btn-block"style="float: right;">Edit</button>
           </p>
           {% if post.image %}
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %}
           <br><br>
+          <a href="/like-post?post_id={{post.id}}">
           <button type="submit" class="btn btn-primary btn-block">Like!</button>
           <button type="submit" class="btn btn-primary btn-block">Comment</button>
           <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>
+
+          
           
         </div>
       </div>
       {% endfor %}
+
+      
+      
     </div>
-    <div class="col-md-4">
-      <h3 class="text-center">Post something!</h3>
-      <br>
-      {% if form %}
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary btn-block">Post!</button>
-      </form>
-      {% endif %}
-    </div>
+
+
+
+
   </div>
 </div>
 
