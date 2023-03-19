@@ -1,13 +1,13 @@
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-from .models import Post, Profile
+from .models import Post, Profile, Comment, Like
 from django.shortcuts import render, redirect
-from .forms import PostForm
+from .forms import PostForm, CommentForm
 from django.contrib import messages
 
 @login_required(login_url='signin')
@@ -120,6 +120,26 @@ def profile(request, username):
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
 
+def comment_create(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    form = CommentForm(request.POST or None, request.FILES)
+    if request.method == 'POST':
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+        return render(request,"comment.html")
+    if request.method == 'GET':
+        return render(request,"comment.html")
+    
+def like_create(request, post_id):
+    if request.method == 'POST':
+        post = get_object_or_404(Post, id=post_id)
+        like, created = Like.objects.get_or_create(post=post, like_author=request.user)
+        if not created:
+            like.delete()
+        return redirect('home')
 # def followers(request, username):
 #     if request.user.is_authenticated:
 #         user = User.objects.get(username=username)
