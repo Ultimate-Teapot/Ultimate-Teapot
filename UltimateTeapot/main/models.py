@@ -12,12 +12,13 @@ class Profile(models.Model):
     url = models.URLField()
     github = models.URLField()
     profileImage = models.URLField()
+    last_date = models.DateField()
 
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
     friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return self.displayName
 
 class FollowRequest(models.Model):
     sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
@@ -48,6 +49,10 @@ class Post(models.Model):
     # link = models.CharField(max_length=255, default=None, null=True)
     visibility = models.TextField()
     likes = models.IntegerField(default=0)
+
+
+    #sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
+    #receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
     def __str__(self):
         return(f"{self.author} "

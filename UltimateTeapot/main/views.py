@@ -110,12 +110,29 @@ def home(request):
         return render(request, 'home.html', {"posts":posts, "form":form})
 
 def inbox(request):
+    
     followRequests = FollowRequest.objects.filter(receiver=request.user)
+    #postMessage = Post.objects.filter(reciever = request.user)
 
+    curr_user = request.user.profile
+    following = curr_user.users_following
+    post_list = []
+    for user in following.all():
+        print(user)
+        post = Post.objects.filter(author=user)
+        for p in post.all():
+            post_list.append(p)
+    print(post_list)
+
+    
+
+    
     if request.method == "POST":
         senderName = request.POST['accept']
         sender = User.objects.get(username=senderName)
         followRequest = FollowRequest.objects.get(sender=sender, receiver=request.user)
+
+
         senderProfile = followRequest.sender.profile
         receiverProfile = followRequest.receiver.profile
         receiverProfile.followers.add(senderProfile)
@@ -128,7 +145,7 @@ def inbox(request):
         return render(request, 'inbox.html', {"followRequests":followRequests})
 
 
-    return render(request, 'inbox.html', {"followRequests":followRequests})
+    return render(request, 'inbox.html', {"followRequests":followRequests, "posts":post_list})
 
 def authors(request):
     author_list = Profile.objects.all()
