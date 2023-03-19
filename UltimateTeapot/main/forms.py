@@ -16,11 +16,11 @@ class PostForm(forms.ModelForm):
     
     class Meta:
         model = Post
-        fields = ('text', 'image', 'pub_date', 'post_id', 'author')
-        exclude = ("user", "visibility", "likes")
+        fields = ('text', 'image', 'pub_date', 'post_id')
+        exclude = ("user", "visibility", "likes", 'author')
 
 class CommentForm(forms.ModelForm):
-    text = forms.CharField(required=True, 
+    content = forms.CharField(required=True, 
             widget=forms.widgets.Textarea(
             attrs = {
                 "placeholder": "Enter Your Comment!",

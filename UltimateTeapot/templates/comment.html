@@ -7,11 +7,12 @@
 </form> -->
 {% block content %}
 <h2>Add Comment</h2>
-
+      {% if form %}
       <form method="POST"enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary btn-block">Comment!</button>
       </form>
+      {% endif %}
 
 {% endblock %}

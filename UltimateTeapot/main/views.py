@@ -78,7 +78,7 @@ def home(request):
         if request.method == "POST":
             if form.is_valid():
                 post = form.save(commit=False)
-                post.user = request.user
+                post.author = request.user.profile
                 post.save()
                 messages.success(request, ("You Successfully Posted!"))
                 return redirect('home')
@@ -127,11 +127,11 @@ def comment_create(request, post_id):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
-            comment.author = request.user
+            comment.comment_author = request.user
             comment.save()
-        return render(request,"comment.html")
+        return redirect('home')
     if request.method == 'GET':
-        return render(request,"comment.html")
+        return render(request,"comment.html",{'form': form})
     
 def like_create(request, post_id):
     if request.method == 'POST':
