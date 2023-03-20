@@ -2,7 +2,7 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<title>Homepage</title>
+<title>Inbox</title>
 <style>
     button{
         border: none;
@@ -18,6 +18,9 @@
 
       }
 </style>
+
+
+
 <div class="container">
   <div class="row">
     <div class="col-md-8">
@@ -34,44 +37,49 @@
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %}
           <br><br>
-          <form method="POST" action="{% url 'like_create' post.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary btn-block">
-                {% if request.user in post.likes.all %}
-                    Unlike
-                {% else %}
-                    Like
-                {% endif %}
-            </button>
-          </form>
-          <br/>
-          <button class="btn btn-primary btn-block">
-            <a href="{% url 'comment_create' post.id %}" style="text-decoration:none;color:rgb(256,256,256)">Comment!</a>
-          </button>
-
+          <button type="submit" class="btn btn-primary btn-block">Like!</button>
+          <button type="submit" class="btn btn-primary btn-block">Comment</button>
           <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>
-
-          <br/><br/>
-          {% for comment in post.comment.all %}
-            <p class="card-text">{{ comment.comment_author.username }} :
-            </p>
-            <p class="card-text">{{ comment.content }}</p>
-          {% endfor %}
+          
         </div>
       </div>
-
       {% endfor %}
     </div>
-    <div class="col-md-4">
-      <h3 class="text-center">Post something!</h3>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <h1 class="text-center">Follow Requests</h1>
       <br>
-      {% if form %}
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary btn-block">Post!</button>
-      </form>
-      {% endif %}
+      {% for followRequest in followRequests %}
+      
+      <div class="card mb-4">
+        <div class="card-body">
+          <p class="card-text">{{ followRequest.sender.username }}</p>
+          <br><br>
+          <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block" name="accept" value="{{ followRequest.sender.username }}">Accept</button>
+            <button type="submit" class="btn btn-primary btn-block" name="accept" value="{{ followRequest.sender.username }}">Decline</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
     </div>
   </div>
 </div>
