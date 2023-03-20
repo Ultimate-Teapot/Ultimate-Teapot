@@ -80,15 +80,33 @@
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %}
           <br><br>
-          <a href="/like-post?post_id={{post.id}}">
-          <button type="submit" class="btn btn-primary btn-block">Like!</button>
-          <button type="submit" class="btn btn-primary btn-block">Comment</button>
+
+          <form method="POST" action="{% url 'like_create' post.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block">
+                {% if request.user in post.likes.all %}
+                    Unlike
+                {% else %}
+                    Like
+                {% endif %}
+            </button>
+          </form>
+          <br/>
+          <button class="btn btn-primary btn-block">
+            <a href="{% url 'comment_create' post.id %}" style="text-decoration:none;color:rgb(256,256,256)">Comment!</a>
+          </button>
+
           <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>
 
-          
-          
+          <br/><br/>
+          {% for comment in post.comment.all %}
+            <p class="card-text">{{ comment.comment_author.username }} :
+            </p>
+            <p class="card-text">{{ comment.content }}</p>
+          {% endfor %}
         </div>
       </div>
+
       {% endfor %}
 
       

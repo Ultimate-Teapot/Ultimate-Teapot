@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
-from .models import Post
+from .models import Post, Comment
 
 class UploadForm(forms.ModelForm):
     text_post = forms.CharField(required=True, 
@@ -15,8 +15,9 @@ class UploadForm(forms.ModelForm):
         )
     class Meta:
         model = Post
-        fields = ('text_post', 'image', 'is_public',)
+        fields = ('text_post', 'image', 'is_public')
         labels = {'is_public': 'Make post public?'}
+        exclude = ("user", "visibility", "likes", 'author')
 
     is_public = forms.BooleanField(required=False)
     
@@ -45,5 +46,19 @@ class SignUpForm(UserCreationForm):
         model = User
         fields = ('username', 'email',)
         #fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
-        
-        
+
+
+
+class CommentForm(forms.ModelForm):
+    content = forms.CharField(required=True, 
+            widget=forms.widgets.Textarea(
+            attrs = {
+                "placeholder": "Enter Your Comment!",
+                "class": "form-control",
+            }
+            ),
+            label = "",
+        )
+    class Meta:
+        model = Comment
+        fields = ['content']
