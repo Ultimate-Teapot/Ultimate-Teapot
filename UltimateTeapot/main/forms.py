@@ -41,6 +41,10 @@ class UploadForm(forms.ModelForm):
 class SignUpForm(UserCreationForm):
     username = forms.CharField(max_length=30, required=True,)
     email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')
+
+    display_name = forms.CharField(max_length=100, required=True,)
+    github = forms.URLField(max_length=100, required=False,)
+    profile_image = forms.URLField(max_length=200, required=False,)
     
     class Meta:
         model = User

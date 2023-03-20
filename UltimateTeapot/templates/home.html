@@ -80,8 +80,8 @@
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %}
           <br><br>
-
-          <form method="POST" action="{% url 'like_create' post.id %}">
+          {% comment %}
+          <form method="POST" action="{% url 'like_create' post.post_id %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-primary btn-block">
                 {% if request.user in post.likes.all %}
@@ -91,11 +91,12 @@
                 {% endif %}
             </button>
           </form>
+
           <br/>
           <button class="btn btn-primary btn-block">
             <a href="{% url 'comment_create' post.id %}" style="text-decoration:none;color:rgb(256,256,256)">Comment!</a>
           </button>
-
+          {% endcomment %}
           <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>
 
           <br/><br/>

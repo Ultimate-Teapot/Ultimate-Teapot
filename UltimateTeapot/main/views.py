@@ -18,7 +18,7 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from serializers import ProfileSerializer, PostSerializer, UserSerializer
+from .serializers import ProfileSerializer, PostSerializer, UserSerializer
 
 @login_required(login_url='signin')
 def index(request):
@@ -65,13 +65,12 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user_model = User.objects.get(username=username)
 
-
             host = request.get_host()
             uniqueID = uuid.uuid4()
             authorID = "http://" + host + "/main/authors/" + str(uniqueID)
-            display_name = request.POST['displayName']
-            github = request.POST["github"]
-            profile_image = request.POST["profileImage"]
+            display_name = form.cleaned_data.get('display_name')
+            github = form.cleaned_data.get('github')
+            profile_image = form.cleaned_data.get('profile_image')
 
             new_profile = Profile.objects.create(
                 user=user_model,
@@ -108,13 +107,15 @@ def upload(request):
             # upload_form.save()
             current_user = User.objects.get(username=request.user)
             author_profile = Profile.objects.get(user=current_user)
+            uniqueID = uuid.uuid4()
+            post_id = author_profile.id + "/posts/" + str(uniqueID)
             image = request.FILES.get('image')
             text_post = request.POST['text_post']
             if 'is_public' in request.POST and request.POST['is_public'] == 'on':
                 is_public = True
             else: 
                 is_public = False
-            new_post = Post.objects.create(author=author_profile, image=image, text_post=text_post, is_public=is_public)
+            new_post = Post.objects.create(post_id=post_id ,author=author_profile, image=image, text_post=text_post, is_public=is_public)
             new_post.save()
 
         #return redirect('home')
@@ -268,7 +269,7 @@ def profile(request, id):
 #     permission_classes = [permissions.IsAuthenticated]
 
 def comment_create(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(Post, post_id=post_id)
     form = CommentForm(request.POST or None, request.FILES)
     if request.method == 'POST':
         if form.is_valid():
@@ -282,7 +283,7 @@ def comment_create(request, post_id):
     
 def like_create(request, post_id):
     if request.method == 'POST':
-        post = get_object_or_404(Post, id=post_id)
+        post = get_object_or_404(Post, post_id=post_id)
         like, created = Like.objects.get_or_create(post=post, like_author=request.user)
         if not created:
             like.delete()

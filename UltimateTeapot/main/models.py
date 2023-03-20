@@ -15,7 +15,7 @@ class Profile(models.Model):
     url = models.URLField()
     github = models.URLField()
     profileImage = models.URLField()
-    last_date = models.DateField()
+    last_date = models.DateField(default=datetime.datetime.now)
 
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
     friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
@@ -43,7 +43,7 @@ class FollowRequest(models.Model):
 #     USERNAME_FIELD = "identifier"
 
 class Post(models.Model):
-    post_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    post_id = models.CharField(max_length=200, unique=True, primary_key=True)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
     text_post = models.TextField()
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
