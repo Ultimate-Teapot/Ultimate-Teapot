@@ -5,12 +5,24 @@ from django.db.models.signals import post_save
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
-    friends =  models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
-    
-    def __str__(self):
-        return self.user.username
 
+    id = models.CharField(max_length=100, unique=True, primary_key=True)
+    host = models.URLField()
+    displayName = models.CharField(max_length=100)
+    url = models.URLField()
+    github = models.URLField()
+    profileImage = models.URLField()
+    last_date = models.DateField()
+
+    followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
+    friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
+
+    def __str__(self):
+        return self.displayName
+
+class FollowRequest(models.Model):
+    sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
 # def create_profile(sender, instance, created, **kwargs):
 #     if created:
@@ -37,6 +49,10 @@ class Post(models.Model):
     # link = models.CharField(max_length=255, default=None, null=True)
     visibility = models.TextField()
     likes = models.IntegerField(default=0)
+
+
+    #sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
+    #receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
     def __str__(self):
         return(f"{self.author} "

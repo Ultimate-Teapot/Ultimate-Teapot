@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<title>Inbox</title>
+<style>
+    button{
+        border: none;
+        cursor: pointer;
+        appearance: none;
+        background-color: inherit;
+         transition: transform .7s ease-in-out;
+        margin-left:10px;
+
+      }
+      button:hover{
+        transform: rotate(360deg);
+
+      }
+</style>
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <h1 class="text-center">Ultimate Teapot!</h1>
+      <br>
+      {% for post in posts %}
+      
+      <div class="card mb-4">
+        <div class="card-body">
+          <p class="card-text">{{ post }}
+            <button type="submit" class="btn btn-primary btn-block"style="float: right;">Edit</button>
+          </p>
+          {% if post.image %}
+          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
+          {% endif %}
+          <br><br>
+          <button type="submit" class="btn btn-primary btn-block">Like!</button>
+          <button type="submit" class="btn btn-primary btn-block">Comment</button>
+          <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>
+          
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <h1 class="text-center">Follow Requests</h1>
+      <br>
+      {% for followRequest in followRequests %}
+      
+      <div class="card mb-4">
+        <div class="card-body">
+          <p class="card-text">{{ followRequest.sender.username }}</p>
+          <br><br>
+          <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-block" name="accept" value="{{ followRequest.sender.username }}">Accept</button>
+            <button type="submit" class="btn btn-primary btn-block" name="accept" value="{{ followRequest.sender.username }}">Decline</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+      <p class="lead">You are not logged in.</p>
+      <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'signup' %}">sign up</a>.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
