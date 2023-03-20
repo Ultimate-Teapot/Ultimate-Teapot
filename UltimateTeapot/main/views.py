@@ -7,11 +7,17 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-from .models import Post, Profile, Comment, Like
+from .models import Post, Profile, Comment, Like, FollowRequest
 
 from django.shortcuts import render, redirect
 from .forms import PostForm, CommentForm
 from django.contrib import messages
+
+# rest stuff
+from rest_framework import viewsets
+from rest_framework import permissions
+from main.serializers import ProfileSerializer, PostSerializer, UserSerializer
+
 
 @login_required(login_url='signin')
 def index(request):
@@ -185,6 +191,22 @@ def profile(request, id):
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
 
+# class ProfileViewSet(viewsets.ModelViewSet):
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+
+# class PostViewSet(viewsets.ModelViewSet):
+#     queryset = Post.objects.all()
+#     serializer_class = PostSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+# class UserViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
 def comment_create(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None, request.FILES)
@@ -205,6 +227,7 @@ def like_create(request, post_id):
         if not created:
             like.delete()
         return redirect('home')
+
 # def followers(request, username):
 #     if request.user.is_authenticated:
 #         user = User.objects.get(username=username)
