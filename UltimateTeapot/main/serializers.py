@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Profile, Post, Comment, PostLike, CommentLike, Inbox
+from .models import Profile, Post, Comment, Inbox
 from rest_framework import serializers
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):

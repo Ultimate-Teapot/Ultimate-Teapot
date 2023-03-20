@@ -43,6 +43,12 @@
         </form>
 </div>
 
+<h1>{{ profile.user.username }}'s Post</h1>
+    {% if profile.user.username == user.profile.user.username %}
+        {% for post in posts %}
+        {{ post }}
+        {% endfor %}
+    {% endif %}
 
 
 {% endif %}

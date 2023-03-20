@@ -2,6 +2,9 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+import uuid
+import datetime
+
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -40,25 +43,26 @@ class FollowRequest(models.Model):
 #     USERNAME_FIELD = "identifier"
 
 class Post(models.Model):
-    post_id = models.CharField(max_length=40)
-    # user = models.ForeignKey(AbstractBaseUser)
+    post_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    text = models.CharField(max_length=255)
+    text_post = models.TextField()
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
-    pub_date = models.DateTimeField('date posted')
-    # link = models.CharField(max_length=255, default=None, null=True)
-    visibility = models.TextField()
-    # likes = models.IntegerField(default=0)
-    
 
+    pub_date = models.DateTimeField(default=datetime.datetime.now)
+    is_public = models.BooleanField(default=False)
+    likes = models.IntegerField(default=0)
+
+    # link = models.CharField(max_length=255, default=None, null=True)
+    # likes = models.IntegerField(default=0)
 
     #sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
     #receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
+
     def __str__(self):
         return(f"{self.author} "
               f"({self.pub_date:%Y-%m-%d %H:%M}): "
-              f"{self.text}"
+              f"{self.text_post}"
         )
     
 class Like(models.Model):
