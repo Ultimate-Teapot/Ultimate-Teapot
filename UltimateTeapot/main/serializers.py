@@ -7,11 +7,20 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ['url', 'username', 'password','email']
 
-class ProfileSerializer(serializers.HyperlinkedModelSerializer):
-    user = UserSerializer()
-    class Meta:
-        model = Profile
-        fields = ['url','user','friends','followers']#'url', 'user', 'followers', 'friends']
+class ProfileSerializer(serializers.Serializer):
+    #user = UserSerializer()
+
+    type = "author"
+    id = serializers.CharField(max_length=100)
+    host = serializers.URLField()
+    displayName = serializers.CharField(max_length=100)
+    url = serializers.URLField()
+    github = serializers.URLField()
+    profileImage = serializers.URLField()
+
+    # class Meta:
+    #     model = Profile
+    #     fields = ['id','url','host','displayName', 'github', 'profileImage']
     
 class PostSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

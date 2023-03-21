@@ -1,8 +1,11 @@
+import json
+import urllib.parse
 import uuid
 
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, auth
+from django.utils.http import urlencode
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -18,6 +21,8 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from .serializers import ProfileSerializer, PostSerializer, UserSerializer
 
 @login_required(login_url='signin')
@@ -67,7 +72,7 @@ def signup(request):
 
             host = request.get_host()
             uniqueID = uuid.uuid4()
-            authorID = "http://" + host + "/main/authors/" + str(uniqueID)
+            authorID = "http://" + host + "/api/authors/" + str(uniqueID)
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
             profile_image = form.cleaned_data.get('profile_image')
@@ -296,3 +301,63 @@ def like_create(request, post_id):
 #         followers = profile.followers
 #         return render(request, "followers.html", {""})
 
+@api_view(['GET'])
+def get_authors(request):
+    authors = Profile.objects.all()
+    list = []
+    for profile in authors:
+        list.append({
+            "type":"author",
+            "id":profile.id,
+            "host":profile.host,
+            "displayName":profile.displayName,
+            "url":profile.url,
+            "github":profile.github,
+            "profileImage":profile.profileImage,
+        })
+
+    serial = {
+        "type": "authors",
+        "items": list
+    }
+
+    return Response(serial)
+
+@api_view(['GET', 'POST'])
+def get_author(request, id):
+    uri = request.build_absolute_uri('?')
+    profile = Profile.objects.get(id=str(uri))
+
+    serial = {
+        "type":"author",
+        "id":profile.id,
+        "host":profile.host,
+        "displayName":profile.displayName,
+        "url":profile.url,
+        "github":profile.github,
+        "profileImage":profile.profileImage,
+    }
+
+    if request.method == 'POST': # ONLY ALLOWED ON LOCAL.
+        data = request.data
+        for item in data:
+            if item == 'github':
+                serial['github'] = data['github']
+                profile.github = data['github']
+                profile.save()
+            elif item == 'profileImage':
+                serial['profileImage'] = data['profileImage']
+                profile.github = data['github']
+                profile.save()
+            elif item == 'displayName':
+                serial['displayName'] = data['displayName']
+                profile.displayName = data['displayName']
+                profile.save()
+
+        return Response(serial)
+
+    return Response(serial)
+
+@api_view(['GET'])
+def get_followers(request):
+    pass

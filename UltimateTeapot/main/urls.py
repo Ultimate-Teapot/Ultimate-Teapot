@@ -20,10 +20,13 @@ urlpatterns = [
   path('authors/<str:id>/posts/<str:post_id>/comment/', views.comment_create, name='comment_create'),
   #path('', views.index, name='index'),
   #path('posts/', views.posts, name='posts'),
-  path('authors/', views.authors, name='authors'),
-  path('authors/<str:id>', views.profile, name='profile'),
+  path('authors/$', views.authors, name='authors'),
+  path('authors/<str:id>$', views.profile, name='profile'),
   path('inbox/', views.inbox, name='inbox'),
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+  path('api/authors/', views.get_authors, name='get_authors'),
+  path('api/authors/<str:id>', views.get_author, name='get_author'),
+  #path('api/authors/<str:id>', views.update_author, name='update_author'),
 ]
