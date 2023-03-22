@@ -26,7 +26,10 @@ urlpatterns = [
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+
   path('api/authors/', views.get_authors, name='get_authors'),
   path('api/authors/<str:id>', views.get_author, name='get_author'),
-  #path('api/authors/<str:id>', views.update_author, name='update_author'),
+  path('api/authors/<str:id>/followers/', views.get_followers, name='get_followers'),
+  path('api/authors/<str:id>/followers/<path:foreign_id>', views.update_followers, name='update_followers'),
+  path('api/authors/<str:id>/inbox', views.author_inbox, name='author_inbox'),
 ]

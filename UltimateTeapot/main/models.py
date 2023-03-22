@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import User
+
 from django.db.models.signals import post_save
 import uuid
 import datetime
@@ -85,8 +86,14 @@ class Comment(models.Model):
 #     author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_comment_like')
 
 class Inbox(models.Model):
-    # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
+    data = models.JSONField(default={"type":"inbox", "items":[]},blank=True, null=True)
+
+
+
+    #posts = models.ManyToManyField(Post, related_name="inbox", symmetrical=False, blank=True)
+    #followRequests = models.ManyToManyField(FollowRequest, related_name="inbox", symmetrical=False, blank=True)
+    #sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
+    #recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
+    #content = models.TextField()
+    #timestamp = models.DateTimeField(auto_now_add=True)

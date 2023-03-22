@@ -11,7 +11,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-from .models import Post, Profile, Comment, Like, FollowRequest
+from .models import Post, Profile, Comment, Like, FollowRequest, Inbox
 
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
@@ -326,7 +326,7 @@ def get_authors(request):
 @api_view(['GET', 'POST'])
 def get_author(request, id):
     uri = request.build_absolute_uri('?')
-    profile = Profile.objects.get(id=str(uri))
+    profile = Profile.objects.get(id=uri)
 
     serial = {
         "type":"author",
@@ -359,5 +359,69 @@ def get_author(request, id):
     return Response(serial)
 
 @api_view(['GET'])
-def get_followers(request):
-    pass
+def get_followers(request, id):
+    host = request.get_host()
+    uri = "http://" + host + "/api/authors/" + id
+    profile = Profile.objects.get(id=uri)
+    followers = profile.followers.all()
+    list = []
+    for follower in followers:
+        list.append({
+            "type":"author",
+            "id":follower.id,
+            "host":follower.host,
+            "displayName":follower.displayName,
+            "url":follower.url,
+            "github":follower.github,
+            "profileImage":follower.profileImage,
+        })
+    serial = {
+        "type": "followers",
+        "items": list
+    }
+
+    return Response(serial)
+
+@api_view(['GET', 'DELETE', 'PUT'])
+def update_followers(request, id, foreign_id):
+    host = request.get_host()
+    author_id = "http://" + host + "/api/authors/" + id
+    #print(uri)
+    #print(foreign_id)
+    author = Profile.objects.get(id=author_id)
+    foreign = Profile.objects.get(id=foreign_id)
+
+    if request.method == 'PUT':
+        author.followers.add(foreign)
+        return Response('true')
+
+    elif request.method == 'GET':
+        if foreign in author.followers.all():
+            return Response('true')
+        else:
+            return Response('false')
+
+    elif request.method == 'DELETE':
+        if foreign in author.followers.all():
+            author.followers.remove(foreign)
+            return Response('false')
+        else:
+            return Response('false')
+
+@api_view(['GET', 'POST', 'DELETE'])
+def author_inbox(request, id):
+    host = request.get_host()
+    author_id = "http://" + host + "/api/authors/" + id
+    author = Profile.objects.get(id=author_id)
+    inbox = Inbox.objects.get(author=author)
+
+    inbox_data = inbox.data
+
+    if request.method == 'POST':
+        data = request.data
+        if data["type"] == "Follow":
+            inbox_data["items"].append(data)
+
+        inbox.data = inbox_data
+
+    return Response(inbox_data)
