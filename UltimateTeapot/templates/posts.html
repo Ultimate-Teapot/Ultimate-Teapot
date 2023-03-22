@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if posts %}  
+<p>{{ posts.author }} you have successfully posted the post</p>
+
+<h1>DELETE THIS PAGE LATER </h1>
+{{ posts.post_id}}
+{{ post.text_post}}
+{% endif %}
+
+
+{% endblock content %}

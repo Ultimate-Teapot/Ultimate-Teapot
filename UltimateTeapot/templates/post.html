@@ -1,0 +1,60 @@
+
+should display the post that i just posted with post_id path
+fix: when reload post will be posted again
+
+
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-md-8">
+    
+    <div class="card mb-4">
+      <div class="card-body">
+        <p class="card-text">
+          {% if post.post_type != 4%}
+            <p><a href="{% url 'profile' post.author %}">{{ post.author }}</a> posted<p>
+            <p>Created: {{ post.pub_date }}</p>
+            <p>Tweeted: {{ post.text_post }}</p>
+            <p>Post_id(delete later): {{ post.post_id }}</p>
+
+            {% if post.post_type == 1 %}
+              {{ post.post_type }}
+              This post is public
+            {% elif post.post_type == 0 %}
+              {{ post.post_type }}
+              This post is private
+            {% elif post.post_type == 2 %}
+              {{ post.post_type }}
+              Only friends can see this post
+            {% elif post.post_type == 3 %}
+              {{ post.post_type }}
+              Shared to selected people
+            {% elif post.post_type == 4 %}
+              {{ post.post_type }}
+              Should not see this anywhere
+            {% endif %}
+            
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary btn-block"style="float: right;">Edit</button>
+        </p>
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
+        {% endif %}
+        <br><br>
+        {% comment %} <a href="/like-post?post_id={{post.id}}"> {% endcomment %}
+        <button type="submit" class="btn btn-primary btn-block">Like!</button>
+        <button type="submit" class="btn btn-primary btn-block">Comment</button>
+        <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>     
+        
+      </div>
+    </div>
+    
+
+    
+    
+  </div>
+
+
+{% endblock content %}

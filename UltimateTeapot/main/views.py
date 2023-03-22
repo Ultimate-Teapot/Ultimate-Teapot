@@ -4,15 +4,40 @@ from django.contrib.auth.models import User, auth
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-
+from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from .models import Post, Profile
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm
 from django.contrib import messages
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.http import Http404
 
-@login_required(login_url='signin')
+from .serializers import ProfileSerializer
+
+class ProfileList(APIView):
+    def get(self, request):
+        profiles = Profile.objects.all()
+        serializer = ProfileSerializer(profiles, many=True)
+        
+        # data = {}
+        # i=1
+        # for profile in profiles:
+        #     data[f'author_{i}'] = {}
+        #     data[f'author_{i}']['name'] = profile.user.username
+        #     data[f'author_{i}']['friends'] = []
+        #     for friend in profile.friends.all():
+        #         data[f'author_{i}']['friends'].append(friend.user.username)
+        #     i = i + 1
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@login_required(login_url='login')
 def index(request):
     return render(request, 'index.html')
 
@@ -60,18 +85,18 @@ def signup(request):
             new_profile.save()
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            return redirect('home')
+            return redirect('login')
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
 
 def logout(request):
     auth.logout(request)
-    return redirect('signin')
+    return redirect('login')
 
-    #request.user => User => Profile
-@login_required(login_url='signin')
-def upload(request):
+#request.user => User => Profile
+@login_required(login_url='login')
+def posts(request):
     if request.method == 'POST':
         upload_form = UploadForm(request.POST, request.FILES)
         if upload_form.is_valid():
@@ -80,30 +105,37 @@ def upload(request):
             author_profile = Profile.objects.get(user=current_user)
             image = request.FILES.get('image')
             text_post = request.POST['text_post']
-            if 'is_public' in request.POST and request.POST['is_public'] == 'on':
-                is_public = True
-            else: 
-                is_public = False
-            new_post = Post.objects.create(author=author_profile, image=image, text_post=text_post, is_public=is_public)
+            post_type = request.POST['post_type']
+            new_post = Post.objects.create(author=author_profile, image=image, text_post=text_post, post_type=post_type)
             new_post.save()
-
-        #return redirect('home')
         # return render(request, 'home.html', {"upload_form":upload_form})
-    # else:
-    #     #return redirect('home')
-    #     upload_form = UploadForm()
-
+    #return redirect('home')
     return redirect('home')
 
-@login_required(login_url='signin')
+@login_required(login_url='login')
 def like(request):
     return redirect('home')
 
-# def posts(request):
-#     posts = Post.objects.all()
+@login_required(login_url='login')
+def post(request, post_id):
+    #check if post_id exists
+    #new_post = Post.objects.get(post_id=post_id)
+    #new_post = get_object_or_404(Post, post_id=post_id)
+    try:
+        new_post = Post.objects.get(post_id=post_id)
+    except Post.DoesNotExist:
+        print("404 ERRORRRRRRRRRRRRRRRRRRR")
+        return HttpResponseRedirect('/main/home/')
+    
+    # condition = True
+    # if condition:
+    #     print("SSSSSSSSSSSSSSSSSSSSSSSSS")
+    #     return render(request, "post.html", {"post":new_post, "whatever": "dev"})
+    # else:
+    #     return HttpResponseRedirect('home')
+    return render(request, "post.html", {"post":new_post, "whatever": "dev"})
 
-#     return HttpResponse(posts)
-
+@login_required(login_url='login')
 def home(request):
         # form = PostForm(request.POST or None, request.FILES)
         # if request.method == "POST":
@@ -135,14 +167,23 @@ def home(request):
             else:
                 current_user = User.objects.get(username=request.user)
                 author_profile = Profile.objects.get(user=current_user)
-                public_posts = Post.objects.filter(is_public=True)
-                private_posts = Post.objects.filter(is_public=False, author=author_profile)
+                public_posts = Post.objects.filter(post_type=1)
+                private_posts = Post.objects.filter(post_type__in=[0, 2], author=author_profile)
+                private_posts_of_friends = Post.objects.none()
+                my_friends = author_profile.friends.all()
+                print(my_friends)
+                for profile in my_friends:
+                    #print(profile)
+                    private_posts_of_friends |= Post.objects.filter(post_type=2, author=profile)
+                    #print(private_posts_of_friends)
+                unlisted_posts = Post.objects.filter(post_type=4)
+                #print(current_user_friends)
+                #private_posts_friends = Post.objects.filter(post_type=2, current_user_friends=current_user_friends)
                 
-                current_user_posts =(public_posts | private_posts).order_by("-pub_date")
-        
-         
-        # else:
-            #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
+                current_user_posts =(public_posts | private_posts | private_posts_of_friends).order_by("-pub_date")
+                # print("1111111111111111111")
+                # print(current_user_posts)
+                # print("1111111111111111111")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
@@ -151,6 +192,7 @@ def authors(request):
     author_list = Profile.objects.all()
     return render(request, 'authors.html', {"authors":author_list})
 
+@login_required(login_url='login')
 def profile(request, username):
     if request.user.is_authenticated:
         user = User.objects.get(username=username)

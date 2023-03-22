@@ -34,10 +34,11 @@ class Profile(models.Model):
 class Post(models.Model):
     post_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    
     text_post = models.TextField()
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
     pub_date = models.DateTimeField(default=datetime.datetime.now)
-    is_public = models.BooleanField(default=False)
+    post_type = models.IntegerField(default=0)
     likes = models.IntegerField(default=0)
 
     def __str__(self):
