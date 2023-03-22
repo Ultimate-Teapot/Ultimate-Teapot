@@ -69,7 +69,7 @@
             <p><a href="{% url 'profile' post.author %}">{{ post.author }}</a> posted<p>
             <p>Created: {{ post.pub_date }}</p>
             <p>Tweeted: {{ post.text_post }}</p>
-            {% if post.is_public %}
+            {% if post.post_type == 1 %}
               This post is public
             {% else %}
               This post is private

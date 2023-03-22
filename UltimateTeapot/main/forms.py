@@ -3,6 +3,13 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
 from .models import Post, Comment
 
+POST_TYPE = [
+    (0, 'Private (Only you can see)'),
+    (1, 'Public (Everyone can see)'),
+    (2, 'Private (Only your friends can see)'),
+    (3, 'Private (Only people you send this post can see)'),
+    (4, 'Unlisted (Only accessible via link)')
+]
 class UploadForm(forms.ModelForm):
     text_post = forms.CharField(required=True, 
         widget=forms.widgets.Textarea(
@@ -13,13 +20,14 @@ class UploadForm(forms.ModelForm):
             ),
             label = "",
         )
+    post_type = forms.CharField(label='Who would you like to share your post?', widget=forms.RadioSelect(choices=POST_TYPE))
     class Meta:
         model = Post
-        fields = ('text_post', 'image', 'is_public')
-        labels = {'is_public': 'Make post public?'}
+        fields = ( 'title','text_post', 'image', 'post_type')
+        # labels = {'is_public': 'Make post public?'}
         exclude = ("user", "visibility", "likes", 'author')
 
-    is_public = forms.BooleanField(required=False)
+    # is_public = forms.BooleanField(required=False)
     
 # class PostForm(forms.ModelForm):
 #     text = forms.CharField(required=True, 

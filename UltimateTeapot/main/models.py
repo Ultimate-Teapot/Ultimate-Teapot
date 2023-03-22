@@ -74,7 +74,7 @@ class Post(models.Model):
     #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)
     #Visibility
-    is_public = models.BooleanField(default=False)
+    post_type = models.IntegerField(default=0)
     #Unlisted
     unlisted = models.BooleanField(default=False)
 

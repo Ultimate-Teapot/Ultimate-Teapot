@@ -119,11 +119,12 @@ def upload(request):
             post_id = author_profile.id + "/posts/" + str(uniqueID)
             image = request.FILES.get('image')
             text_post = request.POST['text_post']
-            if 'is_public' in request.POST and request.POST['is_public'] == 'on':
-                is_public = True
-            else: 
-                is_public = False
-            new_post = Post.objects.create(post_id=post_id ,author=author_profile, image=image, text_post=text_post, is_public=is_public)
+            post_type = request.POST['post_type']
+            # if 'is_public' in request.POST and request.POST['is_public'] == 'on':
+            #     is_public = True
+            # else:
+            #     is_public = False
+            new_post = Post.objects.create(post_id=post_id ,author=author_profile, image=image, text_post=text_post, post_type=post_type)
             new_post.save()
 
         #return redirect('home')
@@ -174,9 +175,9 @@ def home(request):
             else:
                 current_user = User.objects.get(username=request.user)
                 author_profile = Profile.objects.get(user=current_user)
-                public_posts = Post.objects.filter(is_public=True)
-                private_posts = Post.objects.filter(is_public=False, author=author_profile)
-                
+                public_posts = Post.objects.filter(post_type=1)
+                private_posts = Post.objects.filter(post_type=0, author=author_profile)
+
                 current_user_posts =(public_posts | private_posts).order_by("-pub_date")
         
          
