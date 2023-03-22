@@ -1,11 +1,16 @@
 from django.urls import path,include
 from . import views
+from .views import AuthorList, SingleAuthor, PostsList
+
+
 # from rest_framework import routers
 
 # router = routers.DefaultRouter()
 # router.register(r'apiprofile', views.ProfileViewSet)
 # router.register(r'apiposts', views.PostViewSet)
 # router.register(r'apiusers',views.UserViewSet)
+
+
 
 
 urlpatterns = [
@@ -23,7 +28,14 @@ urlpatterns = [
   path('authors/', views.authors, name='authors'),
   path('authors/<str:id>', views.profile, name='profile'),
   path('inbox/', views.inbox, name='inbox'),
+
+  
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+
+  path('api/authors/', AuthorList.as_view(), name='authors_api'),
+  path('api/authors/<str:id>', SingleAuthor.as_view(), name='author_api'),
+  path('api/authors/<str:id>/posts/', PostsList.as_view(), name='posts_api'),
+
 ]

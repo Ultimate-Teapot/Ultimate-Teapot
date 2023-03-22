@@ -18,7 +18,15 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostSerializer, UserSerializer
+from .serializers import ProfileSerializer, PostsSerializer
+from rest_framework.views import APIView
+
+from django.http import Http404
+from rest_framework.response import Response
+from django.http import HttpResponse
+from rest_framework import status
+
+from urllib.parse import urlparse
 
 @login_required(login_url='signin')
 def index(request):
@@ -67,7 +75,7 @@ def signup(request):
 
             host = request.get_host()
             uniqueID = uuid.uuid4()
-            authorID = "http://" + host + "/main/authors/" + str(uniqueID)
+            authorID = "http://" + host + "/main/api/authors/" + str(uniqueID)
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
             profile_image = form.cleaned_data.get('profile_image')
@@ -296,3 +304,56 @@ def like_create(request, post_id):
 #         followers = profile.followers
 #         return render(request, "followers.html", {""})
 
+
+class AuthorList(APIView):
+    def get(self, request):
+        profiles = Profile.objects.all()
+        serializer = ProfileSerializer(profiles, many=True)
+        updated_data = {"type":"authors", "items":serializer.data}
+        
+        return Response(updated_data, status=status.HTTP_200_OK)
+    
+    def post(self,request):
+        print(request.body)
+    
+
+class SingleAuthor(APIView):
+    def get(self, request, id):
+
+        uri = request.build_absolute_uri('?')
+        #id = request.get_full_path().split("Author/")[1]
+        
+
+        #o = urlparse(request)
+        profile = Profile.objects.get(id=str(uri))
+        serializer = ProfileSerializer(profile)
+        updated_data = serializer.data
+                        
+        return Response(updated_data, status=status.HTTP_200_OK)
+    
+
+class PostsList(APIView):
+    def get(self, request, id):
+        uri = request.build_absolute_uri('?')
+        uri = uri.replace("/posts/","")
+        
+        author = Profile.objects.get(id=str(uri))
+        posts = Post.objects.filter(author=author)
+        serializer = PostsSerializer(posts,many=True)
+
+        print(serializer.data) 
+
+        
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def post(self, request, id):
+        pass
+    def put(self, request, id):
+        pass
+    def delete(self, request, id):
+        pass
+
+    
+    
