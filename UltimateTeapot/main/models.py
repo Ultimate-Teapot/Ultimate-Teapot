@@ -7,18 +7,20 @@ import datetime
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
+    # TO BE SENT AS JSON #
+    type = models.CharField(max_length=100, default="Author",editable=False)
     id = models.CharField(max_length=100, unique=True, primary_key=True)
+    url = models.URLField()
     host = models.URLField()
     displayName = models.CharField(max_length=100)
-    url = models.URLField()
     github = models.URLField()
     profileImage = models.URLField()
+    
     last_date = models.DateField(default=datetime.datetime.now)
-
+    user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
     friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
+
 
     def __str__(self):
         return self.displayName
@@ -43,21 +45,41 @@ class FollowRequest(models.Model):
 #     USERNAME_FIELD = "identifier"
 
 class Post(models.Model):
+
+    #Title of Post
+    title = models.TextField()
+    #Post ID
     post_id = models.CharField(max_length=200, unique=True, primary_key=True)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    #Source
+    source = models.URLField()
+    #origin
+    origin = models.URLField()
+    #description
+    description = models.TextField(blank=True)
+    #Conent-type
+    contentType = models.CharField(max_length=100,default="text/plain")
+    #Content
     text_post = models.TextField()
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
+    #author
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
+    #categories
+    categories = models.CharField(max_length=200, default=['web','tutorial'])
+    #count - the count of comments on the post
+    count = models.IntegerField(default=0)
+
+    #TO_DO ADD COMMENTS AND COMMENT SRC
+
+    #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)
+    #Visibility
     is_public = models.BooleanField(default=False)
+    #Unlisted
+    unlisted = models.BooleanField(default=False)
+
+
     likes = models.IntegerField(default=0)
-
-    # link = models.CharField(max_length=255, default=None, null=True)
-    # likes = models.IntegerField(default=0)
-
-    #sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
-    #receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
-
 
     def __str__(self):
         return(f"{self.author} "
