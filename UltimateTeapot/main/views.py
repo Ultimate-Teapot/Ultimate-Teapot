@@ -356,5 +356,50 @@ class PostsList(APIView):
     def delete(self, request, id):
         pass
 
+
+class SinglePost(APIView):
+    def get(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        print(uri)
+
+        posts = Post.objects.get(post_id=str(uri))
+        serializer = PostsSerializer(posts)
+
+        #print(serializer.data) 
+
+        
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    # def post(self, request, id):
+    #     uri = request.build_absolute_uri('?')
+    #     posts = Post.objects.get(post_id=str(uri))
+
+        
+
+    def put(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        serializer = PostsSerializer(request.data)
+        if (serializer.is_valid()):
+            serializer.save()
+            return Response(status=status.HTTP_200_OK)
+
+        #post_object = Post(post_id = str(uri))
+        #post_object.save()
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    # def delete(self, request, id):
+    #     uri = request.build_absolute_uri('?')
+    #     Post.objects.get(post_id=str(uri)).delete()
+    #     return Response(status=status.HTTP_200_OK)
+
+
+
+
+
+
     
     

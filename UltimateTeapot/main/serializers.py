@@ -13,7 +13,7 @@ class PostsSerializer(serializers.ModelSerializer):
     author = ProfileSerializer()
     class Meta:
         model = Post
-        fields = ['title','post_id','source','origin','description','contentType','text_post','image','author','categories','count','pub_date','is_public','unlisted','likes']
+        fields = ['title','post_id','source','origin','description','contentType','text_post','image','author','categories','count','pub_date','unlisted','likes']
 
 
 
