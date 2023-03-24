@@ -26,6 +26,7 @@ class Profile(models.Model):
         return self.displayName
 
 class FollowRequest(models.Model):
+    id = models.CharField(max_length=100, unique=True, primary_key=True)
     sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
@@ -106,9 +107,11 @@ class Comment(models.Model):
 #     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
 #     author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_comment_like')
 
+
+
 class Inbox(models.Model):
     # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    #content = models.TextField()
+    #timestamp = models.DateTimeField(auto_now_add=True)
+    author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
+    data = models.JSONField(default=dict,blank=True, null=True)

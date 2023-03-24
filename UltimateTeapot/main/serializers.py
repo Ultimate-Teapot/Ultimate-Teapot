@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Profile, Post, Comment, Inbox
+from .models import Profile, Post, Comment, Inbox, FollowRequest
 from rest_framework import serializers
 
 
@@ -14,6 +14,13 @@ class PostsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['title','post_id','source','origin','description','contentType','text_post','image','author','categories','count','pub_date','unlisted','likes']
+
+class FollowRequestSerializer(serializers.ModelSerializer):
+    actor = ProfileSerializer()
+    object = ProfileSerializer()
+    class Meta:
+        model = FollowRequest
+        fields = ['type','summary','actor','object' ]
 
 
 

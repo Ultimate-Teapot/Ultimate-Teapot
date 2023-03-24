@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
-from .models import Post, Profile, Comment, Like, FollowRequest
+from .models import Post, Profile, Comment, Like, FollowRequest, Inbox
 
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
@@ -95,11 +95,23 @@ def signup(request):
 
             new_profile.save()
 
+            new_inbox = Inbox.objects.create(
+                author=new_profile,
+                data={
+                "type":"inbox",
+                "author":authorID,
+                "items":[]
+                } 
+                                             
+                                             )
+
+            new_inbox.save()
             user = authenticate(username=username, password=raw_password)
             login(request, user)
             return redirect('home')
     else:
         form = SignUpForm()
+    
     return render(request, 'signup.html', {'form': form})
 
 def logout(request):
@@ -372,29 +384,50 @@ class SinglePost(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-    # def post(self, request, id):
-    #     uri = request.build_absolute_uri('?')
-    #     posts = Post.objects.get(post_id=str(uri))
+    def post(self,request, id,pid, format=None):
+        uri = request.build_absolute_uri('?')
+        try:
+            postobj = Post.objects.get(post_id=str(uri))
+        except postobj.DoesNotExist:
+            raise Http404
+        serializer = PostsSerializer(postobj,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         
 
-    def put(self, request, id, pid):
+    def put(self, request, id,pid, format=None):
+         uri = request.build_absolute_uri('?')
+         try:
+            postobj = Post.objects.get(post_id=str(uri))
+         except postobj.DoesNotExist:
+            serializer = PostsPutSerializer(postobj,data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    def delete(self, request, id, pid):
         uri = request.build_absolute_uri('?')
-        serializer = PostsSerializer(request.data)
-        if (serializer.is_valid()):
-            serializer.save()
-            return Response(status=status.HTTP_200_OK)
-
-        #post_object = Post(post_id = str(uri))
-        #post_object.save()
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        Post.objects.get(post_id=str(uri)).delete()
+        return Response(status=status.HTTP_200_OK)
+    
 
 
 
-    # def delete(self, request, id):
-    #     uri = request.build_absolute_uri('?')
-    #     Post.objects.get(post_id=str(uri)).delete()
-    #     return Response(status=status.HTTP_200_OK)
+
+class FollowRequest(APIView):
+    def post(self, request,id, sender, reciever):
+        followrequest = FollowRequest.objects.get(id=id)
+
+
+
+        serializer = FollowRequestSerializer(followrequest)
+
 
 
 
