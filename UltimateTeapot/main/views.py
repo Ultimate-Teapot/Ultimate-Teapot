@@ -29,7 +29,7 @@ from django.http import Http404
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework import status
-
+from rest_framework.generics import ListCreateAPIView
 from urllib.parse import urlparse
 
 @login_required(login_url='signin')
@@ -329,7 +329,7 @@ class NodePermission(BasePermission):
 
 
 class AuthorList(APIView):
-    permission_classes = [NodePermission, IsAuthenticated]
+    # permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request):
         profiles = Profile.objects.all()
@@ -378,16 +378,31 @@ class FollowerList(APIView):
         return Response(updated_data, status=status.HTTP_200_OK)
 
 
-class PostsList(APIView):
-    def get(self, request, id):
-        uri = request.build_absolute_uri('?')
-        uri = uri.replace("/posts/", "")
+class PostsList(ListCreateAPIView):
 
-        author = Profile.objects.get(id=str(uri))
-        posts = Post.objects.filter(author=author)
-        serializer = PostsSerializer(posts, many=True)
+    serializer_class = PostsSerializer
+    queryset = Post.objects.all()
+    lookup_url_kwarg = "id"
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def perform_create(self, serializer):
+        uri = self.request.build_absolute_uri('?')
+        profile_id = uri.replace("/posts/", "") # GERARD PLZ FIX MEUSDO TODOTODOTODOTODO
+        #profile_id = self.kwargs.get(self.lookup_url_kwarg)
+        profile_instance = Profile.objects.get(id=profile_id)
+        post = serializer.save(author=profile_instance,content=self.request.data["content"])
+        return post
+
+    # def get(self, request, id):
+    #     uri = request.build_absolute_uri('?')
+    #     uri = uri.replace("/posts/", "")
+
+    #     author = Profile.objects.get(id=str(uri))
+    #     posts = Post.objects.filter(author=author)
+    #     serializer = PostsSerializer(posts, many=True)
+
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # def post(self,request,id):
 
 
 class SinglePost(APIView):
