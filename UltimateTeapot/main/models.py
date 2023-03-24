@@ -26,6 +26,7 @@ class Profile(models.Model):
         return self.displayName
 
 class FollowRequest(models.Model):
+    id = models.CharField(max_length=100, unique=True, primary_key=True)
     sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
@@ -43,6 +44,20 @@ class FollowRequest(models.Model):
 #     username = None
 #     identifier = models.CharField(max_length=40, unique=True, default=0)
 #     USERNAME_FIELD = "identifier"
+
+class Comment(models.Model):
+    type = models.CharField(max_length=100, default="comment",editable=False)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    content = models.TextField()
+    contentType = models.CharField(max_length=100,default="text/plain")
+    created_at = models.DateTimeField(auto_now_add=True)
+    comment_id = models.CharField(max_length=200, unique=True, primary_key=True)
+
+    #post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
+
+    # Might need to delete this #
+    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
+
 
 class Post(models.Model):
 
@@ -70,6 +85,7 @@ class Post(models.Model):
     count = models.IntegerField(default=0)
 
     #TO_DO ADD COMMENTS AND COMMENT SRC
+    comment = models.ForeignKey(Comment,on_delete=models.PROTECT)
 
     #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)
@@ -92,11 +108,10 @@ class Like(models.Model):
     like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
     created_at = models.DateTimeField(auto_now_add=True)
 
-class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
-    content = models.TextField()
-    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    
+    
+    
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)

@@ -18,7 +18,7 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostsSerializer
+from .serializers import ProfileSerializer, PostsSerializer, ProfilePostSerializer, PostsPutSerializer, FollowerSerializer, FollowRequestSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
@@ -27,6 +27,8 @@ from django.http import HttpResponse
 from rest_framework import status
 
 from urllib.parse import urlparse
+from rest_framework.parsers import JSONParser 
+from django.http.response import JsonResponse
 
 @login_required(login_url='signin')
 def index(request):
@@ -332,6 +334,28 @@ class SingleAuthor(APIView):
         return Response(updated_data, status=status.HTTP_200_OK)
     
 
+    def post(self, request, id, format=None):
+        uri = request.build_absolute_uri('?')
+        try:
+            author = Profile.objects.get(id=str(uri))
+        except author.DoesNotExist:
+            raise Http404
+        serializer = ProfilePostSerializer(author,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class FollowerList(APIView):
+     def get(self, request, id):
+        uri = request.build_absolute_uri('?')
+        uri = uri.replace("/followers","")
+        author = Profile.objects.get(id=str(uri))
+        serializer = FollowerSerializer(profile)
+        updated_data = serializer.data
+        return Response(updated_data, status=status.HTTP_200_OK)
+        
+
 class PostsList(APIView):
     def get(self, request, id):
         uri = request.build_absolute_uri('?')
@@ -341,19 +365,65 @@ class PostsList(APIView):
         posts = Post.objects.filter(author=author)
         serializer = PostsSerializer(posts,many=True)
 
-        print(serializer.data) 
-
-        
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-    def post(self, request, id):
-        pass
-    def put(self, request, id):
-        pass
-    def delete(self, request, id):
-        pass
+class SinglePost(APIView):
 
-    
-    
+    def get(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        print(uri)
+        posts = Post.objects.get(post_id=str(uri))
+        serializer = PostsSerializer(posts)
+
+        #print(serializer.data) 
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self,request, id,pid, format=None):
+        uri = request.build_absolute_uri('?')
+        try:
+            postobj = Post.objects.get(post_id=str(uri))
+        except postobj.DoesNotExist:
+            raise Http404
+        serializer = PostsSerializer(postobj,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, id,pid, format=None):
+         uri = request.build_absolute_uri('?')
+         try:
+            postobj = Post.objects.get(post_id=str(uri))
+         except postobj.DoesNotExist:
+            serializer = PostsPutSerializer(postobj,data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        Post.objects.get(post_id=str(uri)).delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class Commentlist(APIView):
+     def get(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        print(uri)
+        posts = Post.objects.get(post_id=str(uri))
+        serializer = PostsSerializer(posts)
+
+        #print(serializer.data) 
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+           
+
+class FollowRequest(APIView):
+    def post(self, request,id):
+        followrequest = FollowRequest.objects.get(id=id)
+        serializer = FollowRequestSerializer(followrequest)
