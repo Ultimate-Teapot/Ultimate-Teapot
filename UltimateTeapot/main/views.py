@@ -8,6 +8,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
+
 from .models import Post, Profile, Comment, Like, FollowRequest
 
 from django.shortcuts import render, redirect
@@ -305,8 +308,16 @@ def like_create(request, post_id):
 #         followers = profile.followers
 #         return render(request, "followers.html", {""})
 
+class NodePermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.groups.filter(name='node').exists():
+            return True
+        return False
 
 class AuthorList(APIView):
+    # authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated, NodePermission]
+
     def get(self, request):
         profiles = Profile.objects.all()
         serializer = ProfileSerializer(profiles, many=True)
@@ -334,6 +345,7 @@ class SingleAuthor(APIView):
     
 
 class PostsList(APIView):
+
     def get(self, request, id):
         uri = request.build_absolute_uri('?')
         uri = uri.replace("/posts/","")
