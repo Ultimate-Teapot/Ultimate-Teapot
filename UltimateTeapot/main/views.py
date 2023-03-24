@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from django.contrib.auth import authenticate, login
@@ -31,6 +32,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView
 from urllib.parse import urlparse
+from django.conf import settings
 
 @login_required(login_url='signin')
 def index(request):
@@ -79,7 +81,7 @@ def signup(request):
 
             host = request.get_host()
             uniqueID = uuid.uuid4()
-            authorID = "http://" + host + "/main/api/authors/" + str(uniqueID)
+            authorID = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + str(uniqueID)
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
             profile_image = form.cleaned_data.get('profile_image')
@@ -88,7 +90,7 @@ def signup(request):
                 user=user_model,
                 id=authorID,
                 url=authorID,
-                host="http://" + host + "/",
+                host= settings.APP_HTTP + settings.APP_DOMAIN + "/",
                 displayName=display_name,
                 github=github,
                 profileImage=profile_image,
@@ -372,8 +374,11 @@ class FollowerList(APIView):
     def get(self, request, id):
         uri = request.build_absolute_uri('?')
         uri = uri.replace("/followers", "")
-        author = Profile.objects.get(id=str(uri))
-        serializer = FollowerSerializer(profile)
+
+        author_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + id
+
+        author = Profile.objects.get(id=author_id)
+        serializer = FollowerSerializer(author)
         updated_data = serializer.data
         return Response(updated_data, status=status.HTTP_200_OK)
 
@@ -385,8 +390,8 @@ class PostsList(ListCreateAPIView):
     lookup_url_kwarg = "id"
 
     def perform_create(self, serializer):
-        uri = self.request.build_absolute_uri('?')
-        profile_id = uri.replace("/posts/", "") # GERARD PLZ FIX MEUSDO TODOTODOTODOTODO
+        #uri = self.request.build_absolute_uri('?')
+        profile_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + id
         #profile_id = self.kwargs.get(self.lookup_url_kwarg)
         profile_instance = Profile.objects.get(id=profile_id)
         post = serializer.save(author=profile_instance,content=self.request.data["content"])
@@ -406,6 +411,7 @@ class PostsList(ListCreateAPIView):
 
 
 class SinglePost(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request, id, pid):
         uri = request.build_absolute_uri('?')
