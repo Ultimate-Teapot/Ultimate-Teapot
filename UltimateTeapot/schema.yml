@@ -1,0 +1,204 @@
+openapi: 3.0.3
+info:
+  title: Your Project API
+  version: 1.0.0
+  description: Your project description
+paths:
+  /main/api/authors/:
+    get:
+      operationId: main_api_authors_retrieve
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: main_api_authors_create
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}:
+    get:
+      operationId: main_api_authors_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: main_api_authors_create_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/followers:
+    get:
+      operationId: main_api_authors_followers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/posts/:
+    get:
+      operationId: main_api_authors_posts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/posts/{pid}:
+    get:
+      operationId: main_api_authors_posts_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: main_api_authors_posts_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: main_api_authors_posts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: main_api_authors_posts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /main/api/authors/{id}/posts/{pid}/comments:
+    get:
+      operationId: main_api_authors_posts_comments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

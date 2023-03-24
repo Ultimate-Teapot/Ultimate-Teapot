@@ -46,10 +46,12 @@ class FollowRequest(models.Model):
 
 class Post(models.Model):
 
+    # Type of post #
+    type = models.CharField(max_length=100, default="post",editable=False)
     #Title of Post
     title = models.TextField()
     #Post ID
-    post_id = models.CharField(max_length=200, unique=True, primary_key=True)
+    id = models.CharField(max_length=200, unique=True, primary_key=True)
     #Source
     source = models.URLField()
     #origin
@@ -59,7 +61,8 @@ class Post(models.Model):
     #Conent-type
     contentType = models.CharField(max_length=100,default="text/plain")
     #Content
-    text_post = models.TextField()
+    content = models.TextField()
+
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
     #author
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
@@ -68,8 +71,11 @@ class Post(models.Model):
     categories = models.CharField(max_length=200, default=['web','tutorial'])
     #count - the count of comments on the post
     count = models.IntegerField(default=0)
+    
 
     #TO_DO ADD COMMENTS AND COMMENT SRC
+    
+
 
     #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)

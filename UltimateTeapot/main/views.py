@@ -30,7 +30,7 @@ from django.http import Http404
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework import status
-
+from rest_framework.generics import ListCreateAPIView
 from urllib.parse import urlparse
 from django.conf import settings
 
@@ -331,7 +331,7 @@ class NodePermission(BasePermission):
 
 
 class AuthorList(APIView):
-    #permission_classes = [NodePermission, IsAuthenticated]
+    # permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request):
         profiles = Profile.objects.all()
@@ -383,18 +383,31 @@ class FollowerList(APIView):
         return Response(updated_data, status=status.HTTP_200_OK)
 
 
-class PostsList(APIView):
-    def get(self, request, id):
-        uri = request.build_absolute_uri('?')
-        uri = uri.replace("/posts/", "")
+class PostsList(ListCreateAPIView):
 
-        author_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + id
+    serializer_class = PostsSerializer
+    queryset = Post.objects.all()
+    lookup_url_kwarg = "id"
 
-        author = Profile.objects.get(id=author_id)
-        posts = Post.objects.filter(author=author)
-        serializer = PostsSerializer(posts, many=True)
+    def perform_create(self, serializer):
+        #uri = self.request.build_absolute_uri('?')
+        profile_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + id
+        #profile_id = self.kwargs.get(self.lookup_url_kwarg)
+        profile_instance = Profile.objects.get(id=profile_id)
+        post = serializer.save(author=profile_instance,content=self.request.data["content"])
+        return post
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    # def get(self, request, id):
+    #     uri = request.build_absolute_uri('?')
+    #     uri = uri.replace("/posts/", "")
+
+    #     author = Profile.objects.get(id=str(uri))
+    #     posts = Post.objects.filter(author=author)
+    #     serializer = PostsSerializer(posts, many=True)
+
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # def post(self,request,id):
 
 
 class SinglePost(APIView):
