@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
-from .models import Post, Profile, Comment, Like, FollowRequest
+from .models import Post, Profile, Comment, Like, FollowRequest, Inbox
 
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
