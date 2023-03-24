@@ -1,6 +1,6 @@
 from django.urls import path,include
 from . import views
-from .views import AuthorList, SingleAuthor, PostsList, SinglePost
+from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList, Commentlist
 
 
 # from rest_framework import routers
@@ -9,8 +9,6 @@ from .views import AuthorList, SingleAuthor, PostsList, SinglePost
 # router.register(r'apiprofile', views.ProfileViewSet)
 # router.register(r'apiposts', views.PostViewSet)
 # router.register(r'apiusers',views.UserViewSet)
-
-
 
 
 urlpatterns = [
@@ -36,7 +34,8 @@ urlpatterns = [
 
   path('api/authors/', AuthorList.as_view(), name='authors_api'),
   path('api/authors/<str:id>', SingleAuthor.as_view(), name='author_api'),
+  path('api/authors/<str:id>/followers', FollowerList.as_view(), name='followers_api'),
   path('api/authors/<str:id>/posts/', PostsList.as_view(), name='posts_api'),
   path('api/authors/<str:id>/posts/<str:pid>', SinglePost.as_view(), name='post_api'),
-
+  path('api/authors/<str:id>/posts/<str:pid>/comments', Commentlist.as_view(), name='post_api'),
 ]

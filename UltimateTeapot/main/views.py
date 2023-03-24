@@ -21,7 +21,8 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostsSerializer
+from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostsPutSerializer, \
+    FollowerSerializer, ProfilePostSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
@@ -97,6 +98,18 @@ def signup(request):
             new_profile.friends.clear()
 
             new_profile.save()
+
+            new_inbox = Inbox.objects.create(
+                author=new_profile,
+                data={
+                "type":"inbox",
+                "author":authorID,
+                "items":[]
+                }
+
+                                             )
+
+            new_inbox.save()
 
             user = authenticate(username=username, password=raw_password)
             login(request, user)
@@ -314,101 +327,126 @@ class NodePermission(BasePermission):
             return True
         return False
 
+
 class AuthorList(APIView):
-    # authentication_classes = [BasicAuthentication]
-    permission_classes = [IsAuthenticated, NodePermission]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request):
         profiles = Profile.objects.all()
         serializer = ProfileSerializer(profiles, many=True)
-        updated_data = {"type":"authors", "items":serializer.data}
-        
+        updated_data = {"type": "authors", "items": serializer.data}
+
         return Response(updated_data, status=status.HTTP_200_OK)
-    
-    def post(self,request):
+
+    def post(self, request):
         print(request.body)
-    
+
 
 class SingleAuthor(APIView):
     def get(self, request, id):
 
         uri = request.build_absolute_uri('?')
-        #id = request.get_full_path().split("Author/")[1]
-        
+        # id = request.get_full_path().split("Author/")[1]
 
-        #o = urlparse(request)
+        # o = urlparse(request)
         profile = Profile.objects.get(id=str(uri))
         serializer = ProfileSerializer(profile)
         updated_data = serializer.data
-                        
+
         return Response(updated_data, status=status.HTTP_200_OK)
-    
 
-class PostsList(APIView):
-
-    def get(self, request, id):
+    def post(self, request, id, format=None):
         uri = request.build_absolute_uri('?')
-        uri = uri.replace("/posts/","")
-        
-        author = Profile.objects.get(id=str(uri))
-        posts = Post.objects.filter(author=author)
-        serializer = PostsSerializer(posts,many=True)
-
-        print(serializer.data) 
-
-        
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-    def post(self, request, id):
-        pass
-    def put(self, request, id):
-        pass
-    def delete(self, request, id):
-        pass
-
-
-class SinglePost(APIView):
-    def get(self, request, id, pid):
-        uri = request.build_absolute_uri('?')
-        print(uri)
-
-        posts = Post.objects.get(post_id=str(uri))
-        serializer = PostsSerializer(posts)
-
-        #print(serializer.data) 
-
-        
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-    # def post(self, request, id):
-    #     uri = request.build_absolute_uri('?')
-    #     posts = Post.objects.get(post_id=str(uri))
-
-        
-
-    def put(self, request, id, pid):
-        uri = request.build_absolute_uri('?')
-        serializer = PostsSerializer(request.data)
-        if (serializer.is_valid()):
+        try:
+            author = Profile.objects.get(id=str(uri))
+        except author.DoesNotExist:
+            raise Http404
+        serializer = ProfilePostSerializer(author, data=request.data)
+        if serializer.is_valid():
             serializer.save()
-            return Response(status=status.HTTP_200_OK)
-
-        #post_object = Post(post_id = str(uri))
-        #post_object.save()
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class FollowerList(APIView):
+    def get(self, request, id):
+        uri = request.build_absolute_uri('?')
+        uri = uri.replace("/followers", "")
+        author = Profile.objects.get(id=str(uri))
+        serializer = FollowerSerializer(profile)
+        updated_data = serializer.data
+        return Response(updated_data, status=status.HTTP_200_OK)
 
-    # def delete(self, request, id):
-    #     uri = request.build_absolute_uri('?')
-    #     Post.objects.get(post_id=str(uri)).delete()
-    #     return Response(status=status.HTTP_200_OK)
+
+class PostsList(APIView):
+    def get(self, request, id):
+        uri = request.build_absolute_uri('?')
+        uri = uri.replace("/posts/", "")
+
+        author = Profile.objects.get(id=str(uri))
+        posts = Post.objects.filter(author=author)
+        serializer = PostsSerializer(posts, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class SinglePost(APIView):
+
+    def get(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        print(uri)
+        posts = Post.objects.get(post_id=str(uri))
+        serializer = PostsSerializer(posts)
+
+        # print(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, id, pid, format=None):
+        uri = request.build_absolute_uri('?')
+        try:
+            postobj = Post.objects.get(post_id=str(uri))
+        except postobj.DoesNotExist:
+            raise Http404
+        serializer = PostsSerializer(postobj, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, id, pid, format=None):
+        uri = request.build_absolute_uri('?')
+        try:
+            postobj = Post.objects.get(post_id=str(uri))
+        except postobj.DoesNotExist:
+            serializer = PostsPutSerializer(postobj, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        Post.objects.get(post_id=str(uri)).delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+class Commentlist(APIView):
+    def get(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        print(uri)
+        posts = Post.objects.get(post_id=str(uri))
+        serializer = PostsSerializer(posts)
+
+        # print(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FollowRequest(APIView):
+    def post(self, request, id):
+        followrequest = FollowRequest.objects.get(id=id)
+        serializer = FollowRequestSerializer(followrequest)
 
 
 

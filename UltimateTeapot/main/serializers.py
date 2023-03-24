@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import Profile, Post, Comment, Inbox
+from .models import Profile, Post, Comment, Inbox, FollowRequest
 from rest_framework import serializers
 
 
@@ -8,13 +8,71 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['type','id','url','host','displayName','github','profileImage']
 
+class FollowerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['followers']
+
+class ProfilePostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['url','host','displayName','github','profileImage']
+
+    def update(self,instance,validated_data):
+        instance.url = validated_data.get('url',instance.url)
+        instance.host = validated_data.get('host',instance.host)
+        instance.displayName = validated_data.get('displayName',instance.displayName)
+        instance.github = validated_data.get('github',instance.github)
+        instance.profileImage= validated_data.get('profileImage',instance.profileImage)
+        instance.save()
+        return instance
 
 class PostsSerializer(serializers.ModelSerializer):
-    author = ProfileSerializer()
+    author = ProfilePostSerializer()
     class Meta:
         model = Post
-        fields = ['title','post_id','source','origin','description','contentType','text_post','image','author','categories','count','pub_date','unlisted','likes']
+        fields = ['title','post_id','source','origin','description','contentType','text_post','image','author','categories','count','pub_date','unlisted','likes'] # add back is_public
 
+    # def create(self,validated_data):
+    #     return Post.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+
+        if 'author' in validated_data:
+            nested_serializer = self.fields['author']
+            nested_instance = instance.author
+            nested_data = validated_data.pop('author')
+            nested_serializer.update(nested_instance, nested_data)
+
+
+        instance.title = validated_data.get('title',instance.title)
+        instance.source = validated_data.get('source',instance.source)
+        instance.origin = validated_data.get('origin',instance.origin)
+        instance.description = validated_data.get('description',instance.description)
+        instance.contentType = validated_data.get('contentType',instance.contentType)
+        instance.text_post = validated_data.get('text_post',instance.text_post)
+        instance.image = validated_data.get('image',instance.image)
+        instance.author = validated_data.get('author',instance.author)
+        instance.categories = validated_data.get('categories',instance.categories)
+        instance.count = validated_data.get('count',instance.count)
+        instance.pub_date = validated_data.get('pub_date',instance.pub_date)
+        instance.unlisted = validated_data.get('unlisted',instance.unlisted)
+        instance.likes = validated_data.get('likes',instance.likes)
+
+        return super(PostsSerializer,self).update(instance,validated_data)
+
+class PostsPutSerializer(serializers.ModelSerializer):
+    author = ProfilePostSerializer()
+    class Meta:
+        model = Post
+        fields = ['title','post_id','source','origin','description','contentType','text_post','image','author','categories','count','pub_date','unlisted','likes'] # add back is_public
+
+class FollowRequestSerializer(serializers.ModelSerializer):
+    actor = ProfileSerializer()
+    object = ProfileSerializer()
+    class Meta:
+        model = FollowRequest
+        fields = ['type','summary','actor','object' ]
 
 
 # from django.contrib.auth.models import User

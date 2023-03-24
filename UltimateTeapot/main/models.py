@@ -108,7 +108,9 @@ class Comment(models.Model):
 
 class Inbox(models.Model):
     # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    # sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
+    # recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
+    # content = models.TextField()
+    # timestamp = models.DateTimeField(auto_now_add=True)
+    author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
+    data = models.JSONField(default=dict, blank=True, null=True)
