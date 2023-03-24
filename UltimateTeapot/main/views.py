@@ -34,6 +34,28 @@ from rest_framework.generics import ListCreateAPIView
 from urllib.parse import urlparse
 from django.conf import settings
 
+
+@login_required(login_url='login')
+def post(request, id):
+    #check if post_id exist
+    #for now if post doesnt exist back to home
+    
+    new_post = Post.objects.get(id=id)
+    current_user = request.user.profile
+    
+    if current_user == new_post.author:
+        messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
+        return render(request, "post.html", {"post":new_post, "whatever": "dev"})
+        
+    elif current_user not in new_post.author.friends.all():
+        # User is not authorized to view this post.
+        # Redirect to a login page or display an error message.
+        messages.add_message(request, messages.INFO, 'You cannot view this post. This is a friend posts. Only author and his/her friends can see.')
+        return not_friend(request)
+    else:
+        # User is authorized to view this post.
+        #return render(request, 'view_post.html', {'post': post})
+        return render(request, "post.html", {"post":new_post, "whatever": "dev"})
 @login_required(login_url='signin')
 def index(request):
     return render(request, 'index.html')
@@ -80,8 +102,8 @@ def signup(request):
             user_model = User.objects.get(username=username)
 
             host = request.get_host()
-            uniqueID = uuid.uuid4()
-            authorID = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + str(uniqueID)
+            uniqueUserID = uuid.uuid4()
+            authorID = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + str(uniqueUserID)
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
             profile_image = form.cleaned_data.get('profile_image')
@@ -126,23 +148,26 @@ def logout(request):
 
     #request.user => User => Profile
 @login_required(login_url='signin')
-def upload(request):
+def posts(request):
     if request.method == 'POST':
         upload_form = UploadForm(request.POST, request.FILES)
         if upload_form.is_valid():
             # upload_form.save()
             current_user = User.objects.get(username=request.user)
             author_profile = Profile.objects.get(user=current_user)
-            uniqueID = uuid.uuid4()
-            post_id = author_profile.id + "/posts/" + str(uniqueID)
+            uniquePostID = uuid.uuid4()
+            post_id = author_profile.id + "/posts/" + str(uniquePostID)
             image = request.FILES.get('image')
-            text_post = request.POST['text_post']
-            post_type = request.POST['post_type']
-            # if 'is_public' in request.POST and request.POST['is_public'] == 'on':
-            #     is_public = True
-            # else:
-            #     is_public = False
-            new_post = Post.objects.create(post_id=post_id ,author=author_profile, image=image, text_post=text_post, post_type=post_type)
+            content = request.POST['content']
+            visibility = request.POST['visibility']
+            if('unlisted' in request.POST):
+                unlisted = request.POST['unlisted']
+            else:
+                unlisted = False
+                
+            if(unlisted == 'on'):
+                unlisted = True
+            new_post = Post.objects.create(id=post_id ,author=author_profile, image=image, content=content, visibility=visibility, unlisted=unlisted)
             new_post.save()
 
         #return redirect('home')
@@ -186,24 +211,29 @@ def home(request):
 
         # posts = Post.objects.all().order_by("-pub_date")
         current_user_posts = None 
-        
+        author_list = Profile.objects.all() 
         if request.user.is_authenticated:
             if request.user.is_staff:
                 current_user_posts = Post.objects.all().order_by("-pub_date")
             else:
                 current_user = User.objects.get(username=request.user)
                 author_profile = Profile.objects.get(user=current_user)
-                public_posts = Post.objects.filter(post_type=1)
-                private_posts = Post.objects.filter(post_type=0, author=author_profile)
-
-                current_user_posts =(public_posts | private_posts).order_by("-pub_date")
-        
-         
-        # else:
-            #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
+                public_posts = Post.objects.filter(visibility='PUBLIC')
+                # private_posts = Post.objects.filter(post_type__in=[0, 2], author=author_profile)
+                # unlisted_posts = Post.objects.filter(post_type=4)
+                # private_posts_of_friends = Post.objects.none()
+                friend_posts = Post.objects.none()
+                my_friends = author_profile.friends.all()
+                
+                for profile in my_friends:
+                    friend_posts |= Post.objects.filter(visibility='FRIENDS', author=profile)
+           
+                current_user_posts =(public_posts | friend_posts).order_by("-pub_date")
+                #print("HAHA: ", current_user_posts[0].visibility,current_user_posts[0].text_post )
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
+        
+        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form, "authors": author_list})
 
 def inbox(request):
     

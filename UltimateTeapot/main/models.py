@@ -80,7 +80,7 @@ class Post(models.Model):
     #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)
     #Visibility
-    post_type = models.IntegerField(default=0)
+    visibility = models.CharField(max_length=10, default="")
     #Unlisted
     unlisted = models.BooleanField(default=False)
 
@@ -90,7 +90,7 @@ class Post(models.Model):
     def __str__(self):
         return(f"{self.author} "
               f"({self.pub_date:%Y-%m-%d %H:%M}): "
-              f"{self.text_post}"
+              f"{self.content}"
         )
     
 class Like(models.Model):

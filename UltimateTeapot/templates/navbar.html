@@ -1,47 +1,47 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'home' %}">Ultimate Teapot</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'authors' %}">Authors</a>
-          </li>
-
-        </ul>
-        {% if user.is_authenticated %}
-        <a href="{{ user.profile.id }}">Friends</a>
-        <a href="{% url 'authors' %}">Authors</a>
-        <a href="{% url 'logout' %}"> Log Out</a>
-        {% endif %}
-      </div>
-
-          {% if user.is_authenticated %}
-
-          <li class="nav-item">
-            <a class="nav-link" 
-
-              href="{{ user.profile.id }}">My Profile</a>
-
-          </li>
-          {% endif %}
-        </ul>
-        
-      </div>
-
-        {% if user.is_authenticated %}
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'home' %}">Ultimate Teapot</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link" 
-            href="{% url 'profile' request.user.username  %}">My Profile</a>
+          href="{% url 'authors' %}">Authors</a>
+        </li>
+
+      </ul>
+      {% if user.is_authenticated %}
+      <a href="{% url 'profile' user.profile.id %}">Friends</a>
+      <a href="{% url 'authors' %}">Authors</a>
+      <a href="{% url 'logout' %}"> Log Out</a>
+      {% endif %}
+    </div>
+
+        {% if user.is_authenticated %}
+
+        <li class="nav-item">
+          <a class="nav-link" 
+
+            href="{{ user.profile.id }}">My Profile</a>
+
         </li>
         {% endif %}
-          
-        </ul>
+      </ul>
+      
+    </div>
 
-      </div>
+      {% if user.is_authenticated %}
+      <li class="nav-item">
+        <a class="nav-link" 
+          href="{% url 'profile' request.user.username  %}">My Profile</a>
+      </li>
+      {% endif %}
+        
+      </ul>
 
     </div>
-  </nav>
+
+  </div>
+</nav>
