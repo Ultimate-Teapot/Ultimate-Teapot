@@ -386,10 +386,14 @@ class PostsList(ListCreateAPIView):
 
     def perform_create(self, serializer):
         uri = self.request.build_absolute_uri('?')
-        profile_id = uri.replace("/posts/", "") # GERARD PLZ FIX MEUSDO TODOTODOTODOTODO
+        profile_id = uri.replace("/posts/", "") # GERARD PLZ FIX MEUSDO TODOTODO TODOTODO
         #profile_id = self.kwargs.get(self.lookup_url_kwarg)
         profile_instance = Profile.objects.get(id=profile_id)
-        post = serializer.save(author=profile_instance,content=self.request.data["content"])
+
+        uniqueID = uuid.uuid4()
+        post_id = uri + str(uniqueID)
+
+        post = serializer.save(id=post_id,author=profile_instance,content=self.request.data["content"])
         return post
 
     # def get(self, request, id):
@@ -410,7 +414,7 @@ class SinglePost(APIView):
     def get(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         print(uri)
-        posts = Post.objects.get(post_id=str(uri))
+        posts = Post.objects.get(id=str(uri))
         serializer = PostsSerializer(posts)
 
         # print(serializer.data)

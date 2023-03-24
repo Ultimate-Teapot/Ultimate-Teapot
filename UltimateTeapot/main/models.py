@@ -74,10 +74,11 @@ class Post(models.Model):
     
 
     #TO_DO ADD COMMENTS AND COMMENT SRC
-    
+
 
 
     #Published
+    #pub_date = models.DateTimeField(auto_now=False,auto_now_add=True)
     pub_date = models.DateTimeField(default=datetime.datetime.now)
     #Visibility
     post_type = models.IntegerField(default=0)

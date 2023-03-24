@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from .models import Profile, Post, Comment, Inbox, FollowRequest
 from rest_framework import serializers
-from rest_framework.serializers import CharField, DateTimeField
+from rest_framework.serializers import CharField, DateTimeField, IntegerField
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,18 +33,30 @@ class PostsSerializer(serializers.ModelSerializer):
     type = CharField(read_only=True)
     categories = serializers.SerializerMethodField('get_categories')
     comments = serializers.SerializerMethodField('get_comments')
-    
+    id = CharField(required = False, read_only = True)
+    count = IntegerField(required=False,read_only=True)
+    source = serializers.SerializerMethodField("get_source",required=False)
+    origin = serializers.SerializerMethodField("get_origin",required=False)
+
+
+    def get_source(self,instance):
+        return instance.id
+        
+    def get_origin(self,instance):
+        return instance.id
+
     def get_categories(self, instance):
         return ['web','tutorial','hack']
     
     def get_comments(self, instance):
         return "TODO"
 
-    published = DateTimeField(source="pub_date")
+    published = DateTimeField(read_only=True,required=False,source="pub_date")
 
     class Meta:
         model = Post
-        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','unlisted','likes'] # add back is_public
+        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','unlisted'] # add back is_public
+
 
     # def create(self,validated_data):
     #     return Post.objects.create(**validated_data)
