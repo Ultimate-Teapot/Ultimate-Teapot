@@ -1,6 +1,7 @@
 from django.urls import path,include
 from . import views
-from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList, Commentlist
+from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList, Commentlist, singleFollowerList, ImagePostsList,inboxLikes,commentLikes,postLikes,likedList,InboxList
+
 
 
 # from rest_framework import routers
@@ -38,4 +39,14 @@ urlpatterns = [
   path('api/authors/<str:id>/posts/', PostsList.as_view(), name='posts_api'),
   path('api/authors/<str:id>/posts/<str:pid>', SinglePost.as_view(), name='post_api'),
   path('api/authors/<str:id>/posts/<str:pid>/comments', Commentlist.as_view(), name='post_api'),
+  path('api/authors/<str:id>/followers',FollowerList.as_view(),name="followers_api"),
+  path('api/authors/<str:id>/followers/<str:fid>', singleFollowerList.as_view(),name="follower_api"),
+  path('api/authors/<str:id>/posts/<str:pid>/image', ImagePostsList.as_view(), name='image_api'),
+  path('api/authors/<str:id>/inbox/',inboxLikes.as_view(), name="inbox_likes"),
+  path('api/authors/<str:id>/posts/<str:pid>/likes',postLikes.as_view(), name="post_likes"),
+  path('api/authors/<str:id>/posts/<str:pid>/comments<str:cid>/likes',commentLikes.as_view(), name="comment_likes"),
+  path('api/authors/<str:id>/liked', likedList.as_view(),name="liked"),
+  path('api/authors/<str:id>/inbox', InboxList.as_view(),name="Inbox"),
+
+
 ]

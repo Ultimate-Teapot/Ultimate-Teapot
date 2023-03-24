@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse
+import requests
+from requests.auth import HTTPBasicAuth
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
@@ -142,7 +144,7 @@ def upload(request):
             #     is_public = True
             # else:
             #     is_public = False
-            new_post = Post.objects.create(post_id=post_id ,author=author_profile, image=image, text_post=text_post, post_type=post_type)
+            new_post = Post.objects.create(id=post_id ,author=author_profile, image=image, content=text_post, post_type=post_type)
             new_post.save()
 
         #return redirect('home')
@@ -197,13 +199,18 @@ def home(request):
                 private_posts = Post.objects.filter(post_type=0, author=author_profile)
 
                 current_user_posts =(public_posts | private_posts).order_by("-pub_date")
-        
+
+        res = requests.get('https://sd7-api.herokuapp.com/api/authors/d3bb924f-f37b-4d14-8d8e-f38b09703bab/posts/9095cfd8-8f6a-44aa-b75b-7d2abfb5f694/', auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
+        foreign_post = res.json()
+
+        res2 = requests.get('https://social-t30.herokuapp.com/api/authors/15e3f8db-614c-4410-ab76-9cb737a54a95/posts/7598008a-0e75-4ca6-99fc-56ec1cba1db0/')
+        foreign_post2 = res2.json()
          
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
+        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form, "foreign_post":foreign_post, "foreign_post2":foreign_post2})
 
 def inbox(request):
     
@@ -383,6 +390,16 @@ class FollowerList(APIView):
         return Response(updated_data, status=status.HTTP_200_OK)
 
 
+class singleFollowerList(APIView):
+    def get(self, request, id,fid):
+        pass
+
+    def post(self, request, id,fid):
+        pass
+    def put(self, request, id,fid):
+        pass
+
+
 class PostsList(ListCreateAPIView):
 
     serializer_class = PostsSerializer
@@ -452,6 +469,11 @@ class SinglePost(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+class ImagePostsList(APIView):
+    def get(self, request, id, pid):
+        return Response(status=status.HTTP_200_OK)
+
+
 class Commentlist(APIView):
     def get(self, request, id, pid):
         uri = request.build_absolute_uri('?')
@@ -463,6 +485,8 @@ class Commentlist(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def post(self,request,id,pid):
+        return Response(status=status.HTTP_200_OK)
 
 class FollowRequest(APIView):
     def post(self, request, id):
@@ -471,6 +495,34 @@ class FollowRequest(APIView):
 
 
 
+class inboxLikes(APIView):
+    def post(self, request, id):
+        return Response(status=status.HTTP_200_OK)
 
-    
-    
+
+class postLikes(APIView):
+
+    def get(self, request, id,pid):
+        return Response(status=status.HTTP_200_OK)
+
+
+class commentLikes(APIView):
+
+    def get(self,request,id,pid,cid):
+        return Response(status=status.HTTP_200_OK)
+
+
+class likedList(APIView):
+    def get(self,request,id):
+        return Response(status=status.HTTP_200_OK)
+
+
+class InboxList(APIView):
+    def get(self,request,id):
+        return Response(status=status.HTTP_200_OK)
+
+    def post(self,request,id):
+        return Response(status=status.HTTP_200_OK)
+
+    def delete(self,request,id):
+        return Response(status=status.HTTP_200_OK)

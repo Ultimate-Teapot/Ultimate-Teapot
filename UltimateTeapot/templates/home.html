@@ -114,8 +114,47 @@
       
     </div>
 
+    <div class="card mb-4">
+      {% if foreign_post %}
 
+      {% if foreign_post.author.profileImage %}
+      <img src={{ foreign_post.author.profileImage }} width="50" height="50">
+      {% endif %}
+      <h>
+        By {{ foreign_post.author.displayName }}
+        </br>
+        From {{ foreign_post.author.host }}
+      </h>
 
+      <h style="font-size:40;">
+        {{ foreign_post.title }}
+      </h>
+      <p>
+        {{ foreign_post.content }}
+      </p>
+      {% endif %}
+    </div>
+
+    <div class="card mb-4">
+      {% if foreign_post2 %}
+
+      {% if foreign_post2.author.profileImage %}
+      <img src={{ foreign_post2.author.profileImage }} width="50" height="50">
+      {% endif %}
+      <h>
+        By {{ foreign_post2.author.displayName }}
+        </br>
+        From {{ foreign_post2.author.host }}
+      </h>
+
+      <h style="font-size:40;">
+        {{ foreign_post2.title }}
+      </h>
+      <p>
+        {{ foreign_post2.content }}
+      </p>
+      {% endif %}
+    </div>
 
   </div>
 </div>
