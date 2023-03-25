@@ -20,15 +20,16 @@ class Profile(models.Model):
     last_date = models.DateField(default=datetime.datetime.now)
     user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials
 
+    # Test these two later with postgres
     # List of authorIDs that are followers
-    follower_list = ArrayField(
-        models.CharField(max_length=255)
-    )
+    #follower_list = ArrayField(
+    #    models.CharField(max_length=255)
+    #)
 
     # List of authorIDs that are friends
-    friend_list = ArrayField(
-        models.CharField(max_length=255)
-    )
+    #friend_list = ArrayField(
+    #    models.CharField(max_length=255)
+    #)
 
     #DO NOT USR
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
@@ -86,7 +87,7 @@ class Post(models.Model):
     # DO NOT USE, use author_id instead
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
-    author_id = models.CharField(max_length=255)
+    # author_id = models.CharField(max_length=255) we might need this later. TODO
 
     #categories
     categories = models.CharField(max_length=200, default=['web','tutorial'])
@@ -113,7 +114,7 @@ class Post(models.Model):
     def __str__(self):
         return(f"{self.author} "
               f"({self.pub_date:%Y-%m-%d %H:%M}): "
-              f"{self.text_post}"
+              f"{self.content}"
         )
     
 class Like(models.Model):
@@ -133,7 +134,7 @@ class Comment(models.Model):
     content = models.TextField()
     author = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-    id = models.CharField(max_length=255)
+    id = models.CharField(max_length=255, primary_key=True)
 
     # DO NOT USE
     comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
@@ -163,7 +164,7 @@ class Inbox(models.Model):
     # content = models.TextField()
     # timestamp = models.DateTimeField(auto_now_add=True)
     author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
-    items = models.ManyToManyField(Object, on_delete=models.CASCADE)
+    items = models.ManyToManyField(Object)
 
     # DO NOT USE
     data = models.JSONField(default=dict, blank=True, null=True)
@@ -177,4 +178,4 @@ class Node(models.Model):
     # Our username for the service
     username = models.CharField(max_length=255)
     # Our password for the service
-    passowrd = models.CharField(max_length=255
+    passowrd = models.CharField(max_length=255)

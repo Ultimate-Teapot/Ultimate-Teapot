@@ -255,8 +255,10 @@ def authors(request):
 def profile(request, id):
     if request.user.is_authenticated:
         # user = User.objects.get(username=username)
-        uri = request.build_absolute_uri('?')
-        profile = Profile.objects.get(id=str(uri))
+        #uri = request.build_absolute_uri('?')
+        # author_id = settings.APP_HTTP + settings.APP_DOMAIN + id
+
+        profile = Profile.objects.get(id=id)
 
         if request.method == "POST":
             current_user = request.user.profile
@@ -352,11 +354,12 @@ class AuthorList(APIView):
 class SingleAuthor(APIView):
     def get(self, request, id):
 
-        uri = request.build_absolute_uri('?')
+        #uri = request.build_absolute_uri('?')
         # id = request.get_full_path().split("Author/")[1]
 
         # o = urlparse(request)
-        profile = Profile.objects.get(id=str(uri))
+
+        profile = Profile.objects.get(id=id)
         serializer = ProfileSerializer(profile)
         updated_data = serializer.data
 

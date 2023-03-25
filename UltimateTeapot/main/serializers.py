@@ -2,11 +2,17 @@ from django.contrib.auth.models import User
 from .models import Profile, Post, Comment, Inbox, FollowRequest
 from rest_framework import serializers
 from rest_framework.serializers import CharField, DateTimeField
+from django.conf import settings
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['type','id','url','host','displayName','github','profileImage']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.id
+        return representation
 
 class FollowerSerializer(serializers.ModelSerializer):
     class Meta:
