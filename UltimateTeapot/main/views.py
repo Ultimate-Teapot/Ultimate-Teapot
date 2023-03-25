@@ -401,6 +401,7 @@ class singleFollowerList(APIView):
 
 
 class PostsList(ListCreateAPIView):
+    permission_classes = [NodePermission, IsAuthenticated]
 
     serializer_class = PostsSerializer
     queryset = Post.objects.all()
@@ -433,7 +434,7 @@ class SinglePost(APIView):
     def get(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         print(uri)
-        posts = Post.objects.get(post_id=str(uri))
+        posts = Post.objects.get(id=str(uri))
         serializer = PostsSerializer(posts)
 
         # print(serializer.data)
