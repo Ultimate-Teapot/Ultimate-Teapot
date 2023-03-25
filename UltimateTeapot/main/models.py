@@ -167,3 +167,14 @@ class Inbox(models.Model):
 
     # DO NOT USE
     data = models.JSONField(default=dict, blank=True, null=True)
+
+'''
+Set up in the admin page
+'''
+class Node(models.Model):
+    # service we are connecting to
+    host = models.CharField(max_length=255)
+    # Our username for the service
+    username = models.CharField(max_length=255)
+    # Our password for the service
+    passowrd = models.CharField(max_length=255

@@ -83,7 +83,7 @@ def signup(request):
 
             host = request.get_host()
             uniqueID = uuid.uuid4()
-            authorID = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + str(uniqueID)
+            authorID = str(uniqueID) # settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" +
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
             profile_image = form.cleaned_data.get('profile_image')
@@ -91,7 +91,7 @@ def signup(request):
             new_profile = Profile.objects.create(
                 user=user_model,
                 id=authorID,
-                url=authorID,
+                url=settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + authorID,
                 host= settings.APP_HTTP + settings.APP_DOMAIN + "/",
                 displayName=display_name,
                 github=github,
@@ -110,9 +110,7 @@ def signup(request):
                 "author":authorID,
                 "items":[]
                 }
-
-                                             )
-
+            )
             new_inbox.save()
 
             user = authenticate(username=username, password=raw_password)
