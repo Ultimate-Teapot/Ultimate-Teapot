@@ -14,7 +14,7 @@ from requests.auth import HTTPBasicAuth
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
-from .models import Post, Profile, Comment, Like, FollowRequest, Inbox
+from .models import Post, Profile, Comment, Like, FollowRequest, Inbox, Node, Object
 
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
@@ -39,6 +39,30 @@ from django.conf import settings
 @login_required(login_url='signin')
 def index(request):
     return render(request, 'index.html')
+
+
+@login_required(login_url='login')
+def post(request, id):
+    # check if post_id exist
+    # for now if post doesnt exist back to home
+
+    new_post = Post.objects.get(id=id)
+    current_user = request.user.profile
+
+    if current_user == new_post.author:
+        messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
+        return render(request, "post.html", {"post": new_post})
+
+    elif current_user not in new_post.author.friends.all():
+        # User is not authorized to view this post.
+        # Redirect to a login page or display an error message.
+        messages.add_message(request, messages.INFO,
+                             'You cannot view this post. This is a friend posts. Only author and his/her friends can see.')
+        return render(request, "not_friend.html")
+    else:
+        # User is authorized to view this post.
+        # return render(request, 'view_post.html', {'post': post})
+        return render(request, "post.html", {"post": new_post})
 
 # def signup(request):
 #     if request.method == 'POST':
@@ -125,27 +149,33 @@ def logout(request):
     return redirect('signin')
 
     #request.user => User => Profile
+
+
 @login_required(login_url='signin')
-def upload(request):
+def posts(request):
     if request.method == 'POST':
         upload_form = UploadForm(request.POST, request.FILES)
         if upload_form.is_valid():
             # upload_form.save()
             current_user = User.objects.get(username=request.user)
             author_profile = Profile.objects.get(user=current_user)
-            uniqueID = uuid.uuid4()
-            post_id = author_profile.id + "/posts/" + str(uniqueID)
+            uniquePostID = uuid.uuid4()
+            post_id = author_profile.id + "/posts/" + str(uniquePostID)
             image = request.FILES.get('image')
-            text_post = request.POST['text_post']
-            post_type = request.POST['post_type']
-            # if 'is_public' in request.POST and request.POST['is_public'] == 'on':
-            #     is_public = True
-            # else:
-            #     is_public = False
-            new_post = Post.objects.create(id=post_id ,author=author_profile, image=image, content=text_post, post_type=post_type)
+            content = request.POST['content']
+            visibility = request.POST['visibility']
+            if ('unlisted' in request.POST):
+                unlisted = request.POST['unlisted']
+            else:
+                unlisted = False
+
+            if (unlisted == 'on'):
+                unlisted = True
+            new_post = Post.objects.create(id=post_id, author=author_profile, image=image, content=content,
+                                           visibility=visibility, unlisted=unlisted)
             new_post.save()
 
-        #return redirect('home')
+        # return redirect('home')
         # return render(request, 'home.html', {"upload_form":upload_form})
     # else:
     #     #return redirect('home')
@@ -185,30 +215,48 @@ def home(request):
         #         return redirect('home')
 
         # posts = Post.objects.all().order_by("-pub_date")
-        current_user_posts = None 
-        
+        current_user_posts = None
+        #author_list = Profile.objects.all()
         if request.user.is_authenticated:
             if request.user.is_staff:
                 current_user_posts = Post.objects.all().order_by("-pub_date")
             else:
                 current_user = User.objects.get(username=request.user)
                 author_profile = Profile.objects.get(user=current_user)
-                public_posts = Post.objects.filter(post_type=1)
-                private_posts = Post.objects.filter(post_type=0, author=author_profile)
+                public_posts = Post.objects.filter(visibility='PUBLIC')
+                # private_posts = Post.objects.filter(post_type__in=[0, 2], author=author_profile)
+                # unlisted_posts = Post.objects.filter(post_type=4)
+                # private_posts_of_friends = Post.objects.none()
+                friend_posts = Post.objects.none()
+                my_friends = author_profile.friends.all()
 
-                current_user_posts =(public_posts | private_posts).order_by("-pub_date")
+                for profile in my_friends:
+                    friend_posts |= Post.objects.filter(visibility='FRIENDS', author=profile)
 
-        res = requests.get('https://sd7-api.herokuapp.com/api/authors/d3bb924f-f37b-4d14-8d8e-f38b09703bab/posts/9095cfd8-8f6a-44aa-b75b-7d2abfb5f694/', auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
-        foreign_post = res.json()
+                current_user_posts = (public_posts | friend_posts).order_by("-pub_date")
+                # print("HAHA: ", current_user_posts[0].visibility,current_user_posts[0].text_post )
+
+        # res = requests.get('https://sd7-api.herokuapp.com/api/authors/d3bb924f-f37b-4d14-8d8e-f38b09703bab/posts/9095cfd8-8f6a-44aa-b75b-7d2abfb5f694/', auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
+        # foreign_post = res.json()
 
         res2 = requests.get('https://social-t30.herokuapp.com/api/authors/15e3f8db-614c-4410-ab76-9cb737a54a95/posts/7598008a-0e75-4ca6-99fc-56ec1cba1db0/')
         foreign_post2 = res2.json()
+
+        all_authors = []
+
+        nodes = Node.objects.all()
+        for node in nodes:
+            res = requests.get(settings.APP_HTTP + node.host + "/authors", auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
+            foreign_authors = res.json()
+            all_authors.extend(foreign_authors['items'])
+
+
          
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form, "foreign_post":foreign_post, "foreign_post2":foreign_post2})
+        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form, "authors":all_authors, "foreign_post2":foreign_post2})
 
 def inbox(request):
     
@@ -252,13 +300,21 @@ def authors(request):
     author_list = Profile.objects.all()
     return render(request, 'authors.html', {"authors":author_list})
 
+def singlePost(request, author_id, post_id):
+    if request.user.is_authenticated:
+
+        post = Post.objects.get(id=post_id)
+
+
+
 def profile(request, id):
     if request.user.is_authenticated:
         # user = User.objects.get(username=username)
         #uri = request.build_absolute_uri('?')
         # author_id = settings.APP_HTTP + settings.APP_DOMAIN + id
 
-        profile = Profile.objects.get(id=id)
+        #profile = Profile.objects.get(id=id)
+
 
         if request.method == "POST":
             current_user = request.user.profile

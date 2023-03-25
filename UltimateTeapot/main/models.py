@@ -31,7 +31,7 @@ class Profile(models.Model):
     #    models.CharField(max_length=255)
     #)
 
-    #DO NOT USR
+    #DO NOT USE
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
     friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
 
@@ -98,16 +98,17 @@ class Post(models.Model):
     #TO_DO ADD COMMENTS AND COMMENT SRC
     # Url to comments
     comments = models.CharField(max_length=255)
-    
 
 
     #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)
     #Visibility
-    post_type = models.IntegerField(default=0)
+    visibility = models.CharField(max_length=10, default="PUBLIC")
     #Unlisted
     unlisted = models.BooleanField(default=False)
 
+
+    # post_type = models.IntegerField(default=0)
 
     likes = models.IntegerField(default=0)
 
@@ -130,14 +131,16 @@ class Like(models.Model):
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
+    #post_id = models.CharField(max_length=255)
     content = models.TextField()
+    contentType = models.TextField(max_length=255, default='text/markdown')
     author = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     id = models.CharField(max_length=255, primary_key=True)
 
     # DO NOT USE
     comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)
@@ -178,4 +181,4 @@ class Node(models.Model):
     # Our username for the service
     username = models.CharField(max_length=255)
     # Our password for the service
-    passowrd = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
