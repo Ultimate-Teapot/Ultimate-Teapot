@@ -17,23 +17,28 @@ urlpatterns = [
   path('signup', views.signup, name='signup'),
   path('login', views.login, name='login'),
   path('logout', views.logout, name='logout'),
-  path('upload', views.upload, name='upload'),
+  #path('upload', views.upload, name='upload'),
   path('like', views.like, name='like'),
   path('home/', views.home, name="home"),
   path('<str:post_id>/like/', views.like_create, name='like_create'),
+  # ('authors/<str:author_id>')
+  path('posts/', views.posts, name='posts'),
+  path('posts/<str:id>', views.post, name='post'),
+  path('authors/<str:author_id>/posts/<str:post_id>', views.singlePost, name='singlePost'),
   path('authors/<str:id>/posts/<str:post_id>/comment/', views.comment_create, name='comment_create'),
   #path('', views.index, name='index'),
-  #path('posts/', views.posts, name='posts'),
+  #path('posts/', views.posts, name='posts'),s
   path('authors/', views.authors, name='authors'),
   path('authors/<str:id>', views.profile, name='profile'),
   path('inbox/', views.inbox, name='inbox'),
+
 
   
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 
-  path('api/authors/', AuthorList.as_view(), name='authors_api'),
+  path('api/authors', AuthorList.as_view(), name='authors_api'),
   path('api/authors/<str:id>', SingleAuthor.as_view(), name='author_api'),
   path('api/authors/<str:id>/followers', FollowerList.as_view(), name='followers_api'),
   path('api/authors/<str:id>/posts/', PostsList.as_view(), name='posts_api'),
@@ -42,7 +47,7 @@ urlpatterns = [
   path('api/authors/<str:id>/followers',FollowerList.as_view(),name="followers_api"),
   path('api/authors/<str:id>/followers/<str:fid>', singleFollowerList.as_view(),name="follower_api"),
   path('api/authors/<str:id>/posts/<str:pid>/image', ImagePostsList.as_view(), name='image_api'),
-  path('api/authors/<str:id>/inbox/',inboxLikes.as_view(), name="inbox_likes"),
+  # path('api/authors/<str:id>/inbox/',inboxLikes.as_view(), name="inbox_likes"),
   path('api/authors/<str:id>/posts/<str:pid>/likes',postLikes.as_view(), name="post_likes"),
   path('api/authors/<str:id>/posts/<str:pid>/comments<str:cid>/likes',commentLikes.as_view(), name="comment_likes"),
   path('api/authors/<str:id>/liked', likedList.as_view(),name="liked"),

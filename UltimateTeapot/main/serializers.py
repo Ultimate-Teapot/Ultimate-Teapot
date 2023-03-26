@@ -1,12 +1,22 @@
 from django.contrib.auth.models import User
-from .models import Profile, Post, Comment, Inbox, FollowRequest
+from requests.auth import HTTPBasicAuth
+
+from .models import Profile, Post, Comment, FollowRequest, Object, Node
 from rest_framework import serializers
 from rest_framework.serializers import CharField, DateTimeField
+from django.conf import settings
+from urllib.parse import urlparse
+import requests
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['type','id','url','host','displayName','github','profileImage']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.id
+        return representation
 
 class FollowerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,11 +24,14 @@ class FollowerSerializer(serializers.ModelSerializer):
         fields = ['followers']
 
 class ProfilePostSerializer(serializers.ModelSerializer):
+    # TODO: not needed?
     class Meta:
         model = Profile
-        fields = ['url','host','displayName','github','profileImage']
+        fields = ['type', 'id', 'url','host','displayName','github','profileImage']
 
     def update(self,instance,validated_data):
+        instance.type = validated_data.get('type', instance.type)
+        instance.id = validated_data.get('id', instance.id)
         instance.url = validated_data.get('url',instance.url)
         instance.host = validated_data.get('host',instance.host)
         instance.displayName = validated_data.get('displayName',instance.displayName)
@@ -28,7 +41,7 @@ class ProfilePostSerializer(serializers.ModelSerializer):
         return instance
 
 class PostsSerializer(serializers.ModelSerializer):
-    author = ProfilePostSerializer(required = False,read_only=True)
+    author = ProfileSerializer(required = False,read_only=True)
     title = CharField(required=True)
     type = CharField(read_only=True)
     categories = serializers.SerializerMethodField('get_categories')
@@ -45,6 +58,11 @@ class PostsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','unlisted','likes'] # add back is_public
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
+        return representation
 
     # def create(self,validated_data):
     #     return Post.objects.create(**validated_data)
@@ -81,11 +99,67 @@ class PostsPutSerializer(serializers.ModelSerializer):
         fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','pub_date','unlisted','likes'] # add back is_public
 
 class FollowRequestSerializer(serializers.ModelSerializer):
-    actor = ProfileSerializer()
-    object = ProfileSerializer()
+    # actor = ProfileSerializer()
+    # object = ProfileSerializer()
     class Meta:
-        model = FollowRequest
-        fields = ['type','summary','actor','object' ]
+        model = Object
+        fields = ['type']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        actor_id = instance.actor
+        #actor_url = urlparse(actor_id)
+        root = actor_id.split('/authors')[0]
+        host = root.split('//')[1]
+
+        node = Node.objects.get(host=host)
+        actor_object = requests.get(actor_id, auth=HTTPBasicAuth(node.username, node.password))
+        actor_json = actor_object.json()
+
+        object_id = instance.object
+        object_json = ProfileSerializer(Profile.objects.get(url=object_id)).data
+
+        representation['type'] = "Follow"
+        representation['summary'] = actor_json["displayName"] + " wants to follow " + object_json["displayName"]
+
+        representation['actor'] = actor_json
+        representation['object'] =object_json
+
+        return representation
+
+class InboxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['type']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['type'] = "inbox"
+        representation['author'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.id
+
+        items = []
+        for item in instance.inbox.all():
+            if item.type == "Follow":
+                follow = FollowRequestSerializer(item).data
+                items.append(follow)
+            elif item.type == "post":
+                id = item.object_id
+                # actor_url = urlparse(actor_id)
+                root = id.split('/authors')[0]
+                host = root.split('//')[1]
+
+                node = Node.objects.get(host=host)
+                post = requests.get(id, auth=HTTPBasicAuth(node.username, node.password))
+                post_json = post.json()
+
+                items.append(post_json)
+
+
+
+        representation['items'] = items
+
+        return representation
 
 
 # from django.contrib.auth.models import User

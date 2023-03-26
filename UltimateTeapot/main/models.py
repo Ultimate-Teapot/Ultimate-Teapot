@@ -1,10 +1,20 @@
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 import uuid
 import datetime
 
+class Object(models.Model):
+    # post, comment, like or FollowRequest
+    type = models.TextField()
+    # If the object is post, comment or like:
+    object_id = models.CharField(max_length=255)
+
+    # If the object is a follow request:
+    actor = models.CharField(max_length=255)
+    object = models.CharField(max_length=255)
 
 class Profile(models.Model):
     # TO BE SENT AS JSON #
@@ -18,6 +28,21 @@ class Profile(models.Model):
     
     last_date = models.DateField(default=datetime.datetime.now)
     user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials
+
+    inbox = models.ManyToManyField(Object)
+
+    # Test these two later with postgres
+    # List of authorIDs that are followers
+    #follower_list = ArrayField(
+    #    models.CharField(max_length=255)
+    #)
+
+    # List of authorIDs that are friends
+    #friend_list = ArrayField(
+    #    models.CharField(max_length=255)
+    #)
+
+    #DO NOT USE
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
     friends = models.ManyToManyField("self", related_name="friends_with", symmetrical=False, blank=True)
 
@@ -26,6 +51,12 @@ class Profile(models.Model):
         return self.displayName
 
 class FollowRequest(models.Model):
+    # id of author sending the request
+    actor = models.CharField(max_length=255)
+    # id of author recieving the request
+    object = models.CharField(max_length=255)
+
+    # DO NOT USE
     sender = models.ForeignKey(User, related_name="sender", on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name="receiver", on_delete=models.CASCADE)
 
@@ -64,8 +95,10 @@ class Post(models.Model):
     content = models.TextField()
 
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
-    #author
+    # DO NOT USE, use author_id instead
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+
+    # author_id = models.CharField(max_length=255) we might need this later. TODO
 
     #categories
     categories = models.CharField(max_length=200, default=['web','tutorial'])
@@ -74,35 +107,51 @@ class Post(models.Model):
     
 
     #TO_DO ADD COMMENTS AND COMMENT SRC
-    
+    # Url to comments
+    comments = models.CharField(max_length=255)
 
 
     #Published
     pub_date = models.DateTimeField(default=datetime.datetime.now)
     #Visibility
-    post_type = models.IntegerField(default=0)
+    visibility = models.CharField(max_length=10, default="PUBLIC")
     #Unlisted
     unlisted = models.BooleanField(default=False)
 
+
+    # post_type = models.IntegerField(default=0)
 
     likes = models.IntegerField(default=0)
 
     def __str__(self):
         return(f"{self.author} "
               f"({self.pub_date:%Y-%m-%d %H:%M}): "
-              f"{self.text_post}"
+              f"{self.content}"
         )
     
 class Like(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
-    like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
+    # id of the object being liked
+    object_id = models.CharField(max_length=255)
+    author_id = models.CharField(max_length=255)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Please DO NOT USE
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
+    like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
+
+
 class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
+    #post_id = models.CharField(max_length=255)
     content = models.TextField()
-    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
+    contentType = models.TextField(max_length=255, default='text/markdown')
+    author = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+    id = models.CharField(max_length=255, primary_key=True)
+
+    # DO NOT USE
+    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)
@@ -112,11 +161,27 @@ class Comment(models.Model):
 #     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
 #     author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_comment_like')
 
-class Inbox(models.Model):
-    # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    # sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
-    # recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
-    # content = models.TextField()
-    # timestamp = models.DateTimeField(auto_now_add=True)
-    author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
-    data = models.JSONField(default=dict, blank=True, null=True)
+
+
+# class Inbox(models.Model):
+#     # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+#     # sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
+#     # recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
+#     # content = models.TextField()
+#     # timestamp = models.DateTimeField(auto_now_add=True)
+#     author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
+#     items = models.ManyToManyField(Object)
+#
+#     # DO NOT USE
+#     data = models.JSONField(default=dict, blank=True, null=True)
+
+'''
+Set up in the admin page
+'''
+class Node(models.Model):
+    # service we are connecting to
+    host = models.CharField(max_length=255)
+    # Our username for the service
+    username = models.CharField(max_length=255)
+    # Our password for the service
+    password = models.CharField(max_length=255)

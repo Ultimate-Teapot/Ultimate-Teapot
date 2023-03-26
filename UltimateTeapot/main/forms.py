@@ -3,27 +3,28 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
 from .models import Post, Comment
 
-POST_TYPE = [
-    (0, 'Private (Only you can see)'),
-    (1, 'Public (Everyone can see)'),
-    (2, 'Private (Only your friends can see)'),
-    (3, 'Private (Only people you send this post can see)'),
-    (4, 'Unlisted (Only accessible via link)')
+VISIBILITY = [
+    ('PUBLIC', 'PUBLIC'),
+    ('FRIENDS', 'FRIENDS'),
 ]
+
+
 class UploadForm(forms.ModelForm):
-    text_post = forms.CharField(required=True, 
-        widget=forms.widgets.Textarea(
-            attrs = {
-                "placeholder": "Enter Your Thoughts!",
-                "class": "form-control",
-            }
-            ),
-            label = "",
-        )
-    post_type = forms.CharField(label='Who would you like to share your post?', widget=forms.RadioSelect(choices=POST_TYPE))
+    content = forms.CharField(required=True,
+                              widget=forms.widgets.Textarea(
+                                  attrs={
+                                      "placeholder": "Enter Your Thoughts!",
+                                      "class": "form-control",
+                                  }
+                              ),
+                              label="",
+                              )
+    visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
+    unlisted = forms.BooleanField(label='Unlisted?', required=False)
+
     class Meta:
         model = Post
-        fields = ( 'title','text_post', 'image', 'post_type')
+        fields = ('title', 'content', 'image', 'visibility', 'unlisted')
         # labels = {'is_public': 'Make post public?'}
         exclude = ("user", "visibility", "likes", 'author')
 
