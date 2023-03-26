@@ -6,6 +6,15 @@ from django.db.models.signals import post_save
 import uuid
 import datetime
 
+class Object(models.Model):
+    # post, comment, like or FollowRequest
+    type = models.TextField()
+    # If the object is post, comment or like:
+    object_id = models.CharField(max_length=255)
+
+    # If the object is a follow request:
+    actor = models.CharField(max_length=255)
+    object = models.CharField(max_length=255)
 
 class Profile(models.Model):
     # TO BE SENT AS JSON #
@@ -19,6 +28,8 @@ class Profile(models.Model):
     
     last_date = models.DateField(default=datetime.datetime.now)
     user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials
+
+    inbox = models.ManyToManyField(Object)
 
     # Test these two later with postgres
     # List of authorIDs that are followers
@@ -150,27 +161,19 @@ class Comment(models.Model):
 #     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
 #     author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='author_comment_like')
 
-class Object(models.Model):
-    # post, comment, like or FollowRequest
-    type = models.TextField()
-    # If the object is post, comment or like:
-    object_id = models.CharField(max_length=255)
 
-    # If the object is a follow request:
-    actor = models.CharField(max_length=255)
-    object = models.CharField(max_length=255)
 
-class Inbox(models.Model):
-    # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    # sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
-    # recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
-    # content = models.TextField()
-    # timestamp = models.DateTimeField(auto_now_add=True)
-    author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
-    items = models.ManyToManyField(Object)
-
-    # DO NOT USE
-    data = models.JSONField(default=dict, blank=True, null=True)
+# class Inbox(models.Model):
+#     # author = models.ForeignKey(Profile, on_delete=models.CASCADE)
+#     # sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sent_messages')
+#     # recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='received_messages')
+#     # content = models.TextField()
+#     # timestamp = models.DateTimeField(auto_now_add=True)
+#     author = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True)
+#     items = models.ManyToManyField(Object)
+#
+#     # DO NOT USE
+#     data = models.JSONField(default=dict, blank=True, null=True)
 
 '''
 Set up in the admin page

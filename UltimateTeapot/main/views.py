@@ -14,7 +14,7 @@ from requests.auth import HTTPBasicAuth
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
-from .models import Post, Profile, Comment, Like, FollowRequest, Inbox, Node, Object
+from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object
 
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
@@ -25,7 +25,7 @@ from django.contrib import messages
 from rest_framework import viewsets
 from rest_framework import permissions
 from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostsPutSerializer, \
-    FollowerSerializer, ProfilePostSerializer
+    FollowerSerializer, ProfilePostSerializer, InboxSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
@@ -127,15 +127,15 @@ def signup(request):
 
             new_profile.save()
 
-            new_inbox = Inbox.objects.create(
-                author=new_profile,
-                data={
-                "type":"inbox",
-                "author":authorID,
-                "items":[]
-                }
-            )
-            new_inbox.save()
+            # new_inbox = Inbox.objects.create(
+            #     author=new_profile,
+            #     data={
+            #     "type":"inbox",
+            #     "author":authorID,
+            #     "items":[]
+            #     }
+            # )
+            # new_inbox.save()
 
             user = authenticate(username=username, password=raw_password)
             login(request, user)
@@ -160,7 +160,7 @@ def posts(request):
             current_user = User.objects.get(username=request.user)
             author_profile = Profile.objects.get(user=current_user)
             uniquePostID = uuid.uuid4()
-            post_id = author_profile.id + "/posts/" + str(uniquePostID)
+            post_id = str(uniquePostID)
             image = request.FILES.get('image')
             content = request.POST['content']
             visibility = request.POST['visibility']
@@ -199,6 +199,9 @@ def home(request):
                 post = form.save(commit=False)
                 post.author = request.user.profile
                 post.save()
+
+
+
                 messages.success(request, ("You Successfully Posted!"))
                 return redirect('home')
 
@@ -246,7 +249,7 @@ def home(request):
 
         nodes = Node.objects.all()
         for node in nodes:
-            res = requests.get(settings.APP_HTTP + node.host + "/authors", auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
+            res = requests.get(settings.APP_HTTP + node.host + "/authors", auth=HTTPBasicAuth(node.username, node.password))
             foreign_authors = res.json()
             all_authors.extend(foreign_authors['items'])
 
@@ -260,41 +263,14 @@ def home(request):
 
 def inbox(request):
     
-    followRequests = FollowRequest.objects.filter(receiver=request.user)
+    #followRequests = FollowRequest.objects.filter(receiver=request.user)
     #postMessage = Post.objects.filter(reciever = request.user)
 
     curr_user = request.user.profile
-    following = curr_user.users_following
-    post_list = []
-    for user in following.all():
-        print(user)
-        post = Post.objects.filter(author=user)
-        for p in post.all():
-            post_list.append(p)
-    print(post_list)
-
-    
-
-    
-    if request.method == "POST":
-        senderName = request.POST['accept']
-        sender = User.objects.get(username=senderName)
-        followRequest = FollowRequest.objects.get(sender=sender, receiver=request.user)
+    inbox = curr_user.inbox.all()
 
 
-        senderProfile = followRequest.sender.profile
-        receiverProfile = followRequest.receiver.profile
-        receiverProfile.followers.add(senderProfile)
-
-        if senderProfile in receiverProfile.users_following.all():
-            receiverProfile.friends.add(senderProfile)
-            senderProfile.friends.add(receiverProfile)
-
-        followRequest.delete()
-        return render(request, 'inbox.html', {"followRequests":followRequests})
-
-
-    return render(request, 'inbox.html', {"followRequests":followRequests, "posts":post_list})
+    return render(request, 'inbox.html', {"items":inbox})
 
 def authors(request):
     author_list = Profile.objects.all()
@@ -408,6 +384,7 @@ class AuthorList(APIView):
 
 
 class SingleAuthor(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
 
         #uri = request.build_absolute_uri('?')
@@ -489,9 +466,8 @@ class SinglePost(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request, id, pid):
-        uri = request.build_absolute_uri('?')
-        print(uri)
-        posts = Post.objects.get(id=str(uri))
+        # uri = request.build_absolute_uri('?')
+        posts = Post.objects.get(id=pid)
         serializer = PostsSerializer(posts)
 
         # print(serializer.data)
@@ -499,9 +475,9 @@ class SinglePost(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, id, pid, format=None):
-        uri = request.build_absolute_uri('?')
+        # uri = request.build_absolute_uri('?')
         try:
-            postobj = Post.objects.get(post_id=str(uri))
+            postobj = Post.objects.get(post_id=pid)
         except postobj.DoesNotExist:
             raise Http404
         serializer = PostsSerializer(postobj, data=request.data)
@@ -513,7 +489,7 @@ class SinglePost(APIView):
     def put(self, request, id, pid, format=None):
         uri = request.build_absolute_uri('?')
         try:
-            postobj = Post.objects.get(post_id=str(uri))
+            postobj = Post.objects.get(post_id=pid)
         except postobj.DoesNotExist:
             serializer = PostsPutSerializer(postobj, data=request.data)
             if serializer.is_valid():
@@ -523,7 +499,7 @@ class SinglePost(APIView):
 
     def delete(self, request, id, pid):
         uri = request.build_absolute_uri('?')
-        Post.objects.get(post_id=str(uri)).delete()
+        Post.objects.get(post_id=pid).delete()
         return Response(status=status.HTTP_200_OK)
 
 
@@ -577,10 +553,42 @@ class likedList(APIView):
 
 class InboxList(APIView):
     def get(self,request,id):
-        return Response(status=status.HTTP_200_OK)
+        profile = Profile.objects.get(id=id)
+        serializer = InboxSerializer(profile)
+        updated_data = serializer.data
+
+        return Response(updated_data, status=status.HTTP_200_OK)
 
     def post(self,request,id):
+        profile = Profile.objects.get(id=id)
+        data = request.data
+        type = data["type"]
+
+        if type == "Follow":
+            object = Object.objects.create(
+                type="Follow",
+                actor=data["actor"]["id"],
+                object=data["object"]["id"],
+            )
+            profile.inbox.add(object)
+            profile.save()
+            return Response(status=status.HTTP_200_OK)
+
+        elif type == "post":
+            object = Object.objects.create(
+                type="post",
+                object_id=data["id"]
+            )
+            profile.inbox.add(object)
+            profile.save()
+            return Response(status=status.HTTP_200_OK)
+
         return Response(status=status.HTTP_200_OK)
 
     def delete(self,request,id):
+        # clear the inbox
+        profile = Profile.objects.get(id=id)
+        profile.inbox.clear()
+        profile.save()
+
         return Response(status=status.HTTP_200_OK)

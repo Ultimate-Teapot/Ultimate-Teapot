@@ -38,7 +38,7 @@ urlpatterns = [
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 
-  path('api/authors/', AuthorList.as_view(), name='authors_api'),
+  path('api/authors', AuthorList.as_view(), name='authors_api'),
   path('api/authors/<str:id>', SingleAuthor.as_view(), name='author_api'),
   path('api/authors/<str:id>/followers', FollowerList.as_view(), name='followers_api'),
   path('api/authors/<str:id>/posts/', PostsList.as_view(), name='posts_api'),
@@ -47,7 +47,7 @@ urlpatterns = [
   path('api/authors/<str:id>/followers',FollowerList.as_view(),name="followers_api"),
   path('api/authors/<str:id>/followers/<str:fid>', singleFollowerList.as_view(),name="follower_api"),
   path('api/authors/<str:id>/posts/<str:pid>/image', ImagePostsList.as_view(), name='image_api'),
-  path('api/authors/<str:id>/inbox/',inboxLikes.as_view(), name="inbox_likes"),
+  # path('api/authors/<str:id>/inbox/',inboxLikes.as_view(), name="inbox_likes"),
   path('api/authors/<str:id>/posts/<str:pid>/likes',postLikes.as_view(), name="post_likes"),
   path('api/authors/<str:id>/posts/<str:pid>/comments<str:cid>/likes',commentLikes.as_view(), name="comment_likes"),
   path('api/authors/<str:id>/liked', likedList.as_view(),name="liked"),
