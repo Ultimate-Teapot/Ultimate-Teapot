@@ -11,12 +11,18 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 import django_on_heroku
+import dotenv
 from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+env_file = os.path.join(BASE_DIR, ".env")
+if os.path.isfile(env_file):
+    dotenv.load_dotenv(env_file)
 
+APP_DOMAIN = os.getenv("DOMAIN")
+APP_HTTP = os.getenv("HTTP_SCHEME")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/

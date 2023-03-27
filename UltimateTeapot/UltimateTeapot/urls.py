@@ -18,6 +18,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
 from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
@@ -25,6 +27,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("main/", include("main.urls")),
     path("main/", include("django.contrib.auth.urls")),
+
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "docs/",
+        SpectacularSwaggerView.as_view(
+            template_name="swagger-ui.html", url_name="schema"
+        ),
+        name="swagger-ui",
+    ),
     #path('api_schema',get_schema_view(title="API Schema",description="Guide for the REST API"), name="api_schema"),
     
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -11,6 +11,7 @@ paths:
       - main
       security:
       - basicAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -20,6 +21,7 @@ paths:
       - main
       security:
       - basicAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -73,34 +75,17 @@ paths:
       responses:
         '200':
           description: No response body
-  /main/api/authors/{id}/posts/:
+  /main/api/authors/{id}/followers/{fid}:
     get:
-      operationId: main_api_authors_posts_retrieve
+      operationId: main_api_authors_followers_retrieve_2
       parameters:
       - in: path
-        name: id
-        schema:
-          type: string
-        required: true
-      tags:
-      - main
-      security:
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /main/api/authors/{id}/posts/{pid}:
-    get:
-      operationId: main_api_authors_posts_retrieve_2
-      parameters:
-      - in: path
-        name: id
+        name: fid
         schema:
           type: string
         required: true
       - in: path
-        name: pid
+        name: id
         schema:
           type: string
         required: true
@@ -113,7 +98,192 @@ paths:
         '200':
           description: No response body
     post:
+      operationId: main_api_authors_followers_create
+      parameters:
+      - in: path
+        name: fid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: main_api_authors_followers_update
+      parameters:
+      - in: path
+        name: fid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/inbox:
+    get:
+      operationId: main_api_authors_inbox_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: main_api_authors_inbox_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: main_api_authors_inbox_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /main/api/authors/{id}/inbox/:
+    post:
+      operationId: main_api_authors_inbox_create_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/liked:
+    get:
+      operationId: main_api_authors_liked_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/posts/:
+    get:
+      operationId: main_api_authors_posts_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostsList'
+          description: ''
+    post:
       operationId: main_api_authors_posts_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Posts'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Posts'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Posts'
+        required: true
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Posts'
+          description: ''
+  /main/api/authors/{id}/posts/{pid}:
+    get:
+      operationId: main_api_authors_posts_retrieve
       parameters:
       - in: path
         name: id
@@ -129,7 +299,26 @@ paths:
       - main
       security:
       - basicAuth: []
-      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: main_api_authors_posts_create_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
       responses:
         '200':
           description: No response body
@@ -150,7 +339,6 @@ paths:
       - main
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -171,7 +359,6 @@ paths:
       - main
       security:
       - basicAuth: []
-      - {}
       responses:
         '204':
           description: No response body
@@ -197,7 +384,204 @@ paths:
       responses:
         '200':
           description: No response body
+    post:
+      operationId: main_api_authors_posts_comments_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/posts/{pid}/comments{cid}/likes:
+    get:
+      operationId: main_api_authors_posts_comments_likes_retrieve
+      parameters:
+      - in: path
+        name: cid
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/posts/{pid}/image:
+    get:
+      operationId: main_api_authors_posts_image_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /main/api/authors/{id}/posts/{pid}/likes:
+    get:
+      operationId: main_api_authors_posts_likes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: pid
+        schema:
+          type: string
+        required: true
+      tags:
+      - main
+      security:
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
 components:
+  schemas:
+    PaginatedPostsList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Posts'
+    Posts:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+        title:
+          type: string
+        id:
+          type: string
+          maxLength: 200
+        source:
+          type: string
+          format: uri
+          maxLength: 200
+        origin:
+          type: string
+          format: uri
+          maxLength: 200
+        description:
+          type: string
+        contentType:
+          type: string
+          maxLength: 100
+        content:
+          type: string
+        author:
+          allOf:
+          - $ref: '#/components/schemas/ProfilePost'
+          readOnly: true
+        categories:
+          type: string
+          readOnly: true
+        count:
+          type: integer
+        comments:
+          type: string
+          readOnly: true
+        published:
+          type: string
+          format: date-time
+        unlisted:
+          type: boolean
+        likes:
+          type: integer
+      required:
+      - author
+      - categories
+      - comments
+      - content
+      - id
+      - origin
+      - published
+      - source
+      - title
+      - type
+    ProfilePost:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        host:
+          type: string
+          format: uri
+          maxLength: 200
+        displayName:
+          type: string
+          maxLength: 100
+        github:
+          type: string
+          format: uri
+          maxLength: 200
+        profileImage:
+          type: string
+          format: uri
+          maxLength: 200
+      required:
+      - displayName
+      - github
+      - host
+      - profileImage
+      - url
   securitySchemes:
     basicAuth:
       type: http
