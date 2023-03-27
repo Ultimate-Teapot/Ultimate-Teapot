@@ -23,15 +23,18 @@ class UploadForm(forms.ModelForm):
     #                           widget=forms.widgets.Textarea(
     #                           ))
     
+    
     visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
     unlisted = forms.BooleanField(label='Unlisted?', required=False)
+    contentType = forms.CharField(required=False,read_only=True)
+
     #image = forms.ImageField()
     
 
 
     class Meta:
         model = Post
-        fields = ('title', 'content','image', 'visibility', 'unlisted')
+        fields = ('title', 'content','image', 'visibility', 'unlisted','contentType')
         # labels = {'is_public': 'Make post public?'}
         exclude = ("user", "visibility", "likes", 'author')
 

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'rest_framework',
     'drf_spectacular',
+    'markdownify.apps.MarkdownifyConfig',
 ]
 
 MIDDLEWARE = [
@@ -163,5 +164,18 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
 }
+
+MARKDOWNIFY = {
+   "default": {
+      "WHITELIST_TAGS": ["a", "p", "h1", ]
+   },
+
+   "alternative": {
+      "WHITELIST_TAGS": ["a", "p", ],
+      "MARKDOWN_EXTENSIONS": ["markdown.extensions.fenced_code", ]
+   }
+}
+
+
 
 django_on_heroku.settings(locals())
