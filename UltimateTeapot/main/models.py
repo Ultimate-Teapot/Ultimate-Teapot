@@ -90,9 +90,10 @@ class Post(models.Model):
     #description
     description = models.TextField(blank=True)
     #Conent-type
-    contentType = models.CharField(max_length=100,default="text/plain")
+    contentType = models.CharField(max_length=100)
     #Content
     content = models.TextField()
+    markdown_content = models.TextField()
 
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
     # DO NOT USE, use author_id instead

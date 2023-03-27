@@ -72,7 +72,7 @@ class PostsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','unlisted'] # add back is_public
+        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','visibility','unlisted'] # add back is_public
 
 
     def to_representation(self, instance):
@@ -107,6 +107,91 @@ class PostsSerializer(serializers.ModelSerializer):
     #     instance.likes = validated_data.get('likes',instance.likes)
 
     #     return super(PostsSerializer,self).update(instance,validated_data)
+
+class PostSerializer(serializers.ModelSerializer):
+    type = CharField(read_only=True)
+    title = CharField(required=True)
+    id = CharField(required=False,read_only=True)
+    # source = URLField(allow_blank=True)
+    # origin = URLField(allow_blank=True)
+    description=CharField(allow_blank=True)
+    contentType=CharField(allow_blank=True)
+    content = CharField(allow_blank=True)
+    author = ProfilePostSerializer(required = False,read_only=True)
+    categories = serializers.SerializerMethodField('get_categories')
+    count = IntegerField(required=False,read_only=True)
+    comments = serializers.SerializerMethodField('get_comments')
+    #unlisted = BooleanField(allow_blank=True)
+    #likes = IntegerField(required=False,read_only=True)
+    published = DateTimeField(source="pub_date",read_only=True)
+    source = serializers.SerializerMethodField("get_source",required=False)
+    origin = serializers.SerializerMethodField("get_origin",required=False)
+
+   
+
+
+    def get_source(self,instance):
+        return instance.id
+        
+    def get_origin(self,instance):
+        return instance.id
+
+    def get_categories(self, instance):
+        return ['web','tutorial','hack']
+    
+    def get_comments(self, instance):
+        return "TODO"
+
+
+    # ADD PERMISSIONS FOR PUT #   
+    def create(self,validated_data):
+        return Post.objects.create(**validated_data)
+    
+
+    def update(self, instance, validated_data):
+     instance.title = validated_data.get('title', instance.title)
+     instance.description = validated_data.get('description', instance.description)      
+     instance.content = validated_data.get('content', instance.content)    
+     instance.contentType = validated_data.get('contentType', instance.contentType) 
+     instance.unlisted = validated_data.get('unlisted',instance.unlisted)
+
+     instance.save()
+     return instance
+    
+
+    def get_fields(self, *args, **kwargs):
+            fields = super().get_fields(*args, **kwargs)
+            request = self.context.get('request', None)
+            if request and getattr(request, 'method', None) == "POST":
+                fields['id'].read_only = True
+            return fields
+
+
+    class Meta:
+        model = Post
+        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','visibility','unlisted'] # add back is_public
+        
+        #extra_kwargs = {'title': {'write_only': True},'description': {'write_only': True},'content': {'write_only': True},'published': {'write_only': True},'unlisted': {'write_only': True}}
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
+        return representation
+
+
+class PostImageSerializer():
+    pass
+
+
+
+
+
+
+
+
+
+
+
 
 class PostsPutSerializer(serializers.ModelSerializer):
     author = ProfilePostSerializer()
@@ -143,6 +228,14 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         representation['object'] =object_json
 
         return representation
+
+
+
+
+
+
+
+
 
 class InboxSerializer(serializers.ModelSerializer):
     class Meta:
