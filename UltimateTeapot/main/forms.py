@@ -9,6 +9,8 @@ VISIBILITY = [
 ]
 
 
+
+
 class UploadForm(forms.ModelForm):
     content = forms.CharField(required=False,
                               widget=forms.widgets.Textarea(
@@ -23,10 +25,13 @@ class UploadForm(forms.ModelForm):
     #                           widget=forms.widgets.Textarea(
     #                           ))
     
-    
+    title = forms.CharField()
     visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
     unlisted = forms.BooleanField(label='Unlisted?', required=False)
-    contentType = forms.CharField(required=False,read_only=True)
+
+    contentType = forms.CharField()
+
+   
 
     #image = forms.ImageField()
     

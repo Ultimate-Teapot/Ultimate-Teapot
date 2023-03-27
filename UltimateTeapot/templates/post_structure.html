@@ -1,10 +1,33 @@
 {% load markdownify %}
 <div class="card mb-4">
     <div class="card-body">
-      <p class="card-text">
-              <p><a href="{% url 'profile' post.author %}">{{ post.author }}</a> posted<p>
-              <p>Created: {{ post.pub_date}}</p>
-              <p>Tweeted: {{ post.content | markdownify }}</p>
+      <p class="card-text" >
+        <!-- <input type="hidden" id="myVar" name="variable" value="{{post.contentType}}"> -->
+            <p><a href="{% url 'profile' post.author %}">{{ post.author }}</a> posted<p>
+            <p>Created: {{ post.pub_date}}</p>
+          
+              
+            {% if post.contentType == 'text/plain' %}
+            <p>Tweeted: {{ post.content }}</p>
+            {% endif %}
+
+            {% if post.contentType == 'text/markdown' %}
+            <p>Tweeted: {{ post.content|markdownify}}</p>
+            {% endif %}
+
+          
+
+
+              <!-- <div id="main_body">
+                <script type="text/javascript">
+                  var myVar = document.getElementById("myVar").value[1];
+                  console.log(myVar);
+                  document.getElementById("main_body").innerHTML+="<p>Tweeted: {{ post.content }}</p>"
+                </script>
+              </div> -->
+              
+
+       
               {% comment %} <p>Post's link: <a href="{% url 'post' post.id %}">{{ post.id }}</a><p> {% endcomment %}
             </p>
             {% if post.image %}
@@ -14,3 +37,4 @@
            
     </div>
   </div>
+
