@@ -33,12 +33,16 @@
 
     <div class="col-md-8">
       <h1 class="text-center">Welcome <span style="color: red">{{user.username}}</span> to Ultimate Teapot!!!</h1>
+    
     </div>
   </br>
   </br>
 
   <div class="col-md-4">
     <h3 class="text-center">Post something!</h3>
+    <!-- <button type="button" onclick=MakeMarkdown()>Markdown Post</button> 
+    <button type="button" onclick=MakeText()>TextPost</button>  
+    <button type="button" onclick=MakeImage()>ImagePost</button>  -->
     <br>
     {% if upload_form %}
       <form action="/main/posts/" method="POST" enctype="multipart/form-data">
@@ -48,6 +52,40 @@
       </form> 
     {% endif %}
   </div>
+
+  <!-- <script type="text/javascript">
+    
+
+    window.onload = function(){
+      document.getElementById('id_image').hidden = true
+      document.getElementById('id_content').hidden = true
+      document.getElementById('id_markdown_content').hidden = true
+    }
+
+    function MakeMarkdown(){
+      document.getElementById('id_content').hidden = true
+      document.getElementById('id_image').hidden = true
+      document.getElementById('id_markdown_content').hidden = false
+
+    }
+
+    function MakeImage(){
+      document.getElementById('id_image').hidden = false
+      document.getElementById('id_content').hidden = true
+      document.getElementById('id_markdown_content').hidden = true
+    }
+
+
+    function MakeText(){
+      document.getElementById('id_content').hidden = false
+      document.getElementById('id_image').hidden = true
+      document.getElementById('id_markdown_content').hidden = true
+
+    }
+
+
+
+  </script> -->
   
     {% comment %} <div class="col-md-8" style=" background-color: pink">
       <form action="/main/posts/" method="POST" enctype="multipart/form-data">
@@ -198,5 +236,6 @@
     </div>
   </div>
 </div>
+
 {% endif %}
 {% endblock %}

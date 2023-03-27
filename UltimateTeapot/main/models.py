@@ -90,9 +90,10 @@ class Post(models.Model):
     #description
     description = models.TextField(blank=True)
     #Conent-type
-    contentType = models.CharField(max_length=100,default="text/plain")
+    contentType = models.CharField(max_length=100)
     #Content
     content = models.TextField()
+    markdown_content = models.TextField()
 
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
     # DO NOT USE, use author_id instead
@@ -107,11 +108,16 @@ class Post(models.Model):
     
 
     #TO_DO ADD COMMENTS AND COMMENT SRC
+
+
+
     # Url to comments
     comments = models.CharField(max_length=255)
 
 
+
     #Published
+    #pub_date = models.DateTimeField(auto_now=False,auto_now_add=True)
     pub_date = models.DateTimeField(default=datetime.datetime.now)
     #Visibility
     visibility = models.CharField(max_length=10, default="PUBLIC")

@@ -24,17 +24,18 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostsPutSerializer, \
-    FollowerSerializer, ProfilePostSerializer, InboxSerializer
+from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, FollowerSerializer, ProfilePostSerializer, InboxSerializer, PostImageSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, GenericAPIView
 from urllib.parse import urlparse
 from django.conf import settings
+from .paginations import NewPaginator
+
 
 @login_required(login_url='signin')
 def index(request):
@@ -196,6 +197,16 @@ def home(request):
         form = UploadForm(request.POST or None, request.FILES)
         if request.method == "POST":
             if form.is_valid():
+                # if form.data['image'] is not None:
+                #     form.contentType = "application/base64"
+                
+                # if form.data['content'] is not None:
+                #     form.contentType = "text/plain"
+
+                # if form.data['markdown_content'] is not None:
+                #     form.contentType = "text/markdown"
+
+                
                 post = form.save(commit=False)
                 post.author = request.user.profile
                 post.save()
@@ -362,11 +373,17 @@ def like_create(request, post_id):
 #         followers = profile.followers
 #         return render(request, "followers.html", {""})
 
+
+################################################################################################################################################################
 class NodePermission(BasePermission):
     def has_permission(self, request, view):
         if request.user.groups.filter(name='node').exists():
             return True
         return False
+    
+
+
+
 
 
 class AuthorList(APIView):
@@ -384,7 +401,7 @@ class AuthorList(APIView):
 
 
 class SingleAuthor(APIView):
-    permission_classes = [NodePermission, IsAuthenticated]
+    # permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
 
         #uri = request.build_absolute_uri('?')
@@ -411,6 +428,106 @@ class SingleAuthor(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+'''api/authors/<str:id>/posts/'''
+
+class PostsList(ListCreateAPIView):
+    # permission_classes = [NodePermission, IsAuthenticated]
+
+    pagination_class = NewPaginator
+    serializer_class = PostsSerializer
+    queryset = Post.objects.all()
+    lookup_url_kwarg = "id"
+
+    def perform_create(self, serializer):
+
+        id = self.kwargs.get(self.lookup_url_kwarg)
+        #uri = request.build_absolute_uri('?')
+        # profile_id = id
+
+        
+        profile_instance = Profile.objects.get(id=id)
+
+        uniqueID = uuid.uuid4()
+        post_id = id + "/posts/" + str(uniqueID)
+
+        post = serializer.save(id=post_id,author=profile_instance,content=self.request.data["content"])
+        return post
+    
+
+
+
+'''api/authors/<str:id>/posts/<str:pid>'''
+class SinglePost(GenericAPIView):
+   #permission_classes = [NodePermission, IsAuthenticated]
+
+    serializer_class = PostSerializer
+    queryset = Post.objects.all()
+    lookup_url_kwarg = "id"
+
+
+
+    def get(self, request, id, pid):
+        # uri = request.build_absolute_uri('?')
+        posts = Post.objects.get(id=pid)
+        serializer = PostSerializer(posts)
+
+        # print(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def post(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        try:
+            postobj = Post.objects.get(id=pid)
+        except postobj.DoesNotExist:
+            raise Http404
+        serializer = PostSerializer(postobj, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+    # def put(self, request, id, pid):
+    #     uri = request.build_absolute_uri('?')
+    #     try:
+    #         postobj = Post.objects.get(id=pid)
+    #     except postobj.DoesNotExist:
+    #         serializer = PostSerializer(postobj,data=request.data)
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             return Response(serializer.data)
+    #        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        Post.objects.get(post_id=str(uri)).delete()
+        return Response(status=status.HTTP_200_OK)
+
+
+
+
+'''api/authors/<str:id>/posts/<str:pid>/image'''
+
+class ImagePostsList(GenericAPIView):
+    serializer_class = PostImageSerializer
+    queryset = Post.objects.all()
+    lookup_url_kwarg = "id"
+
+
+    def get(self, request, id, pid):
+        # uri = request.build_absolute_uri('?')
+        post = Post.objects.get(id=pid)
+        if(post.contentType!="application/base64"):
+            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+        serializer = PostImageSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class FollowerList(APIView):
     def get(self, request, id):
         uri = request.build_absolute_uri('?')
@@ -425,87 +542,62 @@ class FollowerList(APIView):
 
 
 class singleFollowerList(APIView):
-    def get(self, request, id,fid):
-        pass
-
-    def post(self, request, id,fid):
-        pass
-    def put(self, request, id,fid):
-        pass
+    pass
 
 
-class PostsList(ListCreateAPIView):
-    permission_classes = [NodePermission, IsAuthenticated]
-
-    serializer_class = PostsSerializer
-    queryset = Post.objects.all()
-    lookup_url_kwarg = "id"
-
-    def perform_create(self, serializer):
-        #uri = self.request.build_absolute_uri('?')
-        profile_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + id
-        #profile_id = self.kwargs.get(self.lookup_url_kwarg)
-        profile_instance = Profile.objects.get(id=profile_id)
-        post = serializer.save(author=profile_instance,content=self.request.data["content"])
-        return post
-
-    # def get(self, request, id):
-    #     uri = request.build_absolute_uri('?')
-    #     uri = uri.replace("/posts/", "")
-
-    #     author = Profile.objects.get(id=str(uri))
-    #     posts = Post.objects.filter(author=author)
-    #     serializer = PostsSerializer(posts, many=True)
-
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    # def post(self,request,id):
 
 
-class SinglePost(APIView):
-    permission_classes = [NodePermission, IsAuthenticated]
-
-    def get(self, request, id, pid):
-        # uri = request.build_absolute_uri('?')
-        posts = Post.objects.get(id=pid)
-        serializer = PostsSerializer(posts)
-
-        # print(serializer.data)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request, id, pid, format=None):
-        # uri = request.build_absolute_uri('?')
-        try:
-            postobj = Post.objects.get(post_id=pid)
-        except postobj.DoesNotExist:
-            raise Http404
-        serializer = PostsSerializer(postobj, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, id, pid, format=None):
-        uri = request.build_absolute_uri('?')
-        try:
-            postobj = Post.objects.get(post_id=pid)
-        except postobj.DoesNotExist:
-            serializer = PostsPutSerializer(postobj, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, id, pid):
-        uri = request.build_absolute_uri('?')
-        Post.objects.get(post_id=pid).delete()
-        return Response(status=status.HTTP_200_OK)
 
 
-class ImagePostsList(APIView):
-    def get(self, request, id, pid):
-        return Response(status=status.HTTP_200_OK)
+
+
+
+
+
+# class SinglePost(APIView):
+#     # permission_classes = [NodePermission, IsAuthenticated]
+
+#     def get(self, request, id, pid):
+
+
+#         # uri = request.build_absolute_uri('?')
+#         posts = Post.objects.get(id=pid)
+#         serializer = PostsSerializer(posts)
+
+#         # print(serializer.data)
+
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+#     def post(self, request, id, pid, format=None):
+#         # uri = request.build_absolute_uri('?')
+#         try:
+#             postobj = Post.objects.get(post_id=pid)
+#         except postobj.DoesNotExist:
+#             raise Http404
+#         serializer = PostsSerializer(postobj, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def put(self, request, id, pid, format=None):
+#         uri = request.build_absolute_uri('?')
+#         try:
+#             postobj = Post.objects.get(post_id=pid)
+#         except postobj.DoesNotExist:
+#             serializer = PostsPutSerializer(postobj, data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     def delete(self, request, id, pid):
+#         uri = request.build_absolute_uri('?')
+#         Post.objects.get(post_id=pid).delete()
+#         return Response(status=status.HTTP_200_OK)
+
+
+
 
 
 class Commentlist(APIView):
