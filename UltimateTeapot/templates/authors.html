@@ -6,15 +6,16 @@
 
 {% if authors %}
     {% for author in authors %}
-        <a href="{{ author.id }}">Username: @{{ author.user.username }}</a>
-        <br/>
-        {% comment %} <a href="{% url 'main/authors' author.user.username %}" >Join Hood</a> {% endcomment %}
+        <div class="card mb-4">
+            <img src={{ author.profileImage }} height="40" width="40">
+            <a href="{% url 'profile' author.id %}">Name: @{{ author.displayName }}</a>
+            <br/>
+            Host: {{ author.host }}
+
+        </div>
     {% endfor %}
 
     <br/>
-
-    
-
 
 {% endif %}
 {% endblock%}
