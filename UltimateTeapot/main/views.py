@@ -438,6 +438,13 @@ class PostsList(ListCreateAPIView):
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
 
+    def get_queryset(self):
+        id = self.kwargs.get(self.lookup_url_kwarg)
+        profile_instance = Profile.objects.get(id=id)
+
+        posts = Post.objects.filter(author_id=id).all()
+        return posts
+
     def perform_create(self, serializer):
 
         id = self.kwargs.get(self.lookup_url_kwarg)
@@ -618,8 +625,6 @@ class FollowRequest(APIView):
     def post(self, request, id):
         followrequest = FollowRequest.objects.get(id=id)
         serializer = FollowRequestSerializer(followrequest)
-
-
 
 class inboxLikes(APIView):
     def post(self, request, id):
