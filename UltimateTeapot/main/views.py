@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 import uuid
 
 from django.contrib.auth import authenticate, login
@@ -254,25 +255,12 @@ def home(request):
 
         # res = requests.get('https://sd7-api.herokuapp.com/api/authors/d3bb924f-f37b-4d14-8d8e-f38b09703bab/posts/9095cfd8-8f6a-44aa-b75b-7d2abfb5f694/', auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
         # foreign_post = res.json()
-
-        res2 = requests.get('https://social-t30.herokuapp.com/api/authors/15e3f8db-614c-4410-ab76-9cb737a54a95/posts/7598008a-0e75-4ca6-99fc-56ec1cba1db0/')
-        foreign_post2 = res2.json()
-
-        all_authors = []
-
-        nodes = Node.objects.all()
-        for node in nodes:
-            res = requests.get(settings.APP_HTTP + node.host + "/authors", auth=HTTPBasicAuth(node.username, node.password))
-            foreign_authors = res.json()
-            all_authors.extend(foreign_authors['items'])
-
-
          
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form, "authors":all_authors, "foreign_post2":foreign_post2})
+        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
 
 def inbox(request):
     
@@ -286,8 +274,15 @@ def inbox(request):
     return render(request, 'inbox.html', {"items":inbox})
 
 def authors(request):
-    author_list = Profile.objects.all()
-    return render(request, 'authors.html', {"authors":author_list})
+    all_authors = []
+
+    nodes = Node.objects.all()
+    for node in nodes:
+        res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+        foreign_authors = res.json()
+        all_authors.extend(foreign_authors['items'])
+
+    return render(request, 'authors.html', {"authors":all_authors})
 
 def singlePost(request, author_id, post_id):
     if request.user.is_authenticated:
@@ -298,38 +293,66 @@ def singlePost(request, author_id, post_id):
 
 def profile(request, id):
     if request.user.is_authenticated:
-        # user = User.objects.get(username=username)
-        #uri = request.build_absolute_uri('?')
-        # author_id = settings.APP_HTTP + settings.APP_DOMAIN + id
+        host = id.split('authors')[0]
+        author_node = Node.objects.get(host=host)
 
-        #profile = Profile.objects.get(id=id)
+        author_object = requests.get(id + '/', auth=HTTPBasicAuth(author_node.username, author_node.password))
+        posts = requests.get(id + '/posts/', auth=HTTPBasicAuth(author_node.username, author_node.password))
+        print(posts)
+        post_json = posts.json()
+        post_list = []
 
+        if isinstance(post_json, dict):
+            post_list = post_json['items']
+        else:
+            post_list = post_json
 
-        if request.method == "POST":
-            current_user = request.user.profile
+        # if request.method == "POST":
+        #     current_user_id = request.user.profile.id
+        #
+        #     action = request.POST['follow']
+        #     if action == "follow":
+        #         # profile.followers.add(current_user)
+        #         #
+        #         # if current_user in profile.users_following.all():
+        #         #     profile.friends.add(current_user)
+        #         #     current_user.friends.add(profile)
+        #         if not FollowRequest.objects.filter(sender=request.user, receiver=profile.user).exists():
+        #             FollowRequest.objects.create(sender=request.user, receiver=profile.user)
+        #
+        #     elif action == "unfollow":
+        #         profile.followers.remove(current_user)
+        #         if current_user in profile.friends.all():
+        #             profile.friends.remove(current_user)
+        #             current_user.friends.remove(profile)
+        #
+        #     profile.save()
 
-            action = request.POST['follow']
-            if action == "follow":
-                # profile.followers.add(current_user)
-                #
-                # if current_user in profile.users_following.all():
-                #     profile.friends.add(current_user)
-                #     current_user.friends.add(profile)
-                if not FollowRequest.objects.filter(sender=request.user, receiver=profile.user).exists():
-                    FollowRequest.objects.create(sender=request.user, receiver=profile.user)
-
-            elif action == "unfollow":
-                profile.followers.remove(current_user)
-                if current_user in profile.friends.all():
-                    profile.friends.remove(current_user)
-                    current_user.friends.remove(profile)
-
-            profile.save()
-
-        return render(request, "profile.html", {"profile":profile})
+        return render(request, "profile.html", {"profile":author_object.json(), "posts":post_list})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
+
+def follow(request, id):
+    # Send a follow request to the specified id
+    current_user = request.user.profile
+    actor = ProfileSerializer(current_user).data
+    target_host = id.split("author")[0]
+    target_node = Node.objects.get(host=target_host)
+    object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
+    object_json = object.json()
+
+    data_to_send = {
+        "type": "Follow",
+        "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
+        "actor":actor,
+        "object":object_json
+    }
+
+    requests.post(id + "/inbox/", json=data_to_send, auth=HTTPBasicAuth(target_node.username, target_node.password))
+
+    return redirect('home')
+
 
 # class ProfileViewSet(viewsets.ModelViewSet):
 #     queryset = Profile.objects.all()
@@ -447,7 +470,6 @@ class PostsList(ListCreateAPIView):
         posts = Post.objects.filter(author_id=id).all()
         return posts
 
-
     def perform_create(self, serializer):
 
         id = self.kwargs.get(self.lookup_url_kwarg)
@@ -532,34 +554,70 @@ class ImagePostsList(GenericAPIView):
     def get(self, request, id, pid):
         # uri = request.build_absolute_uri('?')
         post = Post.objects.get(id=pid)
+        serializer = PostImageSerializer(post)
         if(post.contentType!="application/base64"):
             return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
-        serializer = PostImageSerializer(post)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FollowerList(APIView):
     def get(self, request, id):
-        uri = request.build_absolute_uri('?')
-        uri = uri.replace("/followers", "")
+        #uri = request.build_absolute_uri('?')
+        #uri = uri.replace("/followers", "")
 
-        author_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + id
-
-        author = Profile.objects.get(id=author_id)
+        author = Profile.objects.get(id=id)
         serializer = FollowerSerializer(author)
         updated_data = serializer.data
         return Response(updated_data, status=status.HTTP_200_OK)
 
 
 class singleFollowerList(APIView):
-    pass
+    '''
+    Check if foreign id is a follower of this author
+    '''
+    def get(self, request, id, fid):
+        foreign_id = urllib.parse.unquote(fid)
+        author = Profile.objects.get(id=id)
 
+        if author.follower_list.filter(id=foreign_id).exists():
+            data = {
+                "follower":"true"
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            data = {
+                "follower":"false"
+            }
+            return Response(data, status=status.HTTP_200_OK)
 
+    def post(self, request, id, fid):
+        foreign_id = urllib.parse.unquote(fid)
+        foreign_host = foreign_id.split('authors')[0]
+        author = Profile.objects.get(id=id)
 
+        if author.follower_list.filter(id=foreign_id).exists():
+            # already a follower, do nothing
+            return Response(status=status.HTTP_200_OK)
+        else:
+            author.follower_list.create(id=foreign_id, host=foreign_host)
+            author.save()
+            return Response(status=status.HTTP_200_OK)
 
+    def delete(self, request, id, fid):
+        foreign_id = urllib.parse.unquote(fid)
+        foreign_host = foreign_id.split('/authors')[0]
+        author = Profile.objects.get(id=id)
 
-
-
+        if author.follower_list.filter(id=foreign_id).exists():
+            # Delete the follower from the list
+            follower_object = author.follower_list.get(id=foreign_id)
+            author.follower_list.remove(follower_object)
+            author.save()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            # do nothing
+            return Response(status=status.HTTP_200_OK)
 
 
 
@@ -628,8 +686,6 @@ class FollowRequest(APIView):
     def post(self, request, id):
         followrequest = FollowRequest.objects.get(id=id)
         serializer = FollowRequestSerializer(followrequest)
-
-
 
 class inboxLikes(APIView):
     def post(self, request, id):

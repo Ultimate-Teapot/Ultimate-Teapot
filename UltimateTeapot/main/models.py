@@ -16,6 +16,12 @@ class Object(models.Model):
     actor = models.CharField(max_length=255)
     object = models.CharField(max_length=255)
 
+class Follower(models.Model):
+    # id as url
+    id = models.CharField(max_length=255, primary_key=True)
+    # host as url
+    host = models.CharField(max_length=255)
+
 class Profile(models.Model):
     # TO BE SENT AS JSON #
     type = models.CharField(max_length=100, default="Author",editable=False)
@@ -30,6 +36,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials
 
     inbox = models.ManyToManyField(Object)
+
+    follower_list = models.ManyToManyField(Follower)
 
     # Test these two later with postgres
     # List of authorIDs that are followers

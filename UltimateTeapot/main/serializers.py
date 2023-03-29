@@ -19,13 +19,30 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['type'] = "author"
         representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.id
         return representation
 
 class FollowerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['followers']
+        fields = []
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['type'] = "followers"
+        items = []
+        for follower in instance.follower_list.all():
+            follower_id = follower.id
+            follower_host = follower.host
+            follower_node = Node.objects.get(host=follower_host)
+
+            follower_data = requests.get(follower_id + '/', auth=HTTPBasicAuth(follower_node.username, follower_node.password))
+            items.append(follower_data.json())
+
+        representation['items'] = items
+
+        return representation
 
 class ProfilePostSerializer(serializers.ModelSerializer):
     # TODO: not needed?
@@ -77,6 +94,7 @@ class PostsSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['type'] = "author"
         representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
         return representation
 
@@ -223,7 +241,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         host = root.split('//')[1]
 
         node = Node.objects.get(host=host)
-        actor_object = requests.get(actor_id, auth=HTTPBasicAuth(node.username, node.password))
+        actor_object = requests.get(actor_id + '/', auth=HTTPBasicAuth(node.username, node.password))
         actor_json = actor_object.json()
 
         object_id = instance.object
@@ -236,13 +254,6 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         representation['object'] =object_json
 
         return representation
-
-
-
-
-
-
-
 
 
 class InboxSerializer(serializers.ModelSerializer):
@@ -263,11 +274,11 @@ class InboxSerializer(serializers.ModelSerializer):
             elif item.type == "post":
                 id = item.object_id
                 # actor_url = urlparse(actor_id)
-                root = id.split('/authors')[0]
-                host = root.split('//')[1]
+                host = id.split('authors')[0]
+
 
                 node = Node.objects.get(host=host)
-                post = requests.get(id, auth=HTTPBasicAuth(node.username, node.password))
+                post = requests.get(id + '/', auth=HTTPBasicAuth(node.username, node.password))
                 post_json = post.json()
 
                 items.append(post_json)
