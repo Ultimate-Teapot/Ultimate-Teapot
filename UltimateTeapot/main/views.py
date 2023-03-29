@@ -26,7 +26,7 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, FollowerSerializer, ProfilePostSerializer, InboxSerializer, PostImageSerializer
+from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, FollowerSerializer, InboxSerializer, PostImageSerializer, CommentSerializer, CommentListSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
@@ -445,7 +445,7 @@ class SingleAuthor(APIView):
             author = Profile.objects.get(id=str(uri))
         except author.DoesNotExist:
             raise Http404
-        serializer = ProfilePostSerializer(author, data=request.data)
+        serializer = ProfileSerializer(author, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -479,7 +479,7 @@ class PostsList(ListCreateAPIView):
         profile_instance = Profile.objects.get(id=id)
 
         uniqueID = uuid.uuid4()
-        post_id = id + "/posts/" + str(uniqueID)
+        post_id = str(uniqueID)
 
         post = serializer.save(id=post_id,author=profile_instance,content=self.request.data["content"])
         return post
@@ -494,7 +494,6 @@ class SinglePost(GenericAPIView):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
-
 
 
     def get(self, request, id, pid):
@@ -519,27 +518,42 @@ class SinglePost(GenericAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-    # TODO fix put
-    # def put(self, request, id, pid):
-    #     uri = request.build_absolute_uri('?')
-    #     try:
-    #         postobj = Post.objects.get(id=pid)
-    #     except postobj.DoesNotExist:
-    #         serializer = PostSerializer(postobj,data=request.data)
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             return Response(serializer.data)
-    #        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        # try:
+        #     postobj = Post.objects.get(id=pid)
+        # except postobj.DoesNotExist:
+        #     serializer = PostSerializer(postobj,data=request.data)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #         return Response(serializer.data)
+        # else:
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+        if Post.objects.filter(id=pid).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            post_data = request.data
+            # author_id = post_data['author']['id']
+            # author_uuid = author_id.split('authors/')[1]
+            author = Profile.objects.get(id=id)
+            Post.objects.create(
+                id=pid,
+                title=post_data['title'],
+                source=post_data['source'],
+                origin=post_data['origin'],
+                description=post_data['description'],
+                contentType=post_data['contentType'],
+                content=post_data['content'],
+                author=author,
+                comments=settings.APP_HTTP+settings.APP_DOMAIN+"/main/api/authors/"+id+"/posts/"+pid+"/comments/"
+            )
+            return Response(status=status.HTTP_200_OK)
 
 
     def delete(self, request, id, pid):
         uri = request.build_absolute_uri('?')
-        Post.objects.get(post_id=str(uri)).delete()
+        Post.objects.get(id=pid).delete()
         return Response(status=status.HTTP_200_OK)
-
-
 
 
 '''api/authors/<str:id>/posts/<str:pid>/image'''
@@ -619,21 +633,17 @@ class singleFollowerList(APIView):
             return Response(status=status.HTTP_200_OK)
 
 
-# TODO: Fix this and add to urls.py
-# /authors/{AUTHOR_ID}/posts/{POST_ID}/comments/
-
 class Commentlist(APIView):
     def get(self, request, id, pid):
-        uri = request.build_absolute_uri('?')
-        print(uri)
-        posts = Post.objects.get(post_id=str(uri))
-        serializer = PostsSerializer(posts)
+        post = Post.objects.get(id=pid)
+        serializer = CommentListSerializer(post)
 
         # print(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self,request,id,pid):
+        # TODO: Add this
         return Response(status=status.HTTP_200_OK)
 
 

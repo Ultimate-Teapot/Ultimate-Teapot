@@ -84,6 +84,21 @@ class FollowRequest(models.Model):
 #     identifier = models.CharField(max_length=40, unique=True, default=0)
 #     USERNAME_FIELD = "identifier"
 
+class Comment(models.Model):
+    # Actually, post not stored here at all
+    #post_id = models.CharField(max_length=255)
+    comment = models.TextField()
+    contentType = models.TextField(max_length=255, default='text/markdown')
+    # url to comment author
+    author = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    # id of comment, full url
+    id = models.CharField(max_length=255, primary_key=True)
+
+    # DO NOT USE
+    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
+    # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
+
 class Post(models.Model):
 
     # Type of post #
@@ -114,16 +129,11 @@ class Post(models.Model):
     categories = models.CharField(max_length=200, default=['web','tutorial'])
     #count - the count of comments on the post
     count = models.IntegerField(default=0)
-    
 
     #TO_DO ADD COMMENTS AND COMMENT SRC
 
-
-
-    # Url to comments
-    comments = models.CharField(max_length=255)
-
-
+    # List of comments
+    comments = models.ManyToManyField(Comment)
 
     #Published
     #pub_date = models.DateTimeField(auto_now=False,auto_now_add=True)
@@ -156,20 +166,7 @@ class Like(models.Model):
     like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
 
 
-class Comment(models.Model):
-    # Post id stored as url
-    post_id = models.CharField(max_length=255)
-    content = models.TextField()
-    contentType = models.TextField(max_length=255, default='text/markdown')
-    # author object
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    # uuid of comment
-    id = models.CharField(max_length=255, primary_key=True)
 
-    # DO NOT USE
-    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
-    # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)

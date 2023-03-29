@@ -44,22 +44,22 @@ class FollowerSerializer(serializers.ModelSerializer):
 
         return representation
 
-class ProfilePostSerializer(serializers.ModelSerializer):
-    # TODO: not needed?
-    class Meta:
-        model = Profile
-        fields = ['type', 'id', 'url','host','displayName','github','profileImage']
-
-    def update(self,instance,validated_data):
-        instance.type = validated_data.get('type', instance.type)
-        instance.id = validated_data.get('id', instance.id)
-        instance.url = validated_data.get('url',instance.url)
-        instance.host = validated_data.get('host',instance.host)
-        instance.displayName = validated_data.get('displayName',instance.displayName)
-        instance.github = validated_data.get('github',instance.github)
-        instance.profileImage= validated_data.get('profileImage',instance.profileImage)
-        instance.save()
-        return instance
+# class ProfilePostSerializer(serializers.ModelSerializer):
+#     # TODO: not needed?
+#     class Meta:
+#         model = Profile
+#         fields = ['type', 'id', 'url','host','displayName','github','profileImage']
+#
+#     def update(self,instance,validated_data):
+#         instance.type = validated_data.get('type', instance.type)
+#         instance.id = validated_data.get('id', instance.id)
+#         instance.url = validated_data.get('url',instance.url)
+#         instance.host = validated_data.get('host',instance.host)
+#         instance.displayName = validated_data.get('displayName',instance.displayName)
+#         instance.github = validated_data.get('github',instance.github)
+#         instance.profileImage= validated_data.get('profileImage',instance.profileImage)
+#         instance.save()
+#         return instance
 
 class PostsSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(required = False,read_only=True)
@@ -135,7 +135,7 @@ class PostSerializer(serializers.ModelSerializer):
     description=CharField(allow_blank=True)
     contentType=CharField(allow_blank=True)
     content = CharField(allow_blank=True)
-    author = ProfilePostSerializer(required = False,read_only=True)
+    author = ProfileSerializer(required = False,read_only=True)
     categories = serializers.SerializerMethodField('get_categories')
     count = IntegerField(required=False,read_only=True)
     comments = serializers.SerializerMethodField('get_comments')
@@ -195,6 +195,48 @@ class PostSerializer(serializers.ModelSerializer):
         representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
         return representation
 
+class CommentSerializer():
+    class Meta:
+        model = Comment
+        fields = []
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['type'] = "comment"
+        author = instance.author
+        host = author.split("authors")[0]
+        node = Node.objects.get(host=host)
+        author_obj = requests.get(author + '/', auth=HTTPBasicAuth(node.username, node.password))
+        author_json = author_obj.json()
+        representation['author'] = author_json
+        representation['comment'] = instance.comment
+        representation['published'] = instance.created_at
+        representation['id'] = instance.id
+
+        return representation
+
+
+#TODO: make sure comments lists work, add pagination
+class CommentListSerializer():
+    class Meta:
+        model = Post
+        fields = []
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["type"] = "comments"
+        post_id = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
+        representation["post"] = post_id
+        representation["id"] = post_id + "/comments"
+        comments = []
+
+        for comment in instance.comments.all():
+            comment = CommentSerializer(comment)
+            comments.append(comment)
+
+        representation["comments"] = comments
+
+        return representation
 
 class PostImageSerializer():
 
@@ -208,19 +250,8 @@ class PostImageSerializer():
     class Meta:
         fields = ['content']
 
-
-
-
-
-
-
-
-
-
-
-
 class PostsPutSerializer(serializers.ModelSerializer):
-    author = ProfilePostSerializer()
+    author = ProfileSerializer()
     class Meta:
         model = Post
         fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','pub_date','unlisted','likes'] # add back is_public
