@@ -49,7 +49,11 @@
     {% if upload_form %}
       <form action="/main/posts/" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+
+        {{ upload_form.contentType.hidden }}
         {{ upload_form.as_p }}
+
+
         <button type="submit" class="btn btn-primary btn-block">Post!</button>
       </form> 
     {% endif %}
@@ -66,7 +70,7 @@
       document.getElementById('id_image').hidden = true
       document.getElementById('id_content').hidden = true
       //document.getElementById('id_markdown_content').hidden = true
-      document.getElementById('id_contentType').hidden = true
+      //document.getElementById('id_contentType').hidden = true
       
     }
     function MakeMarkdown(){

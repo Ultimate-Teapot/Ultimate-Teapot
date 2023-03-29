@@ -237,8 +237,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
 
         actor_id = instance.actor
         #actor_url = urlparse(actor_id)
-        root = actor_id.split('/authors')[0]
-        host = root.split('//')[1]
+        host = actor_id.split('authors')[0]
 
         node = Node.objects.get(host=host)
         actor_object = requests.get(actor_id + '/', auth=HTTPBasicAuth(node.username, node.password))

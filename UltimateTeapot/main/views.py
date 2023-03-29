@@ -1,3 +1,4 @@
+import base64
 import os
 import urllib.parse
 import uuid
@@ -163,9 +164,13 @@ def posts(request):
             author_profile = Profile.objects.get(user=current_user)
             uniquePostID = uuid.uuid4()
             post_id = str(uniquePostID)
-            image = request.FILES.get('image')
-            content = request.POST['content']
+            #image = request.FILES.get('image')
             contentType = request.POST['contentType']
+            if contentType == "application/base64":
+                image = request.FILES.get('image')
+                content = base64.b64encode(image)
+            else:
+                content = request.POST['content']
             visibility = request.POST['visibility']
             title = request.POST['title']
             if ('unlisted' in request.POST):
@@ -175,7 +180,7 @@ def posts(request):
 
             if (unlisted == 'on'):
                 unlisted = True
-            new_post = Post.objects.create(title=title,id=post_id, author=author_profile, image=image, content=content,
+            new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
                                            visibility=visibility, unlisted=unlisted,contentType=contentType)
             new_post.save()
 
@@ -405,11 +410,8 @@ class NodePermission(BasePermission):
         if request.user.groups.filter(name='node').exists():
             return True
         return False
-    
 
-
-
-
+# TODO: add nodepermission to all remote api requests
 
 class AuthorList(APIView):
     # permission_classes = [NodePermission, IsAuthenticated]
@@ -420,9 +422,6 @@ class AuthorList(APIView):
         updated_data = {"type": "authors", "items": serializer.data}
 
         return Response(updated_data, status=status.HTTP_200_OK)
-
-    def post(self, request):
-        print(request.body)
 
 
 class SingleAuthor(APIView):
@@ -522,7 +521,7 @@ class SinglePost(GenericAPIView):
 
 
 
-
+    # TODO fix put
     # def put(self, request, id, pid):
     #     uri = request.build_absolute_uri('?')
     #     try:
@@ -550,7 +549,7 @@ class ImagePostsList(GenericAPIView):
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
 
-
+ # TODO check if this works
     def get(self, request, id, pid):
         # uri = request.build_absolute_uri('?')
         post = Post.objects.get(id=pid)
@@ -620,54 +619,7 @@ class singleFollowerList(APIView):
             return Response(status=status.HTTP_200_OK)
 
 
-
-
-# class SinglePost(APIView):
-#     # permission_classes = [NodePermission, IsAuthenticated]
-
-#     def get(self, request, id, pid):
-
-
-#         # uri = request.build_absolute_uri('?')
-#         posts = Post.objects.get(id=pid)
-#         serializer = PostsSerializer(posts)
-
-#         # print(serializer.data)
-
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     def post(self, request, id, pid, format=None):
-#         # uri = request.build_absolute_uri('?')
-#         try:
-#             postobj = Post.objects.get(post_id=pid)
-#         except postobj.DoesNotExist:
-#             raise Http404
-#         serializer = PostsSerializer(postobj, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def put(self, request, id, pid, format=None):
-#         uri = request.build_absolute_uri('?')
-#         try:
-#             postobj = Post.objects.get(post_id=pid)
-#         except postobj.DoesNotExist:
-#             serializer = PostsPutSerializer(postobj, data=request.data)
-#             if serializer.is_valid():
-#                 serializer.save()
-#                 return Response(serializer.data)
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def delete(self, request, id, pid):
-#         uri = request.build_absolute_uri('?')
-#         Post.objects.get(post_id=pid).delete()
-#         return Response(status=status.HTTP_200_OK)
-
-
-
-
-
+# TODO: Fix this and add to urls.py
 class Commentlist(APIView):
     def get(self, request, id, pid):
         uri = request.build_absolute_uri('?')
@@ -682,33 +634,27 @@ class Commentlist(APIView):
     def post(self,request,id,pid):
         return Response(status=status.HTTP_200_OK)
 
-class FollowRequest(APIView):
-    def post(self, request, id):
-        followrequest = FollowRequest.objects.get(id=id)
-        serializer = FollowRequestSerializer(followrequest)
 
-class inboxLikes(APIView):
-    def post(self, request, id):
-        return Response(status=status.HTTP_200_OK)
-
-
+# TODO: finish this endpoint
 class postLikes(APIView):
 
     def get(self, request, id,pid):
         return Response(status=status.HTTP_200_OK)
 
-
+# TODO: finish this endpoint
 class commentLikes(APIView):
 
     def get(self,request,id,pid,cid):
         return Response(status=status.HTTP_200_OK)
 
 
-class likedList(APIView):
+# TODO: finish this endpoint
+class authorLikes(APIView):
     def get(self,request,id):
         return Response(status=status.HTTP_200_OK)
 
 
+# TODO: Finish this endpoint for comments and likes
 class InboxList(APIView):
     def get(self,request,id):
         profile = Profile.objects.get(id=id)

@@ -1,6 +1,6 @@
 from django.urls import path,include
 from . import views
-from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList, Commentlist, singleFollowerList, ImagePostsList,inboxLikes,commentLikes,postLikes,likedList,InboxList
+from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList, Commentlist, singleFollowerList, ImagePostsList, authorLikes,commentLikes,postLikes,InboxList
 
 
 
@@ -50,7 +50,7 @@ urlpatterns = [
   # path('api/authors/<str:id>/inbox/',inboxLikes.as_view(), name="inbox_likes"),
   path('api/authors/<str:id>/posts/<str:pid>/likes/',postLikes.as_view(), name="post_likes"),
   path('api/authors/<str:id>/posts/<str:pid>/comments/<str:cid>/likes/',commentLikes.as_view(), name="comment_likes"),
-  path('api/authors/<str:id>/liked/', likedList.as_view(),name="liked"),
+  path('api/authors/<str:id>/liked/', authorLikes.as_view(),name="liked"),
   path('api/authors/<str:id>/inbox/', InboxList.as_view(),name="Inbox"),
 
 

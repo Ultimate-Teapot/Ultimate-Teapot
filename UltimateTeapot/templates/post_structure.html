@@ -8,11 +8,11 @@
           
               
             {% if post.contentType == 'text/plain' %}
-            <p>Tweeted: {{ post.content }}</p>
+            <p>{{ post.content }}</p>
             {% endif %}
 
             {% if post.contentType == 'text/markdown' %}
-            <p>Tweeted: {{ post.content|markdownify}}</p>
+            <p>{{ post.content|markdownify}}</p>
             {% endif %}
 
           
