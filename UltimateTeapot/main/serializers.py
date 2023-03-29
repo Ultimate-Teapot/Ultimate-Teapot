@@ -172,7 +172,6 @@ class PostSerializer(serializers.ModelSerializer):
      instance.content = validated_data.get('content', instance.content)    
      instance.contentType = validated_data.get('contentType', instance.contentType) 
      instance.unlisted = validated_data.get('unlisted',instance.unlisted)
-
      instance.save()
      return instance
     
@@ -198,7 +197,16 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class PostImageSerializer():
-    pass
+
+    content = serializers.SerializerMethodField("get_image",required=False)
+    model = Post
+
+    def get_image(self,instance):
+        return str(instance.image)
+    
+    
+    class Meta:
+        fields = ['content']
 
 
 

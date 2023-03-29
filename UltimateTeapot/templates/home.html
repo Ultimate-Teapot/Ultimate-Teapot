@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
-
+{% load markdownify %}
 {% block content %}
+
 {% if user.is_authenticated %}
 <title>Homepage</title>
 
@@ -40,10 +41,11 @@
 
   <div class="col-md-4">
     <h3 class="text-center">Post something!</h3>
-    <!-- <button type="button" onclick=MakeMarkdown()>Markdown Post</button> 
+    <button type="button" onclick=MakeMarkdown()>Markdown Post</button> 
     <button type="button" onclick=MakeText()>TextPost</button>  
-    <button type="button" onclick=MakeImage()>ImagePost</button>  -->
+    <button type="button" onclick=MakeImage()>ImagePost</button> 
     <br>
+
     {% if upload_form %}
       <form action="/main/posts/" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
@@ -51,41 +53,54 @@
         <button type="submit" class="btn btn-primary btn-block">Post!</button>
       </form> 
     {% endif %}
+
+
+
+
   </div>
 
-  <!-- <script type="text/javascript">
+  <script type="text/javascript">
     
 
     window.onload = function(){
       document.getElementById('id_image').hidden = true
       document.getElementById('id_content').hidden = true
-      document.getElementById('id_markdown_content').hidden = true
+      //document.getElementById('id_markdown_content').hidden = true
+      document.getElementById('id_contentType').hidden = true
+      
     }
-
     function MakeMarkdown(){
-      document.getElementById('id_content').hidden = true
+      document.getElementById('id_content').hidden = false
       document.getElementById('id_image').hidden = true
-      document.getElementById('id_markdown_content').hidden = false
-
+      
+      //document.getElementById('id_markdown_content').hidden = false
+      document.getElementById('id_contentType').value = "text/markdown"
+      //document.getElementById('id_contentType').hidden = true
     }
+
+    
 
     function MakeImage(){
       document.getElementById('id_image').hidden = false
       document.getElementById('id_content').hidden = true
-      document.getElementById('id_markdown_content').hidden = true
+      //document.getElementById('id_markdown_content').hidden = true
+      document.getElementById('id_contentType').value = "application/base64"
+      //document.getElementById('id_contentType').hidden = true
     }
 
 
     function MakeText(){
       document.getElementById('id_content').hidden = false
       document.getElementById('id_image').hidden = true
-      document.getElementById('id_markdown_content').hidden = true
+      //document.getElementById('id_markdown_content').hidden = true
+      document.getElementById('id_contentType').value = "text/plain"
+      //document.getElementById('id_contentType').hidden = true
 
     }
 
 
 
-  </script> -->
+  </script>
   
     {% comment %} <div class="col-md-8" style=" background-color: pink">
       <form action="/main/posts/" method="POST" enctype="multipart/form-data">
@@ -105,7 +120,7 @@
         <div class="card-body">
           <p class="card-text">
             {% if post.unlisted == False %}
-                  <h2>POST DETAIL</h2>
+                  <h2>{{post.title}}</h2>
                   {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
 
                   {% if post.visibility == 'PUBLIC' %}
@@ -132,9 +147,9 @@
                 {% endif %}
             <button type="submit" class="btn btn-primary btn-block"style="float: right;">Edit</button>
           </p>
-          {% if post.image %}
+          <!-- {% if post.image %}
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
-          {% endif %}
+          {% endif %} -->
           <br><br>
           {% comment %}
           <form method="POST" action="{% url 'like_create' post.post_id %}">

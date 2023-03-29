@@ -165,7 +165,9 @@ def posts(request):
             post_id = str(uniquePostID)
             image = request.FILES.get('image')
             content = request.POST['content']
+            contentType = request.POST['contentType']
             visibility = request.POST['visibility']
+            title = request.POST['title']
             if ('unlisted' in request.POST):
                 unlisted = request.POST['unlisted']
             else:
@@ -173,8 +175,8 @@ def posts(request):
 
             if (unlisted == 'on'):
                 unlisted = True
-            new_post = Post.objects.create(id=post_id, author=author_profile, image=image, content=content,
-                                           visibility=visibility, unlisted=unlisted)
+            new_post = Post.objects.create(title=title,id=post_id, author=author_profile, image=image, content=content,
+                                           visibility=visibility, unlisted=unlisted,contentType=contentType)
             new_post.save()
 
         # return redirect('home')
