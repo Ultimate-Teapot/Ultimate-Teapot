@@ -25,6 +25,7 @@ class Follower(models.Model):
 class Profile(models.Model):
     # TO BE SENT AS JSON #
     type = models.CharField(max_length=100, default="Author",editable=False)
+    # UUID only
     id = models.CharField(max_length=100, unique=True, primary_key=True)
     url = models.URLField()
     host = models.URLField()
@@ -89,7 +90,7 @@ class Post(models.Model):
     type = models.CharField(max_length=100, default="post",editable=False)
     #Title of Post
     title = models.TextField()
-    #Post ID
+    #Post ID (UUID)
     id = models.CharField(max_length=200, unique=True, primary_key=True)
     #Source
     source = models.URLField()
@@ -104,10 +105,10 @@ class Post(models.Model):
     #markdown_content = models.TextField()
 
     image = models.ImageField(null=True, blank=True, upload_to = "images/")
-    # DO NOT USE, use author_id instead
     author = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
-    # author_id = models.CharField(max_length=255) we might need this later. TODO
+    # URL, not uuid
+    #author_id = models.CharField(max_length=255)
 
     #categories
     categories = models.CharField(max_length=200, default=['web','tutorial'])
@@ -144,9 +145,9 @@ class Post(models.Model):
         )
     
 class Like(models.Model):
-    # id of the object being liked
+    # id of the object being liked as url
     object_id = models.CharField(max_length=255)
-    author_id = models.CharField(max_length=255)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -156,16 +157,19 @@ class Like(models.Model):
 
 
 class Comment(models.Model):
-    #post_id = models.CharField(max_length=255)
+    # Post id stored as url
+    post_id = models.CharField(max_length=255)
     content = models.TextField()
     contentType = models.TextField(max_length=255, default='text/markdown')
-    author = models.CharField(max_length=255)
+    # author object
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    # uuid of comment
     id = models.CharField(max_length=255, primary_key=True)
 
     # DO NOT USE
     comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
+    # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)

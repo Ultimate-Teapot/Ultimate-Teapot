@@ -620,6 +620,8 @@ class singleFollowerList(APIView):
 
 
 # TODO: Fix this and add to urls.py
+# /authors/{AUTHOR_ID}/posts/{POST_ID}/comments/
+
 class Commentlist(APIView):
     def get(self, request, id, pid):
         uri = request.build_absolute_uri('?')
