@@ -6,7 +6,7 @@
     <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
     {% endfor %}
   </ul>
-{% include 'post_structure.html' %}
+
 {% if upload_form %}
       <form action="/main/posts/" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
@@ -15,7 +15,7 @@
         {{ upload_form.as_p }}
 
 
-        <button type="submit" class="btn btn-primary btn-block">Post!</button>
+        <button type="submit" class="btn btn-primary btn-block">Update!</button>
       </form> 
     {% endif %}
 

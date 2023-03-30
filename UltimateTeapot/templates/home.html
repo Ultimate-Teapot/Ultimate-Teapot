@@ -124,6 +124,8 @@
         <div class="card-body">
           <p class="card-text">
             {% if post.unlisted == False %}
+            <a href="{%url 'post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" >{{post.title}}</i></a>   
+        
                   <h2>{{post.title}}</h2>
                   {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
 

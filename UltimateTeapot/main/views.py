@@ -106,21 +106,15 @@ def delete_post(request, id):
 
 def edit_post(request, id):
     post = Post.objects.get(id = id)
-
-    form = UploadForm(request.POST or None, request.FILES)
+    form = UploadForm(request.POST or None, instance=post)
     if request.method == "POST":
-        if form.is_valid():        
-            post_e = form.save(commit=False)
-            post_e.author = request.user.profile
-            post_e.save()
-            #post.delete()
-            #uri = request.build_absolute_uri('?')
-            #Post.objects.get(post_id=str(uri)).delete()
+        if form.is_valid():      
+            form.save()
             messages.success(request, ("You Successfully Edited!"))
             return redirect('home')
-    upload_form = UploadForm()
+    #upload_form = UploadForm()
     post.delete()
-    return render(request, "edit_post.html", {"post":post, "upload_form":upload_form})
+    return render(request, "edit_post.html", {"post":post, "upload_form":form})
 
 
         
