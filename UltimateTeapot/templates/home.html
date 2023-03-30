@@ -149,7 +149,11 @@
                 {% else %}
                     this is an unlisted post comment this line
                 {% endif %}
-            <button type="submit" class="btn btn-primary btn-block"style="float: right;">Edit</button>
+
+            {% if request.user.id == post.author.user.id %}
+            <a href="{%url 'edit_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>   
+        
+            {% endif %}
           </p>
           <!-- {% if post.image %}
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
@@ -172,7 +176,10 @@
             <a href="{% url 'comment_create' post.id %}" style="text-decoration:none;color:rgb(256,256,256)">Comment!</a>
           </button>
           {% endcomment %}
-          <button type="submit" class="btn btn-secondary btn-block" style="float: right;">Delete</button>
+          {% if request.user.id == post.author.user.id %}
+          <a href="{%url 'delete_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Delete</i></a>
+          {% endif %}
+          
 
           <br/><br/>
           {% for comment in post.comment.all %}
