@@ -26,7 +26,9 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, FollowerSerializer, InboxSerializer, PostImageSerializer, CommentSerializer, CommentListSerializer
+from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, \
+    FollowerSerializer, InboxSerializer, PostImageSerializer, CommentSerializer, CommentListSerializer, \
+    PostLikeSerializer, CommentLikeSerializer, AuthorLikeSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
@@ -647,26 +649,28 @@ class Commentlist(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-# TODO: finish this endpoint
 class postLikes(APIView):
-
     def get(self, request, id,pid):
-        return Response(status=status.HTTP_200_OK)
+        post = Post.objects.get(id=pid)
+        serializer = PostLikeSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-# TODO: finish this endpoint
 class commentLikes(APIView):
-
     def get(self,request,id,pid,cid):
-        return Response(status=status.HTTP_200_OK)
+        comment = Comment.objects.get(id=cid)
+        serializer = CommentLikeSerializer(comment)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# TODO: finish this endpoint
 class authorLikes(APIView):
     def get(self,request,id):
-        return Response(status=status.HTTP_200_OK)
+        author = Profile.objects.get(id=id)
+        serializer = AuthorLikeSerializer(author)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# TODO: Finish this endpoint for comments and likes
 class InboxList(APIView):
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
@@ -680,7 +684,7 @@ class InboxList(APIView):
         data = request.data
         type = data["type"]
 
-        if type == "Follow":
+        if type == ("Follow" or "follow"):
             object = Object.objects.create(
                 type="Follow",
                 actor=data["actor"]["id"],
@@ -690,7 +694,7 @@ class InboxList(APIView):
             profile.save()
             return Response(status=status.HTTP_200_OK)
 
-        elif type == "post":
+        elif type == ("post" or "Post"):
             object = Object.objects.create(
                 type="post",
                 object_id=data["id"]
@@ -698,6 +702,50 @@ class InboxList(APIView):
             profile.inbox.add(object)
             profile.save()
             return Response(status=status.HTTP_200_OK)
+
+        elif type == ("like" or "Like"):
+            object = Object.object.create(
+                type="like",
+                object_id=data["object"]
+            )
+            profile.inbox.add(object)
+            profile.save()
+
+            like = Like.objects.create(
+                object_id=data["object"],
+                author_id=data["author"]["id"]
+            )
+
+            # If the like is for a post, create a like object and add it to that post's likes
+            split_id = data["object"].split("/")
+            object_type = split_id[len(split_id) - 3]
+            id = split_id[len(split_id) - 2]
+            if object_type == "posts":
+                post = Post.objects.get(id=id)
+                post.likes.add(like)
+
+            elif object_type == "comments":
+                comment = Comment.objects.get(id=id)
+                comment.likes.add(like)
+
+        elif type == ("comment" or "Comment"):
+            object = object = Object.object.create(
+                type="comment",
+                object_id=data["object"]
+            )
+            profile.inbox.add(object)
+            profile.save()
+
+            comment = Comment.objects.create(
+                comment=data["comment"],
+                author=data["author"]["id"]
+            )
+
+            # store comment on the post
+            post_url = data["object"].split("/comments")[0]
+            post_id = post_url.split("posts/")[1]
+            post = Post.objects.get(id=post_id)
+            post.comments.add(comment)
 
         return Response(status=status.HTTP_200_OK)
 

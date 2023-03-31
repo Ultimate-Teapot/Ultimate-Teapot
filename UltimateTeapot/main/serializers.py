@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from requests.auth import HTTPBasicAuth
 
-from .models import Profile, Post, Comment, FollowRequest, Object, Node
+from .models import Profile, Post, Comment, FollowRequest, Object, Node, Like
 from rest_framework import serializers
 
 from rest_framework.serializers import CharField, DateTimeField, IntegerField
@@ -285,6 +285,80 @@ class FollowRequestSerializer(serializers.ModelSerializer):
 
         return representation
 
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['@context'] = "https://www.w3.org/ns/activitystreams"
+
+        author_id = instance.author_id
+        host = author_id.split("author")[0]
+        node = Node.objects.get(host=host)
+        author_object = requests.get(author_id + '/', auth=HTTPBasicAuth(node.username, node.password))
+        author_json = author_object.json()
+
+        representation['summary'] = author_json['displayName'] = " likes your post"
+        representation['type'] = "Like"
+        representation['author'] = author_json
+        representation['object'] = instance.object_id
+
+        return representation
+
+class PostLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ['type']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['type'] = "likes"
+        items = []
+
+        for like in instance.likes.all():
+            like_data = LikeSerializer(like).data
+            items.append(like_data)
+
+        representation['items'] = items
+
+        return representation
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = []
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['type'] = "likes"
+        items = []
+
+        for like in instance.likes.all():
+            like_data = LikeSerializer(like).data
+            items.append(like_data)
+
+        representation['items'] = items
+
+        return representation
+
+class AuthorLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = []
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['type'] = "likes"
+        items = []
+
+        for like in instance.liked.all():
+            like_data = LikeSerializer(like).data
+            items.append(like_data)
+
+        representation['items'] = items
+
+        return representation
 
 class InboxSerializer(serializers.ModelSerializer):
     class Meta:

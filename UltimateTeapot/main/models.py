@@ -22,6 +22,19 @@ class Follower(models.Model):
     # host as url
     host = models.CharField(max_length=255)
 
+class Like(models.Model):
+    # id of the object being liked as url
+    object_id = models.CharField(max_length=255)
+    # id of author who created the like, also a url
+    author_id = models.CharField(max_length=255)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Please DO NOT USE
+    # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
+    like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
+
+
 class Profile(models.Model):
     # TO BE SENT AS JSON #
     type = models.CharField(max_length=100, default="Author",editable=False)
@@ -40,16 +53,8 @@ class Profile(models.Model):
 
     follower_list = models.ManyToManyField(Follower)
 
-    # Test these two later with postgres
-    # List of authorIDs that are followers
-    #follower_list = ArrayField(
-    #    models.CharField(max_length=255)
-    #)
-
-    # List of authorIDs that are friends
-    #friend_list = ArrayField(
-    #    models.CharField(max_length=255)
-    #)
+    #List of items this author liked, be careful with private info
+    liked = models.ManyToManyField(Like)
 
     #DO NOT USE
     followers = models.ManyToManyField("self", related_name="users_following", symmetrical=False, blank=True)
@@ -85,15 +90,17 @@ class FollowRequest(models.Model):
 #     USERNAME_FIELD = "identifier"
 
 class Comment(models.Model):
-    # Actually, post not stored here at all
-    #post_id = models.CharField(max_length=255)
+    # post uuid
+    # post_id = models.CharField(max_length=255)
     comment = models.TextField()
     contentType = models.TextField(max_length=255, default='text/markdown')
     # url to comment author
     author = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-    # id of comment, full url
+    # id of comment, uuid or alphanum
     id = models.CharField(max_length=255, primary_key=True)
+
+    likes = models.ManyToManyField(Like)
 
     # DO NOT USE
     comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
@@ -135,6 +142,8 @@ class Post(models.Model):
     # List of comments
     comments = models.ManyToManyField(Comment)
 
+    likes = models.ManyToManyField(Like)
+
     #Published
     #pub_date = models.DateTimeField(auto_now=False,auto_now_add=True)
     pub_date = models.DateTimeField(default=datetime.datetime.now)
@@ -146,26 +155,13 @@ class Post(models.Model):
 
     # post_type = models.IntegerField(default=0)
 
-    likes = models.IntegerField(default=0)
+    likes = models.ManyToManyField(Like)
 
     def __str__(self):
         return(f"{self.author} "
               f"({self.pub_date:%Y-%m-%d %H:%M}): "
               f"{self.content}"
         )
-    
-class Like(models.Model):
-    # id of the object being liked as url
-    object_id = models.CharField(max_length=255)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    # Please DO NOT USE
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
-    like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
-
-
 
 
 # class PostLike(models.Model):
