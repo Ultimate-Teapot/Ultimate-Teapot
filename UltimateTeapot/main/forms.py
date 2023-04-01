@@ -28,6 +28,8 @@ class UploadForm(forms.ModelForm):
     title = forms.CharField()
     visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
     unlisted = forms.BooleanField(label='Unlisted?', required=False)
+    image = forms.ImageField(required=False)
+  
 
     contentType = forms.CharField(widget=forms.HiddenInput(), required=False)
     #image = forms.ImageField()
