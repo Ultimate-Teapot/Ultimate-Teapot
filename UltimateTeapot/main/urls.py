@@ -24,6 +24,9 @@ urlpatterns = [
   # ('authors/<str:author_id>')
   path('posts/', views.posts, name='posts'),
   path('posts/<str:id>', views.post, name='post'),
+  path('make_comment/<path:id>', views.make_comment, name='make_comment'),
+  # For testing posts and comments from other servers
+  path('foreign_post/<path:id>/', views.foreign_post, name='foreign_post'),
   path('authors/<str:author_id>/posts/<str:post_id>', views.singlePost, name='singlePost'),
   path('authors/<str:id>/posts/<str:post_id>/comment/', views.comment_create, name='comment_create'),
   # path('', views.index, name='index'),

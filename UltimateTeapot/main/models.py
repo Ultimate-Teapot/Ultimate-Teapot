@@ -95,7 +95,7 @@ class Comment(models.Model):
     comment = models.TextField()
     contentType = models.TextField(max_length=255, default='text/markdown')
     # url to comment author
-    author = models.CharField(max_length=255)
+    author_id = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # id of comment, uuid or alphanum
     id = models.CharField(max_length=255, primary_key=True)
@@ -103,7 +103,7 @@ class Comment(models.Model):
     likes = models.ManyToManyField(Like)
 
     # DO NOT USE
-    comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
+    #comment_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author_post_comment')
     # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
 
 class Post(models.Model):

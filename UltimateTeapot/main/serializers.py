@@ -195,7 +195,7 @@ class PostSerializer(serializers.ModelSerializer):
         representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
         return representation
 
-class CommentSerializer():
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = []
@@ -203,10 +203,10 @@ class CommentSerializer():
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['type'] = "comment"
-        author = instance.author
-        host = author.split("authors")[0]
+        author_id = instance.author_id
+        host = author_id.split("authors")[0]
         node = Node.objects.get(host=host)
-        author_obj = requests.get(author + '/', auth=HTTPBasicAuth(node.username, node.password))
+        author_obj = requests.get(author_id + '/', auth=HTTPBasicAuth(node.username, node.password))
         author_json = author_obj.json()
         representation['author'] = author_json
         representation['comment'] = instance.comment
@@ -217,7 +217,7 @@ class CommentSerializer():
 
 
 #TODO: make sure comments lists work, add pagination
-class CommentListSerializer():
+class CommentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = []
@@ -231,14 +231,14 @@ class CommentListSerializer():
         comments = []
 
         for comment in instance.comments.all():
-            comment = CommentSerializer(comment)
+            comment = CommentSerializer(comment).data
             comments.append(comment)
 
         representation["comments"] = comments
 
         return representation
 
-class PostImageSerializer():
+class PostImageSerializer(serializers.ModelSerializer):
 
     content = serializers.SerializerMethodField("get_image",required=False)
     model = Post
@@ -386,6 +386,17 @@ class InboxSerializer(serializers.ModelSerializer):
                 post_json = post.json()
 
                 items.append(post_json)
+            elif item.type == "comment":
+                id = item.object_id
+                comment = Comment.objects.get(id=id)
+                comment_json = CommentSerializer(comment).data
+                items.append(comment_json)
+
+            elif item.type == "like":
+                object_id = item.object_id
+                like = Like.objects.get(object_id=object_id)
+                like_json = LikeSerializer(like).data
+                items.append(like_json)
 
 
 

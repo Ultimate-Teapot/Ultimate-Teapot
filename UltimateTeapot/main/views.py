@@ -1,4 +1,5 @@
 import base64
+import datetime
 import os
 import urllib.parse
 import uuid
@@ -68,6 +69,22 @@ def post(request, id):
         # User is authorized to view this post.
         # return render(request, 'view_post.html', {'post': post})
         return render(request, "post.html", {"post": new_post})
+
+def foreign_post(request, id):
+    # Pass in the full URL of a post, make a get request and display it on a page
+    # Make comments
+    comment_form = CommentForm(request.POST or None)
+
+    host = id.split("authors")[0]
+    node = Node.objects.get(host=host)
+    post_obj = requests.get(id + "/", auth=HTTPBasicAuth(node.username, node.password))
+    post_json = post_obj.json()
+
+    post_comments = requests.get(id + "/comments/", auth=HTTPBasicAuth(node.username, node.password))
+    post_comments_json = post_comments.json()
+
+    return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_json['comments'], "comment_form":comment_form})
+
 
 # def signup(request):
 #     if request.method == 'POST':
@@ -195,6 +212,41 @@ def posts(request):
     return redirect('home')
 
 @login_required(login_url='signin')
+def make_comment(request, id):
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST, request.FILES)
+        if comment_form.is_valid():
+            uniqueCommentID = uuid.uuid4()
+            comment_id = str(uniqueCommentID)
+            comment = request.POST['comment']
+
+            profile = request.user.profile
+            author_data = ProfileSerializer(profile).data
+
+            pub_date = datetime.datetime.now().isoformat()
+            full_id = id + "/comments/" + comment_id
+
+            obj_json = {
+                "type":"comment",
+                "author":author_data,
+                "comment":comment,
+                "contentType":"text/markdown",
+                "published":pub_date,
+                "id":full_id
+            }
+
+            print(obj_json)
+
+            author_id = id.split("/posts/")[0]
+            host = author_id.split("authors/")[0]
+
+            node = Node.objects.get(host=host)
+            requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
+
+
+    return redirect('foreign_post', id)
+
+@login_required(login_url='signin')
 def like(request):
     return redirect('home')
 
@@ -220,8 +272,6 @@ def home(request):
                 post = form.save(commit=False)
                 post.author = request.user.profile
                 post.save()
-
-
 
                 messages.success(request, ("You Successfully Posted!"))
                 return redirect('home')
@@ -729,20 +779,24 @@ class InboxList(APIView):
                 comment.likes.add(like)
 
         elif type == ("comment" or "Comment"):
-            object = object = Object.object.create(
+            object = Object.objects.create(
                 type="comment",
-                object_id=data["object"]
+                object_id=data["id"]
             )
             profile.inbox.add(object)
             profile.save()
 
+            print(data["author"]["id"])
+
             comment = Comment.objects.create(
                 comment=data["comment"],
-                author=data["author"]["id"]
+                author_id=data["author"]["id"],
+                id=data["id"],
+                created_at=data["published"],
             )
 
             # store comment on the post
-            post_url = data["object"].split("/comments")[0]
+            post_url = data["id"].split("/comments")[0]
             post_id = post_url.split("posts/")[1]
             post = Post.objects.get(id=post_id)
             post.comments.add(comment)
@@ -752,7 +806,8 @@ class InboxList(APIView):
     def delete(self,request,id):
         # clear the inbox
         profile = Profile.objects.get(id=id)
-        profile.inbox.clear()
+        for object in profile.inbox.all():
+            object.delete()
         profile.save()
 
         return Response(status=status.HTTP_200_OK)
