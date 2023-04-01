@@ -1,58 +1,90 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if user.is_authenticated %}
-<title>Inbox</title>
-<style>
-    button{
+  {% if user.is_authenticated %}
+    <title>Inbox</title>
+    <style>
+      .card {
+        margin-bottom: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .card-body {
+        padding: 20px;
+      }
+
+      .card p {
+        font-size: 18px;
+        margin-bottom: 0;
+      }
+
+      .card small {
+        color: gray;
+        font-size: 14px;
+      }
+
+      .card button {
         border: none;
         cursor: pointer;
         appearance: none;
         background-color: inherit;
-         transition: transform .7s ease-in-out;
-        margin-left:10px;
-
+        transition: transform .7s ease-in-out;
+        margin-left: 10px;
       }
-      button:hover{
+
+      .card button:hover {
         transform: rotate(360deg);
-
       }
-</style>
 
+      .btn-primary {
+        background-color: #1DA1F2;
+        border-color: #1DA1F2;
+        border-radius: 5px;
+      }
 
+      .btn-primary:hover {
+        background-color: #0D8EDB;
+        border-color: #0D8EDB;
+      }
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-8">
-      <h1 class="text-center">Ultimate Teapot!</h1>
-      <br>
-      {% for item in items %}
-      
-      <div class="card mb-4">
-        <div class="card-body">
+      h1 {
+        margin-top: 0;
+        font-size: 36px;
+      }
+    </style>
 
-          {% if item.type == "Follow" %}
-          <p>{{ item.actor }} wants to follow you!</p>
-          {% elif item.type == "post" %}
-          <p>Post id: {{ item.object_id }}</p>
-          {% endif %}
-          
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <h1 class="text-center">Inbox</h1>
+          <br>
+          {% for item in items %}
+            <div class="card">
+              <div class="card-body">
+                {% if item.type == "Follow" %}
+                  <p><strong>{{ item.actor }}</strong> wants to follow you!</p>
+                  <button class="btn btn-primary">Accept</button>
+                  <button class="btn btn-danger">Reject</button>
+                {% elif item.type == "post" %}
+                  <p>You have a new message from <strong>{{ item.actor }}</strong>.</p>
+                  <small>{{ item.published }}</small>
+                  <p>{{ item.content }}</p>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
         </div>
       </div>
-      {% endfor %}
     </div>
-  </div>
-</div>
-
-
-{% else %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-6 text-center">
-      <p class="lead">You are not logged in.</p>
-      <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'signup' %}">sign up</a>.</p>
+  {% else %}
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+          <p class="lead">You are not logged in.</p>
+          <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'signup' %}">sign up</a>.</p>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-{% endif %}
+  {% endif %}
 {% endblock %}
