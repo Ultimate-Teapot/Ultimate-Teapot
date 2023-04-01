@@ -1,4 +1,5 @@
 import base64
+import datetime
 import os
 import urllib.parse
 import uuid
@@ -26,7 +27,9 @@ from django.contrib import messages
 # rest stuff
 from rest_framework import viewsets
 from rest_framework import permissions
-from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, FollowerSerializer, ProfilePostSerializer, InboxSerializer, PostImageSerializer
+from .serializers import ProfileSerializer, PostsSerializer, FollowRequestSerializer, PostSerializer, \
+    FollowerSerializer, InboxSerializer, PostImageSerializer, CommentSerializer, CommentListSerializer, \
+    PostLikeSerializer, CommentLikeSerializer, AuthorLikeSerializer
 from rest_framework.views import APIView
 
 from django.http import Http404
@@ -66,6 +69,22 @@ def post(request, id):
         # User is authorized to view this post.
         # return render(request, 'view_post.html', {'post': post})
         return render(request, "post.html", {"post": new_post})
+
+def foreign_post(request, id):
+    # Pass in the full URL of a post, make a get request and display it on a page
+    # Make comments
+    comment_form = CommentForm(request.POST or None)
+
+    host = id.split("authors")[0]
+    node = Node.objects.get(host=host)
+    post_obj = requests.get(id + "/", auth=HTTPBasicAuth(node.username, node.password))
+    post_json = post_obj.json()
+
+    post_comments = requests.get(id + "/comments/", auth=HTTPBasicAuth(node.username, node.password))
+    post_comments_json = post_comments.json()
+
+    return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_json['comments'], "comment_form":comment_form})
+
 
 # def signup(request):
 #     if request.method == 'POST':
@@ -193,6 +212,65 @@ def posts(request):
     return redirect('home')
 
 @login_required(login_url='signin')
+def make_comment(request, id):
+    if request.method == 'POST':
+        comment_form = CommentForm(request.POST, request.FILES)
+        if comment_form.is_valid():
+            uniqueCommentID = uuid.uuid4()
+            comment_id = str(uniqueCommentID)
+            comment = request.POST['comment']
+
+            profile = request.user.profile
+            author_data = ProfileSerializer(profile).data
+
+            pub_date = datetime.datetime.now().isoformat()
+            full_id = id + "/comments/" + comment_id
+
+            obj_json = {
+                "type":"comment",
+                "author":author_data,
+                "comment":comment,
+                "contentType":"text/markdown",
+                "published":pub_date,
+                "id":full_id
+            }
+
+            author_id = id.split("/posts/")[0]
+            host = author_id.split("authors/")[0]
+
+            node = Node.objects.get(host=host)
+            requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
+
+
+    return redirect('foreign_post', id)
+
+@login_required(login_url='signin')
+def like_post(request, id):
+    if request.method == 'POST':
+        profile = request.user.profile
+        author_data = ProfileSerializer(profile).data
+
+        obj_json = {
+            "@context":"https://wwww.w3.org/ns/activitystreams",
+            "summary":profile.displayName + " likes your post",
+            "type":"Like",
+            "author":author_data,
+            "object":id,
+        }
+
+        print(obj_json)
+
+
+        author_id = id.split("/posts/")[0]
+        host = author_id.split("authors/")[0]
+
+        node = Node.objects.get(host=host)
+        requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
+
+
+    return redirect('foreign_post', id)
+
+@login_required(login_url='signin')
 def like(request):
     return redirect('home')
 
@@ -218,8 +296,6 @@ def home(request):
                 post = form.save(commit=False)
                 post.author = request.user.profile
                 post.save()
-
-
 
                 messages.success(request, ("You Successfully Posted!"))
                 return redirect('home')
@@ -445,7 +521,7 @@ class SingleAuthor(APIView):
             author = Profile.objects.get(id=str(uri))
         except author.DoesNotExist:
             raise Http404
-        serializer = ProfilePostSerializer(author, data=request.data)
+        serializer = ProfileSerializer(author, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -479,7 +555,7 @@ class PostsList(ListCreateAPIView):
         profile_instance = Profile.objects.get(id=id)
 
         uniqueID = uuid.uuid4()
-        post_id = id + "/posts/" + str(uniqueID)
+        post_id = str(uniqueID)
 
         post = serializer.save(id=post_id,author=profile_instance,content=self.request.data["content"])
         return post
@@ -494,7 +570,6 @@ class SinglePost(GenericAPIView):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
-
 
 
     def get(self, request, id, pid):
@@ -519,27 +594,42 @@ class SinglePost(GenericAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-    # TODO fix put
-    # def put(self, request, id, pid):
-    #     uri = request.build_absolute_uri('?')
-    #     try:
-    #         postobj = Post.objects.get(id=pid)
-    #     except postobj.DoesNotExist:
-    #         serializer = PostSerializer(postobj,data=request.data)
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             return Response(serializer.data)
-    #        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, id, pid):
+        uri = request.build_absolute_uri('?')
+        # try:
+        #     postobj = Post.objects.get(id=pid)
+        # except postobj.DoesNotExist:
+        #     serializer = PostSerializer(postobj,data=request.data)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #         return Response(serializer.data)
+        # else:
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+        if Post.objects.filter(id=pid).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            post_data = request.data
+            # author_id = post_data['author']['id']
+            # author_uuid = author_id.split('authors/')[1]
+            author = Profile.objects.get(id=id)
+            Post.objects.create(
+                id=pid,
+                title=post_data['title'],
+                source=post_data['source'],
+                origin=post_data['origin'],
+                description=post_data['description'],
+                contentType=post_data['contentType'],
+                content=post_data['content'],
+                author=author,
+                comments=settings.APP_HTTP+settings.APP_DOMAIN+"/main/api/authors/"+id+"/posts/"+pid+"/comments/"
+            )
+            return Response(status=status.HTTP_200_OK)
 
 
     def delete(self, request, id, pid):
         uri = request.build_absolute_uri('?')
-        Post.objects.get(post_id=str(uri)).delete()
+        Post.objects.get(id=pid).delete()
         return Response(status=status.HTTP_200_OK)
-
-
 
 
 '''api/authors/<str:id>/posts/<str:pid>/image'''
@@ -619,44 +709,42 @@ class singleFollowerList(APIView):
             return Response(status=status.HTTP_200_OK)
 
 
-# TODO: Fix this and add to urls.py
-# /authors/{AUTHOR_ID}/posts/{POST_ID}/comments/
-
 class Commentlist(APIView):
     def get(self, request, id, pid):
-        uri = request.build_absolute_uri('?')
-        print(uri)
-        posts = Post.objects.get(post_id=str(uri))
-        serializer = PostsSerializer(posts)
+        post = Post.objects.get(id=pid)
+        serializer = CommentListSerializer(post)
 
         # print(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self,request,id,pid):
+        # TODO: Add this
         return Response(status=status.HTTP_200_OK)
 
 
-# TODO: finish this endpoint
 class postLikes(APIView):
-
     def get(self, request, id,pid):
-        return Response(status=status.HTTP_200_OK)
+        post = Post.objects.get(id=pid)
+        serializer = PostLikeSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-# TODO: finish this endpoint
 class commentLikes(APIView):
-
     def get(self,request,id,pid,cid):
-        return Response(status=status.HTTP_200_OK)
+        comment = Comment.objects.get(id=cid)
+        serializer = CommentLikeSerializer(comment)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# TODO: finish this endpoint
 class authorLikes(APIView):
     def get(self,request,id):
-        return Response(status=status.HTTP_200_OK)
+        author = Profile.objects.get(id=id)
+        serializer = AuthorLikeSerializer(author)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# TODO: Finish this endpoint for comments and likes
 class InboxList(APIView):
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
@@ -670,7 +758,7 @@ class InboxList(APIView):
         data = request.data
         type = data["type"]
 
-        if type == "Follow":
+        if (type == "Follow") or (type == "follow"):
             object = Object.objects.create(
                 type="Follow",
                 actor=data["actor"]["id"],
@@ -680,7 +768,7 @@ class InboxList(APIView):
             profile.save()
             return Response(status=status.HTTP_200_OK)
 
-        elif type == "post":
+        elif (type == "post") or (type == "Post"):
             object = Object.objects.create(
                 type="post",
                 object_id=data["id"]
@@ -689,12 +777,63 @@ class InboxList(APIView):
             profile.save()
             return Response(status=status.HTTP_200_OK)
 
+        elif (type == "Like") or (type == "like"):
+            object = Object.objects.create(
+                type="like",
+                object_id=data["object"]
+            )
+            profile.inbox.add(object)
+            profile.save()
+
+            like = Like.objects.create(
+                object_id=data["object"],
+                author_id=data["author"]["id"]
+            )
+
+            # If the like is for a post, create a like object and add it to that post's likes
+            split_id = data["object"].split("/")
+            object_type = split_id[len(split_id) - 3]
+            id = split_id[len(split_id) - 2]
+            if object_type == "posts":
+                post = Post.objects.get(id=id)
+                post.likes.add(like)
+
+            elif object_type == "comments":
+                comment = Comment.objects.get(id=id)
+                comment.likes.add(like)
+
+        elif (type == "comment") or (type == "Comment"):
+            object = Object.objects.create(
+                type="comment",
+                object_id=data["id"]
+            )
+            profile.inbox.add(object)
+            profile.save()
+
+            print(data["author"]["id"])
+
+            comment = Comment.objects.create(
+                comment=data["comment"],
+                author_id=data["author"]["id"],
+                id=data["id"],
+                created_at=data["published"],
+            )
+
+            # store comment on the post
+            post_url = data["id"].split("/comments")[0]
+            post_id = post_url.split("posts/")[1]
+            post = Post.objects.get(id=post_id)
+            post.comments.add(comment)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         return Response(status=status.HTTP_200_OK)
 
     def delete(self,request,id):
         # clear the inbox
         profile = Profile.objects.get(id=id)
-        profile.inbox.clear()
+        for object in profile.inbox.all():
+            object.delete()
         profile.save()
 
         return Response(status=status.HTTP_200_OK)

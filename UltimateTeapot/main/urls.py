@@ -24,6 +24,10 @@ urlpatterns = [
   # ('authors/<str:author_id>')
   path('posts/', views.posts, name='posts'),
   path('posts/<str:id>', views.post, name='post'),
+  path('make_comment/<path:id>', views.make_comment, name='make_comment'),
+  path('like_post/<path:id>', views.like_post, name='like_post'),
+  # For testing posts and comments from other servers
+  path('foreign_post/<path:id>/', views.foreign_post, name='foreign_post'),
   path('authors/<str:author_id>/posts/<str:post_id>', views.singlePost, name='singlePost'),
   path('authors/<str:id>/posts/<str:post_id>/comment/', views.comment_create, name='comment_create'),
   # path('', views.index, name='index'),
@@ -43,7 +47,7 @@ urlpatterns = [
   path('api/authors/<str:id>/followers/<path:fid>/', singleFollowerList.as_view(), name='follower_api'),
   path('api/authors/<str:id>/posts/', PostsList.as_view(), name='posts_api'),
   path('api/authors/<str:id>/posts/<str:pid>/', SinglePost.as_view(), name='post_api'),
-  path('api/authors/<str:id>/posts/<str:pid>/comments/', Commentlist.as_view(), name='post_api'),
+  path('api/authors/<str:id>/posts/<str:pid>/comments/', Commentlist.as_view(), name='comments_api'),
   # path('api/authors/<str:id>/followers',FollowerList.as_view(),name="followers_api"),
   # path('api/authors/<str:id>/followers/<str:fid>', singleFollowerList.as_view(),name="follower_api"),
   path('api/authors/<str:id>/posts/<str:pid>/image/', ImagePostsList.as_view(), name='image_api'),

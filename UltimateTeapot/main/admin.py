@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import Group, User
-from .models import Post, Comment, Profile, Like, Node
+from .models import Post, Comment, Profile, Like, Node, Object
 
 class ProfileInLine(admin.StackedInline):
     model = Profile
@@ -19,4 +19,5 @@ admin.site.register(Comment)
 # admin.site.register(CommentLike)
 admin.site.register(Profile)
 admin.site.register(Node)
+admin.site.register(Object)
 
