@@ -3,6 +3,11 @@
 {% block content %}
 {% include 'post_structure.html' %}
 
+<form action="/main/like_post/{{ post.id }}" method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-block">Like</button>
+</form>
+
 <h>Comments</h>
 
 <form action="/main/make_comment/{{ post.id }}" method="POST" enctype="multipart/form-data">
@@ -20,6 +25,11 @@
     <img src="{{ comment.author.profileImage }}" alt="Profile Image" height="100" width="100">
     <p>{{ comment.author.displayName }}</p>
     <p>{{ comment.comment }}</p>
+
+    <form action="/main/like_comment/{{ comment.id }}" method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-block">Like</button>
+</form>
 </div>
 
 {% endfor %}

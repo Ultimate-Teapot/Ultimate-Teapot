@@ -32,7 +32,7 @@ class Like(models.Model):
 
     # Please DO NOT USE
     # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
-    like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
+    #like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
 
 
 class Profile(models.Model):

@@ -288,6 +288,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
 class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
+        fields = []
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

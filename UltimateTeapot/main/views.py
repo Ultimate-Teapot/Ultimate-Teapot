@@ -235,13 +235,37 @@ def make_comment(request, id):
                 "id":full_id
             }
 
-            print(obj_json)
-
             author_id = id.split("/posts/")[0]
             host = author_id.split("authors/")[0]
 
             node = Node.objects.get(host=host)
             requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
+
+
+    return redirect('foreign_post', id)
+
+@login_required(login_url='signin')
+def like_post(request, id):
+    if request.method == 'POST':
+        profile = request.user.profile
+        author_data = ProfileSerializer(profile).data
+
+        obj_json = {
+            "@context":"https://wwww.w3.org/ns/activitystreams",
+            "summary":profile.displayName + " likes your post",
+            "type":"Like",
+            "author":author_data,
+            "object":id,
+        }
+
+        print(obj_json)
+
+
+        author_id = id.split("/posts/")[0]
+        host = author_id.split("authors/")[0]
+
+        node = Node.objects.get(host=host)
+        requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
 
 
     return redirect('foreign_post', id)
@@ -734,7 +758,7 @@ class InboxList(APIView):
         data = request.data
         type = data["type"]
 
-        if type == ("Follow" or "follow"):
+        if (type == "Follow") or (type == "follow"):
             object = Object.objects.create(
                 type="Follow",
                 actor=data["actor"]["id"],
@@ -744,7 +768,7 @@ class InboxList(APIView):
             profile.save()
             return Response(status=status.HTTP_200_OK)
 
-        elif type == ("post" or "Post"):
+        elif (type == "post") or (type == "Post"):
             object = Object.objects.create(
                 type="post",
                 object_id=data["id"]
@@ -753,8 +777,8 @@ class InboxList(APIView):
             profile.save()
             return Response(status=status.HTTP_200_OK)
 
-        elif type == ("like" or "Like"):
-            object = Object.object.create(
+        elif (type == "Like") or (type == "like"):
+            object = Object.objects.create(
                 type="like",
                 object_id=data["object"]
             )
@@ -778,7 +802,7 @@ class InboxList(APIView):
                 comment = Comment.objects.get(id=id)
                 comment.likes.add(like)
 
-        elif type == ("comment" or "Comment"):
+        elif (type == "comment") or (type == "Comment"):
             object = Object.objects.create(
                 type="comment",
                 object_id=data["id"]
@@ -800,6 +824,8 @@ class InboxList(APIView):
             post_id = post_url.split("posts/")[1]
             post = Post.objects.get(id=post_id)
             post.comments.add(comment)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_200_OK)
 
