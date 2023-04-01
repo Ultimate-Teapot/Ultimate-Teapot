@@ -121,6 +121,29 @@ def foreign_post(request, id):
 #     else:
 #         return render(request, 'signup.html')
 
+def delete_post(request, id):
+    post = Post.objects.get(id = id)
+    post.delete()
+    return redirect('home')
+
+def edit_post(request, id):
+    post = Post.objects.get(id = id)
+    form = UploadForm(request.POST or None, instance=post)
+    if request.method == "POST":
+        if form.is_valid():      
+            form.save()
+            messages.success(request, ("You Successfully Edited!"))
+            return redirect('home')
+    #upload_form = UploadForm()
+    post.delete()
+    return render(request, "edit_post.html", {"post":post, "upload_form":form})
+
+
+        
+
+
+
+
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -365,6 +388,7 @@ def home(request):
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
+
 
 def inbox(request):
     

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+
+{% if upload_form %}
+      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ upload_form.contentType.hidden }}
+        {{ upload_form.as_p }}
+
+
+        <button type="submit" class="btn btn-primary btn-block">Update!</button>
+      </form> 
+    {% endif %}
+
+{% endblock content %}
