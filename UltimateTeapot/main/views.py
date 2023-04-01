@@ -343,7 +343,7 @@ def profile(request, id):
         friends = current_user.friend_list.all()
         followers = current_user.follower_list.all()
         print("here")
-        print(followers)
+        print(friends)
         
         #n^2
         for fr in friends:
@@ -400,19 +400,10 @@ def follow_response(request):
             
             author_node = Node.objects.get(host=follower_host)
             followers_object = requests.get(follower_id + '/followers/', auth=HTTPBasicAuth(author_node.username, author_node.password)).json()
-            inbox_object = requests.get(current_user.url + '/inbox/', auth=HTTPBasicAuth(author_node.username, author_node.password)).json()
+            follow_request = Object.objects.get(actor=follower_id, object=current_user.url)
             
             if action == "accept" or action == "decline":
-                for item in inbox_object['items']:
-                    if follower_id == item['actor']['id']:
-                        #print(item['actor']['id'])
-                        #TODO: i need to delete this in inbox but i cant 405 
-                        inbox_object['items'].remove(item)                  
-                        break
-
-                #inbox_object_new = requests.put(current_user.url + '/inbox/', auth=HTTPBasicAuth(author_node.username, author_node.password), json=inbox_object)
-                #405 not allowed
-                #print(inbox_object_new.status_code)
+                current_user.inbox.remove(follow_request)
             
             if action == "accept":               
                 print("in accept")
