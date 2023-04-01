@@ -40,6 +40,9 @@ from rest_framework.generics import ListCreateAPIView, GenericAPIView
 from urllib.parse import urlparse
 from django.conf import settings
 from .paginations import NewPaginator
+import base64
+from django.core.files.base import ContentFile
+
 
 
 @login_required(login_url='signin')
@@ -184,23 +187,43 @@ def posts(request):
             uniquePostID = uuid.uuid4()
             post_id = str(uniquePostID)
             #image = request.FILES.get('image')
+
             contentType = request.POST['contentType']
-            if contentType == "application/base64":
+            image = request.FILES.get('image')
+
+
+            # See what to set content type to #
+            if image:
+                try:
+                    if ".png" in image.name:
+                        contentType = "image/png;base64"
+                    if (".jpeg" in image.name) or (".jpg" in image.name):
+                        contentType = "image/jpeg;base64"
+                except:
+                    contentType = "application/base64"
+             
+
+            if contentType == ("image/png;base64") or ("image/jpeg;base64") or ("application/base64"):
                 image = request.FILES.get('image')
-                content = base64.b64encode(image)
+                b_64 = base64.b64encode(image.file.read())
+                content = b_64
             else:
                 content = request.POST['content']
+            
+            
+
+
             visibility = request.POST['visibility']
             title = request.POST['title']
             if ('unlisted' in request.POST):
                 unlisted = request.POST['unlisted']
             else:
                 unlisted = False
-
             if (unlisted == 'on'):
                 unlisted = True
+
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
-                                           visibility=visibility, unlisted=unlisted,contentType=contentType)
+                                           visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
             new_post.save()
 
         # return redirect('home')
