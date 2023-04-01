@@ -1,42 +1,36 @@
 <!-- django_project/users/templates/users/profile.html -->
 {% extends "base.html" %}
+
 {% block content %}
-
-{% if profile %}
-    <h1>{{ profile.displayName }}'s Profile</h1>
-    <p>From: {{ profile.host }}</p>
-    <p>Github: {{ profile.github }}</p>
-    <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100">
-    <br/>
-
-    </br>    
-<div class="Follow button">
-            {% if profile.user.username != user.profile.user.username %}
-            <a href="{% url 'follow' profile.id %}">
-                Send a follow request to {{ profile.displayName }}
-            </a>
-            {% endif %}
-</div>
-
-{% if posts %}
-<h>{{ profile.displayName }}'s Posts</h>
-
-{% for post in posts %}
-<div class="card mb-4">
-    <a href="{% url 'foreign_post' post.id %}">
-    {{ post.title }}
-    </a>
-    </br>
-    Posted at {{ post.published }}
-    </br>
-    {{ post.content }}
-</div>
-{% endfor %}
-
-{% endif %}
-
-{% endif %}
-
-
-
-{% endblock content %}
+    {% if profile %}
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="{{ profile.profileImage }}" alt="Profile Image" class="card-img-top">
+                    <div class="card-body">
+                        <h3 class="card-title">{{ profile.displayName }}</h3>
+                        <p class="card-text">From: {{ profile.host }}</p>
+                        <p class="card-text">Github: {{ profile.github }}</p>
+                        {% if profile.user.username != user.profile.user.username %}
+                            <a href="{% url 'follow' profile.id %}" class="btn btn-primary">Send a follow request to {{ profile.displayName }}</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                {% if posts %}
+                    <h3>{{ profile.displayName }}'s Posts</h3>
+                    {% for post in posts %}
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ post.title }}</h5>
+                                <p class="card-text">{{ post.content }}</p>
+                                <p class="card-text"><small class="text-muted">Posted at {{ post.published }}</small></p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
