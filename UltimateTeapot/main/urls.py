@@ -32,7 +32,7 @@ urlpatterns = [
   path('authors/<path:id>', views.profile, name='profile'),
   path('follow/<path:id>', views.follow, name='follow'),
   path('inbox/', views.inbox, name='inbox'),
-
+  path('follow_response/', views.follow_response, name='follow_response'),
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))

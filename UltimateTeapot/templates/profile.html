@@ -3,6 +3,23 @@
 {% block content %}
 
 {% if profile %}
+    <style>
+
+        {% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %}
+        .button {
+            background-color: blue;
+            border: solid;
+            border-color: blue;
+            color: white; 
+            padding: 6px 12px; 
+            text-align: center; 
+            text-decoration: none;
+            display: inline-block; 
+            cursor: pointer;   
+            border-radius: 15%;
+        }
+
+    </style>
     <h1>{{ profile.displayName }}'s Profile</h1>
     <p>From: {{ profile.host }}</p>
     <p>Github: {{ profile.github }}</p>
@@ -10,14 +27,29 @@
     <br/>
 
     </br>    
-<div class="Follow button">
-            {% if profile.user.username != user.profile.user.username %}
-            <a href="{% url 'follow' profile.id %}">
-                Send a follow request to {{ profile.displayName }}
-            </a>
-            {% endif %}
-</div>
 
+        {% if profile.url != user.profile.url %}
+        {% comment %} TODO make sure follow is clicked once {% endcomment %}
+        <a href="{% url 'follow' profile.id %}" class="button">
+            Follow 
+            {% comment %} {{ profile.displayName }} {% endcomment %}
+        </a> 
+
+        {% endif %}
+
+{% if friends %}
+    {% if profile.url == user.profile.url %}
+        <h3>Your Friends</h3>
+        {% for fr in friends %}      
+            <a href="{% url 'profile' fr.id %}">
+                {{ fr.name }}
+            </a> 
+        {% endfor %}
+    {% endif %} 
+{% endif %}
+
+
+</br>   </br>   </br>   </br>   
 {% if posts %}
 <h>{{ profile.displayName }}'s Posts</h>
 

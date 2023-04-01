@@ -16,7 +16,7 @@ from requests.auth import HTTPBasicAuth
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
-from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object
+from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object, Follower
 
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
@@ -156,6 +156,7 @@ def logout(request):
 
 @login_required(login_url='signin')
 def posts(request):
+    print("in posts")
     if request.method == 'POST':
         upload_form = UploadForm(request.POST, request.FILES)
         if upload_form.is_valid():
@@ -195,11 +196,6 @@ def posts(request):
 @login_required(login_url='signin')
 def like(request):
     return redirect('home')
-
-# def posts(request):
-#     posts = Post.objects.all()
-
-#     return HttpResponse(posts)
 
 def home(request):
         form = UploadForm(request.POST or None, request.FILES)
@@ -268,26 +264,48 @@ def home(request):
         return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
 
 def inbox(request):
-    
-    #followRequests = FollowRequest.objects.filter(receiver=request.user)
-    #postMessage = Post.objects.filter(reciever = request.user)
-
-    curr_user = request.user.profile
-    inbox = curr_user.inbox.all()
-
-
-    return render(request, 'inbox.html', {"items":inbox})
-
-def authors(request):
+    #should not repeat this code
     all_authors = []
-
     nodes = Node.objects.all()
     for node in nodes:
         res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
         foreign_authors = res.json()
         all_authors.extend(foreign_authors['items'])
 
+    #followRequests = FollowRequest.objects.filter(receiver=request.user)
+    #postMessage = Post.objects.filter(reciever = request.user)
+
+    curr_user = request.user.profile
+    
+    inbox = curr_user.inbox.all()
+    #n^2
+    for ib in inbox:
+        for aa in all_authors:
+            if ib.actor == aa['id']:
+                ib.name = aa['displayName']
+                ib.id = aa['id']
+                ib.host = ib.actor.split('authors')[0]
+    
+    return render(request, 'inbox.html', {"items":inbox})
+
+def authors(request):
+    all_authors = []
+    nodes = Node.objects.all()
+    for node in nodes:
+        print(node)
+        res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+        foreign_authors = res.json()
+        all_authors.extend(foreign_authors['items'])
     return render(request, 'authors.html', {"authors":all_authors})
+
+def authors_list(request):
+    all_authors = []
+    nodes = Node.objects.all()
+    for node in nodes:
+        res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+        foreign_authors = res.json()
+        all_authors.extend(foreign_authors['items'])
+    return all_authors
 
 def singlePost(request, author_id, post_id):
     if request.user.is_authenticated:
@@ -303,6 +321,7 @@ def profile(request, id):
 
         author_object = requests.get(id + '/', auth=HTTPBasicAuth(author_node.username, author_node.password))
         posts = requests.get(id + '/posts/', auth=HTTPBasicAuth(author_node.username, author_node.password))
+        
         print(posts)
         post_json = posts.json()
         post_list = []
@@ -311,29 +330,40 @@ def profile(request, id):
             post_list = post_json['items']
         else:
             post_list = post_json
+            
+        #should not repeat this code
+        all_authors = []
+        nodes = Node.objects.all()
+        for node in nodes:
+            res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+            foreign_authors = res.json()
+            all_authors.extend(foreign_authors['items'])
 
-        # if request.method == "POST":
-        #     current_user_id = request.user.profile.id
-        #
-        #     action = request.POST['follow']
-        #     if action == "follow":
-        #         # profile.followers.add(current_user)
-        #         #
-        #         # if current_user in profile.users_following.all():
-        #         #     profile.friends.add(current_user)
-        #         #     current_user.friends.add(profile)
-        #         if not FollowRequest.objects.filter(sender=request.user, receiver=profile.user).exists():
-        #             FollowRequest.objects.create(sender=request.user, receiver=profile.user)
-        #
-        #     elif action == "unfollow":
-        #         profile.followers.remove(current_user)
-        #         if current_user in profile.friends.all():
-        #             profile.friends.remove(current_user)
-        #             current_user.friends.remove(profile)
-        #
-        #     profile.save()
+        current_user = request.user.profile
+        friends = current_user.friend_list.all()
+        followers = current_user.follower_list.all()
+        print("here")
+        print(followers)
+        
+        #n^2
+        # for fr in friends:
+        #     for aa in all_authors:
+        #         if fr.id == aa['id']:
+        #             fr.name = aa['displayName']
+        #             fr.id = aa['id']
+        #             print(fr.name)
+        #             print(fr.id )
+                    
+        #n^2
+        # for fl in followers:
+        #     for aa in all_authors:
+        #         if fl.id == aa['id']:
+        #             fl.name = aa['displayName']
+        #             fl.id = aa['id']
+        #             print(fl.name)
+        #             print(fl.id )
 
-        return render(request, "profile.html", {"profile":author_object.json(), "posts":post_list})
+        return render(request, "profile.html", {"profile":author_object.json(), "posts":post_list, "friends":friends, "followers":followers})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
@@ -346,17 +376,95 @@ def follow(request, id):
     target_node = Node.objects.get(host=target_host)
     object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
     object_json = object.json()
-
     data_to_send = {
         "type": "Follow",
         "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
         "actor":actor,
         "object":object_json
     }
-
+    
     requests.post(id + "/inbox/", json=data_to_send, auth=HTTPBasicAuth(target_node.username, target_node.password))
 
-    return redirect('home')
+    return render(request, "follow.html")
+    # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
+    
+def follow_response(request):
+    print("in follow_response")
+    if request.user.is_authenticated:
+        if request.method == "POST":
+            current_user = request.user.profile
+            action = request.POST['accept']
+            follower_id = request.POST['follower_id']
+            #TODO: add this later doesnt work right now
+            follower_host = request.POST['follower_host']
+            
+            author_node = Node.objects.get(host=follower_host)
+            followers_object = requests.get(follower_id + '/followers/', auth=HTTPBasicAuth(author_node.username, author_node.password)).json()
+            inbox_object = requests.get(current_user.url + '/inbox/', auth=HTTPBasicAuth(author_node.username, author_node.password)).json()
+            
+            if action == "accept" or action == "decline":
+                for item in inbox_object['items']:
+                    if follower_id == item['actor']['id']:
+                        #print(item['actor']['id'])
+                        #TODO: i need to delete this in inbox but i cant 405 
+                        inbox_object['items'].remove(item)                  
+                        break
+
+                #inbox_object_new = requests.put(current_user.url + '/inbox/', auth=HTTPBasicAuth(author_node.username, author_node.password), json=inbox_object)
+                #405 not allowed
+                #print(inbox_object_new.status_code)
+            
+            if action == "accept":               
+                print("in accept")
+                
+                follower_list = current_user.follower_list.all()             
+                print(follower_id)
+                print(follower_list)
+                
+                # for fl in follower_list:
+                #     if follower_id in fl.id:
+                #         #   followed dont do anything
+                #         print(follower_id)
+                #         print("in")                      
+                #     #s = Follower.objects.all().delete()
+                #     else:
+                #         print(follower_id)
+                #         print("not in") 
+                #         follower = Follower.objects.create(id=follower_id,host=follower_host)
+                #         current_user.follower_list.add(follower)     
+                # print("after")
+                # print(current_user.follower_list.all())   
+                    
+                    # if current_user in profile.users_following.all():
+                    #     profile.friends.add(current_user)
+                    #     current_user.friends.add(profile)
+                
+                #accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
+                # follower = Follower.objects.create(id=follower_id,host=follower_host)
+                # current_user.follower_list.add(follower)     
+                #s = Follower.objects.all().delete()
+                
+                print("here")
+                follower_id_splitted = follower_id.split('/')
+                follower_id_uuid = follower_id_splitted[(len(follower_id_splitted))-1]
+          
+                #check before adding to friend list
+                for follower in followers_object['items']:
+                    if follower['id'] == current_user.url:
+                        print("FOUND")
+                        friends = Follower.objects.get(id=follower_id) 
+                        current_user.friend_list.add(friends)
+                        #current_user.friend_list.clear()
+                print("in follow response")
+                print(current_user.friend_list.all()) 
+            elif action == "decline":
+                #declined dont do anything
+                print("in decline dont do anything")
+                
+        return redirect(inbox)
+    else:
+        messages.success(request, ("You must be logged in to view this page"))
+        return redirect('home')
 
 
 # class ProfileViewSet(viewsets.ModelViewSet):

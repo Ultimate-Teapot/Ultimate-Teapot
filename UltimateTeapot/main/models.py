@@ -38,8 +38,8 @@ class Profile(models.Model):
 
     inbox = models.ManyToManyField(Object)
 
-    follower_list = models.ManyToManyField(Follower)
-
+    follower_list = models.ManyToManyField(Follower, related_name='following_profiles')
+    friend_list = models.ManyToManyField(Follower, related_name='friend_profiles')
     # Test these two later with postgres
     # List of authorIDs that are followers
     #follower_list = ArrayField(
@@ -57,7 +57,10 @@ class Profile(models.Model):
 
 
     def __str__(self):
-        return self.displayName
+        #return self.displayName
+        return(f"{self.displayName} "
+              f"{self.follower_list}"
+        )
 
 class FollowRequest(models.Model):
     # id of author sending the request

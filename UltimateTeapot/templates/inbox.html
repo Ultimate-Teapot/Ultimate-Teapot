@@ -3,13 +3,14 @@
 {% block content %}
 {% if user.is_authenticated %}
 <title>Inbox</title>
-<style>
+
+{% comment %} <style>
     button{
         border: none;
         cursor: pointer;
         appearance: none;
         background-color: inherit;
-         transition: transform .7s ease-in-out;
+        transition: transform .7s ease-in-out;
         margin-left:10px;
 
       }
@@ -17,9 +18,7 @@
         transform: rotate(360deg);
 
       }
-</style>
-
-
+</style> {% endcomment %}
 
 <div class="container">
   <div class="row">
@@ -27,12 +26,21 @@
       <h1 class="text-center">Ultimate Teapot!</h1>
       <br>
       {% for item in items %}
-      
       <div class="card mb-4">
         <div class="card-body">
 
           {% if item.type == "Follow" %}
-          <p>{{ item.actor }} wants to follow you!</p>
+          {% comment %} <a href="{% url 'profile' item.actor %}">{{ item.actor }}</a> wants to follow you! {% endcomment %}
+            <p>{{ item.name }} wants to follow you!</p>
+
+            <form action="/main/follow_response/" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <input type="hidden" value="{{ item.id }}" name="follower_id" />
+              <input type="hidden" value="{{ item.host }}" name="follower_host" />
+              <button type="submit" name="accept" value="accept" class="btn btn-outline-success">Accept</button>
+              <button type="submit" name="accept" value="decline" class="btn btn-outline-danger">Decline</button>
+            </form> 
+    
           {% elif item.type == "post" %}
           <p>Post id: {{ item.object_id }}</p>
           {% endif %}
@@ -43,6 +51,9 @@
     </div>
   </div>
 </div>
+
+
+      
 
 
 {% else %}
