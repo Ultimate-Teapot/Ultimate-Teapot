@@ -1,21 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>List of Authors</h1>
-<br/>
+    <h1>List of Authors</h1>
+    <hr>
 
-{% if authors %}
-    {% for author in authors %}
-        <div class="card mb-4">
-            <img src={{ author.profileImage }} height="40" width="40">
-            <a href="{% url 'profile' author.id %}">Name: @{{ author.displayName }}</a>
-            <br/>
-            Host: {{ author.host }}
-
+    {% if authors %}
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for author in authors %}
+                <div class="col">
+                    <div class="card">
+                        <div class="card-body">
+                            <img src="{{ author.profileImage }}" class="rounded-circle" width="50" height="50" alt="{{ author.displayName }}">
+                            <h5 class="card-title mt-2 mb-1">
+                                <a href="{% url 'profile' author.id %}" class="text-decoration-none">{{ author.displayName }}</a>
+                            </h5>
+                            <p class="card-text mb-0">Host: {{ author.host }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
 
-    <br/>
-
-{% endif %}
-{% endblock%}
+        <br>
+    {% else %}
+        <p>No authors found.</p>
+    {% endif %}
+{% endblock %}

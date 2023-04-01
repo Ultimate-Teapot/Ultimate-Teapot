@@ -337,6 +337,15 @@ def profile(request, id):
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
+    
+def user_profile(request, id):
+    if request.user.is_authenticated:
+        profile = Profile.objects.get(id = id)
+
+        return render(request, "profile.html", {"profile":profile})
+    else:
+        messages.success(request, ("You must be logged in to view this page"))
+        return redirect('home')
 
 def follow(request, id):
     # Send a follow request to the specified id
