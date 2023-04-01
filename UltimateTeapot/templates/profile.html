@@ -29,11 +29,19 @@
     </br>    
 
         {% if profile.url != user.profile.url %}
+         
         {% comment %} TODO make sure follow is clicked once {% endcomment %}
-        <a href="{% url 'follow' profile.id %}" class="button">
+        <a href="{% url 'follow' profile.id %}" class="button" id="followingLink">
             Follow 
             {% comment %} {{ profile.displayName }} {% endcomment %}
         </a> 
+
+        <script>
+            var followingLink = document.getElementById('followingLink');
+            followingLink.addEventListener('click', function() {
+                followingLink.style.display = 'none';
+            });
+        </script>
 
         {% endif %}
 
@@ -43,6 +51,18 @@
         {% for fr in friends %}      
             <a href="{% url 'profile' fr.id %}">
                 {{ fr.name }}
+            </a> 
+        {% endfor %}
+    {% endif %} 
+{% endif %}
+</br></br></br>
+{% if followers %}
+    {% if profile.url == user.profile.url %}
+        <h3>Your Followers</h3>
+        {% for fl in followers %}      
+            <a href="{% url 'profile' fl.id %}">
+                {{ fl.name }}
+            </br>
             </a> 
         {% endfor %}
     {% endif %} 

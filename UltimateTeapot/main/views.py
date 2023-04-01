@@ -346,22 +346,22 @@ def profile(request, id):
         print(followers)
         
         #n^2
-        # for fr in friends:
-        #     for aa in all_authors:
-        #         if fr.id == aa['id']:
-        #             fr.name = aa['displayName']
-        #             fr.id = aa['id']
-        #             print(fr.name)
-        #             print(fr.id )
+        for fr in friends:
+            for aa in all_authors:
+                if fr.id == aa['id']:
+                    fr.name = aa['displayName']
+                    fr.id = aa['id']
+                    print(fr.name)
+                    print(fr.id )
                     
         #n^2
-        # for fl in followers:
-        #     for aa in all_authors:
-        #         if fl.id == aa['id']:
-        #             fl.name = aa['displayName']
-        #             fl.id = aa['id']
-        #             print(fl.name)
-        #             print(fl.id )
+        for fl in followers:
+            for aa in all_authors:
+                if fl.id == aa['id']:
+                    fl.name = aa['displayName']
+                    fl.id = aa['id']
+                    print(fl.name)
+                    print(fl.id )
 
         return render(request, "profile.html", {"profile":author_object.json(), "posts":post_list, "friends":friends, "followers":followers})
     else:

@@ -22,10 +22,15 @@
             <a class="nav-link" 
             href="{% url 'inbox' %}">Your Inbox</a>
           </li>
+
+          <li class="nav-item">
+            <a class="nav-link" 
+            href="{% url 'logout' %}"> Log Out</a>
+          </li>
           
-          <a href="{% url 'profile' user.profile.id %}">Friends</a>
+          {% comment %} <a href="{% url 'profile' user.profile.id %}">Friends</a>
           <a href="{% url 'authors' %}">Authors</a>
-          <a href="{% url 'logout' %}"> Log Out</a>
+          <a href="{% url 'logout' %}"> Log Out</a> {% endcomment %}
           {% endif %}
         </ul>
         
