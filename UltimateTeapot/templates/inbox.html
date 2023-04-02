@@ -47,8 +47,15 @@
     
           {% elif item.type == "post" %}
           <p>Post id: {{ item.object_id }}</p>
+
+          {% elif item.type == "like" %}
+          <p>{{ item.author.displayName }} liked your post!</p>
+
+          {% elif item.type == "comment" %}
+          <p>{{ item.author.displayName }} commented on your post:</p>
+          <p>{{ item.comment }}</p>
+
           {% endif %}
-          
 
         </div>
       </div>

@@ -14,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 import requests
 from requests.auth import HTTPBasicAuth
+from .requestsHelper import get_request, post_request
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
@@ -80,11 +81,8 @@ def foreign_post(request, id):
 
     host = id.split("authors")[0]
     node = Node.objects.get(host=host)
-    post_obj = requests.get(id + "/", auth=HTTPBasicAuth(node.username, node.password))
-    post_json = post_obj.json()
-
-    post_comments = requests.get(id + "/comments/", auth=HTTPBasicAuth(node.username, node.password))
-    post_comments_json = post_comments.json()
+    post_json = get_request(id + '/', node)
+    post_comments_json = get_request(id + '/comments/', node)
 
     return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_json['comments'], "comment_form":comment_form})
 
@@ -282,8 +280,7 @@ def make_comment(request, id):
             host = author_id.split("authors/")[0]
 
             node = Node.objects.get(host=host)
-            requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
-
+            post_request(author_id + "/inbox/", node, obj_json)
 
     return redirect('foreign_post', id)
 
@@ -308,7 +305,7 @@ def like_post(request, id):
         host = author_id.split("authors/")[0]
 
         node = Node.objects.get(host=host)
-        requests.post(author_id + "/inbox/", json=obj_json, auth=HTTPBasicAuth(node.username, node.password))
+        post_request(author_id + "/inbox/", node, obj_json)
 
 
     return redirect('foreign_post', id)
@@ -368,18 +365,17 @@ def home(request):
                 all_authors_posts = []
                 nodes = Node.objects.all()
                 for node in nodes:
-                    res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
-                    foreign_authors = res.json()
+                    foreign_authors = get_request(node.host + "authors/", node)
                     for author in foreign_authors['items']:
-                        author_posts = requests.get(author['id'] + "/posts/", auth=HTTPBasicAuth(node.username, node.password))
-                        all_authors_posts.extend(author_posts.json())
+                        author_posts = get_request(author['id'] + "/posts/", node)
+                        all_authors_posts.extend(author_posts)
 
 
                 for post in all_authors_posts:
                     if post['visibility'] == "PUBLIC":
                         viewable_posts.append(post)
                     elif post['visibility'] == "FRIENDS":
-                        if author_profile.friends.filter(id=post['author']['id']).exists() or author_profile.url == post['author']['id']:
+                        if author_profile.friend_list.filter(id=post['author']['id']).exists() or author_profile.url == post['author']['id']:
                             viewable_posts.append(post)
 
                 friend_posts = Post.objects.none()
@@ -390,9 +386,6 @@ def home(request):
 
                 current_user_posts = (public_posts | friend_posts).order_by("-pub_date")
                 # print("HAHA: ", current_user_posts[0].visibility,current_user_posts[0].text_post )
-
-        # res = requests.get('https://sd7-api.herokuapp.com/api/authors/d3bb924f-f37b-4d14-8d8e-f38b09703bab/posts/9095cfd8-8f6a-44aa-b75b-7d2abfb5f694/', auth=HTTPBasicAuth('node01', 'P*ssw0rd!'))
-        # foreign_post = res.json()
          
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
@@ -406,8 +399,7 @@ def inbox(request):
     all_authors = []
     nodes = Node.objects.all()
     for node in nodes:
-        res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
-        foreign_authors = res.json()
+        foreign_authors = get_request(node.host + "authors/", node)
         all_authors.extend(foreign_authors['items'])
 
     #followRequests = FollowRequest.objects.filter(receiver=request.user)
@@ -430,9 +422,7 @@ def authors(request):
     all_authors = []
     nodes = Node.objects.all()
     for node in nodes:
-        print(node)
-        res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
-        foreign_authors = res.json()
+        foreign_authors = get_request(node.host + "authors/", node)
         all_authors.extend(foreign_authors['items'])
     return render(request, 'authors.html', {"authors":all_authors})
 
@@ -440,8 +430,7 @@ def authors_list(request):
     all_authors = []
     nodes = Node.objects.all()
     for node in nodes:
-        res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
-        foreign_authors = res.json()
+        foreign_authors = get_request(node.host + "authors/", node)
         all_authors.extend(foreign_authors['items'])
     return all_authors
 
@@ -457,11 +446,9 @@ def profile(request, id):
         host = id.split('authors')[0]
         author_node = Node.objects.get(host=host)
 
-        author_object = requests.get(id + '/', auth=HTTPBasicAuth(author_node.username, author_node.password)).json()
-        posts = requests.get(id + '/posts/', auth=HTTPBasicAuth(author_node.username, author_node.password))
-        
-        print(posts)
-        post_json = posts.json()
+        author_object = get_request(id + '/', author_node)
+        post_json = get_request(id + '/posts/', author_node)
+
         post_list = []
 
         if isinstance(post_json, dict):
@@ -473,8 +460,7 @@ def profile(request, id):
         all_authors = []
         nodes = Node.objects.all()
         for node in nodes:
-            res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
-            foreign_authors = res.json()
+            foreign_authors = get_request(node.host + "authors/", node)
             all_authors.extend(foreign_authors['items'])
         
         this_user_id = author_object['id']
@@ -530,8 +516,7 @@ def follow(request, id):
     actor = ProfileSerializer(current_user).data
     target_host = id.split("author")[0]
     target_node = Node.objects.get(host=target_host)
-    object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
-    object_json = object.json()
+    object_json = get_request(id + '/', target_node)
     data_to_send = {
         "type": "Follow",
         "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
@@ -539,7 +524,7 @@ def follow(request, id):
         "object":object_json
     }
     
-    requests.post(id + "/inbox/", json=data_to_send, auth=HTTPBasicAuth(target_node.username, target_node.password))
+    post_request(id + "/inbox/", target_node, data_to_send)
 
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
@@ -580,7 +565,7 @@ def follow_response(request):
                 follower = Follower.objects.create(id=follower_id, host=follower_host)
                 current_user.follower_list.add(follower)    
                 
-                followers_object = requests.get(follower_id + '/followers/', auth=HTTPBasicAuth(author_node.username, author_node.password)).json()
+                followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
                 for follower in followers_object['items']:
                     if follower['id'] == current_user.url:

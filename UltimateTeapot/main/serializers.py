@@ -5,6 +5,7 @@ from .models import Profile, Post, Comment, FollowRequest, Object, Node, Like
 from rest_framework import serializers
 
 from rest_framework.serializers import CharField, DateTimeField, IntegerField
+from .requestsHelper import get_request, post_request
 
 from rest_framework.serializers import CharField, DateTimeField
 from django.conf import settings
@@ -37,8 +38,8 @@ class FollowerSerializer(serializers.ModelSerializer):
             follower_host = follower.host
             follower_node = Node.objects.get(host=follower_host)
 
-            follower_data = requests.get(follower_id + '/', auth=HTTPBasicAuth(follower_node.username, follower_node.password))
-            items.append(follower_data.json())
+            follower_data = get_request(follower_id + '/', follower_node)
+            items.append(follower_data)
 
         representation['items'] = items
 
@@ -206,8 +207,7 @@ class CommentSerializer(serializers.ModelSerializer):
         author_id = instance.author_id
         host = author_id.split("authors")[0]
         node = Node.objects.get(host=host)
-        author_obj = requests.get(author_id + '/', auth=HTTPBasicAuth(node.username, node.password))
-        author_json = author_obj.json()
+        author_json = get_request(author_id + '/', node)
         representation['author'] = author_json
         representation['comment'] = instance.comment
         representation['published'] = instance.created_at
@@ -271,8 +271,7 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         host = actor_id.split('authors')[0]
 
         node = Node.objects.get(host=host)
-        actor_object = requests.get(actor_id + '/', auth=HTTPBasicAuth(node.username, node.password))
-        actor_json = actor_object.json()
+        actor_json = get_request(actor_id + '/', node)
 
         object_id = instance.object
         object_json = ProfileSerializer(Profile.objects.get(url=object_id)).data
@@ -297,8 +296,7 @@ class LikeSerializer(serializers.ModelSerializer):
         author_id = instance.author_id
         host = author_id.split("author")[0]
         node = Node.objects.get(host=host)
-        author_object = requests.get(author_id + '/', auth=HTTPBasicAuth(node.username, node.password))
-        author_json = author_object.json()
+        author_json = get_request(author_id + '/', node)
 
         representation['summary'] = author_json['displayName'] = " likes your post"
         representation['type'] = "Like"
@@ -383,8 +381,7 @@ class InboxSerializer(serializers.ModelSerializer):
 
 
                 node = Node.objects.get(host=host)
-                post = requests.get(id + '/', auth=HTTPBasicAuth(node.username, node.password))
-                post_json = post.json()
+                post_json = get_request(id + '/', node)
 
                 items.append(post_json)
             elif item.type == "comment":
