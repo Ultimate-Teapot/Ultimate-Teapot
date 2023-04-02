@@ -26,6 +26,7 @@ urlpatterns = [
   path('posts/', views.posts, name='posts'),
   path('posts/delete/<path:id>/', views.delete_post, name='delete_post'),
   path('posts/<path:id>/editpost/', views.edit_post, name='edit_post'),
+  path('make_post/', views.make_post, name='make_post'),
   path('make_comment/<path:id>', views.make_comment, name='make_comment'),
   path('like_post/<path:id>', views.like_post, name='like_post'),
   # For testing posts and comments from other servers

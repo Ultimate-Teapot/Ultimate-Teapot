@@ -320,6 +320,15 @@ def like_post(request, id):
 def like(request):
     return redirect('home')
 
+
+
+def make_post(request):
+    upload_form = UploadForm()
+    #return render(request, 'home.html', {"posts":posts, "form":form})
+    return render(request, 'make_post.html', {"upload_form":upload_form})
+
+
+
 def home(request):
         form = UploadForm(request.POST or None, request.FILES)
         if request.method == "POST":
@@ -406,6 +415,10 @@ def home(request):
 
 def inbox(request):
     #should not repeat this code
+    if (request.user.is_authenticated == False):
+        return redirect("home")
+    
+    
     all_authors = []
     nodes = Node.objects.all()
     for node in nodes:
@@ -417,6 +430,7 @@ def inbox(request):
     #postMessage = Post.objects.filter(reciever = request.user)
 
     curr_user = request.user.profile
+
     
     inbox = curr_user.inbox.all()
     #n^2

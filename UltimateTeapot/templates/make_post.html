@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load markdownify %}
+{% block content %}
+
+{% if user.is_authenticated %}
+<title>Make post</title>
+
+<style>
+    button{
+        border-style: solid;
+        border-radius: 5px;
+        cursor: pointer;
+        appearance: none;
+        background-color: inherit;
+        transition: transform .7s ease-in-out;
+        margin-left:10px;
+
+      }
+      button:hover{
+        transform: rotate(360deg);
+
+      }
+      input[type="text"] {
+        text-align: top;
+      }
+
+      .col-md-8 {
+        margin: 25px;
+      }
+      
+</style>
+
+<div class="col-md-4">
+    <h3 class="text-center">Post a Teapot!</h3>
+    <button type="button" onclick=MakeMarkdown()>Markdown Post</button> 
+    <button type="button" onclick=MakeText()>TextPost</button>  
+    <button type="button" onclick=MakeImage()>ImagePost</button> 
+    <br>
+
+    {% if upload_form %}
+      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ upload_form.contentType.hidden }}
+        {{ upload_form.as_p }}
+
+
+        <button type="submit" class="btn btn-primary btn-block">Post!</button>
+      </form> 
+    {% endif %}
+
+
+
+
+  </div>
+
+  <script type="text/javascript">
+    
+
+    window.onload = function(){
+      document.getElementById('id_image').hidden = true
+      document.getElementById('id_content').hidden = true
+      //document.getElementById('id_markdown_content').hidden = true
+      //document.getElementById('id_contentType').hidden = true
+      
+    }
+    function MakeMarkdown(){
+      document.getElementById('id_content').hidden = false
+      document.getElementById('id_image').hidden = true
+      
+      //document.getElementById('id_markdown_content').hidden = false
+      document.getElementById('id_contentType').value = "text/markdown"
+      //document.getElementById('id_contentType').hidden = true
+    }
+
+    
+
+    function MakeImage(){
+      document.getElementById('id_image').hidden = false
+      document.getElementById('id_content').hidden = true
+      //document.getElementById('id_markdown_content').hidden = true
+      document.getElementById('id_contentType').value = "application/base64"
+      //document.getElementById('id_contentType').hidden = true
+    }
+
+
+    function MakeText(){
+      document.getElementById('id_content').hidden = false
+      document.getElementById('id_image').hidden = true
+      //document.getElementById('id_markdown_content').hidden = true
+      document.getElementById('id_contentType').value = "text/plain"
+      //document.getElementById('id_contentType').hidden = true
+
+    }
+
+
+
+  </script>
+  
+    {% comment %} <div class="col-md-8" style=" background-color: pink">
+      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="padding: 20px">
+          <h5>Share your thoughts!</h5>
+          <input type="text" style="width: 100%;" name="text_post" placeholder="What is in your mind?"></textarea></br></br>
+          <input type="file" name="image_upload"></br></br>
+          <button type="submit">Upload</button>
+        </div>
+      </form>
+    </div> {% endcomment %}
+
+{% endif %}
+{% endblock %}
