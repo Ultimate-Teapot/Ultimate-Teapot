@@ -1,0 +1,28 @@
+.create-post{
+    text-align: right;
+    background-color: black;
+}
+.col-md-4{
+    background-color: purple;
+}
+button{
+    border-style: solid;
+    border-radius: 5px;
+    cursor: pointer;
+    appearance: none;
+    background-color: inherit;
+    transition: transform .7s ease-in-out;
+    margin-left:10px;
+
+  }
+  button:hover{
+    transform: rotate(360deg);
+
+  }
+  input[type="text"] {
+    text-align: top;
+  }
+
+  .col-md-8 {
+    margin: 25px;
+  }

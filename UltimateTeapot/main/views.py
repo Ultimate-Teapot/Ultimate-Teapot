@@ -127,6 +127,7 @@ def delete_post(request, id):
     return redirect('home')
 
 def edit_post(request, id):
+    
     post = Post.objects.get(id = id)
     form = UploadForm(request.POST or None, instance=post)
     if request.method == "POST":
@@ -137,8 +138,12 @@ def edit_post(request, id):
             return redirect('home')
     #upload_form = UploadForm()
 
-    post.delete()
+    #post.delete()
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
+
+
+
+     
 
 def signup(request):
     if request.method == 'POST':
@@ -244,6 +249,9 @@ def posts(request):
 
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
                                            visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
+            
+            
+            print("NEW POSTTTTTTTTT")
             new_post.save()
 
         # return redirect('home')
@@ -334,6 +342,7 @@ def home(request):
                 post = form.save(commit=False)
                 post.author = request.user.profile
                 post.save()
+               
 
                 messages.success(request, ("You Successfully Posted!"))
                 return redirect('home')
