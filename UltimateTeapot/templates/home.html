@@ -152,7 +152,7 @@
                     This is an unlisted post comment this line later
                 {% endif %}
 
-            {% if request.user.id == post.author.user.id %}
+            {% if request.user.profile.url == post.author.id %}
             <a href="{%url 'edit_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>   
         
             {% endif %}
@@ -178,7 +178,7 @@
             <a href="{% url 'comment_create' post.id %}" style="text-decoration:none;color:rgb(256,256,256)">Comment!</a>
           </button>
           {% endcomment %}
-          {% if request.user.id == post.author.user.id %}
+          {% if request.user.profile.url == post.author.id %}
           <a href="{%url 'delete_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Delete</i></a>
           {% endif %}
           

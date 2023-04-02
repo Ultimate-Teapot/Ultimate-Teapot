@@ -4,7 +4,7 @@
       <p class="card-text" >
         <!-- <input type="hidden" id="myVar" name="variable" value="{{post.contentType}}"> -->
             <p><a href="{% url 'profile' post.author %}">{{ post.author.displayName }}</a> posted<p>
-            <p>Created: {{ post.pub_date}}</p>
+            <p>Created: {{ post.published}}</p>
 
             {% if post.contentType == 'text/plain' %}
             <p>{{ post.content }}</p>
