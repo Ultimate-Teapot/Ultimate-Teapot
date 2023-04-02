@@ -51,7 +51,8 @@ class Profile(models.Model):
 
     inbox = models.ManyToManyField(Object)
 
-    follower_list = models.ManyToManyField(Follower)
+    follower_list = models.ManyToManyField(Follower, related_name='following_profiles')
+    friend_list = models.ManyToManyField(Follower, related_name='friend_profiles')
 
     #List of items this author liked, be careful with private info
     liked = models.ManyToManyField(Like)
@@ -63,6 +64,9 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.displayName
+        # return(f"{self.displayName} "
+        #       f"{self.follower_list}"
+        # )
 
 class FollowRequest(models.Model):
     # id of author sending the request

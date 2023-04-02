@@ -1,36 +1,92 @@
 <!-- django_project/users/templates/users/profile.html -->
 {% extends "base.html" %}
-
 {% block content %}
-    {% if profile %}
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <img src="{{ profile.profileImage }}" alt="Profile Image" class="card-img-top">
-                    <div class="card-body">
-                        <h3 class="card-title">{{ profile.displayName }}</h3>
-                        <p class="card-text">From: {{ profile.host }}</p>
-                        <p class="card-text">Github: {{ profile.github }}</p>
-                        {% if profile.user.username != user.profile.user.username %}
-                            <a href="{% url 'follow' profile.id %}" class="btn btn-primary">Send a follow request to {{ profile.displayName }}</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-8">
-                {% if posts %}
-                    <h3>{{ profile.displayName }}'s Posts</h3>
-                    {% for post in posts %}
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <a href="{% url 'foreign_post' post.id" class="card-title">{{ post.title }}</a>
-                                <p class="card-text">{{ post.content }}</p>
-                                <p class="card-text"><small class="text-muted">Posted at {{ post.published }}</small></p>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
+
+{% if profile %}
+    <style>
+
+        {% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %}
+        .button {
+            background-color: blue;
+            border: solid;
+            border-color: blue;
+            color: white; 
+            padding: 6px 12px; 
+            text-align: center; 
+            text-decoration: none;
+            display: inline-block; 
+            cursor: pointer;   
+            border-radius: 15%;
+        }
+
+    </style>
+    <h1>{{ profile.displayName }}'s Profile</h1>
+    <p>From: {{ profile.host }}</p>
+    <p>Github: {{ profile.github }}</p>
+    <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100">
+    <br/>
+
+    </br>    
+        {% comment %} a user cannot follow himself {% endcomment %}
+        {% if profile.url != user.profile.url and can_follow %}
+         
+        {% comment %} TODO make sure follow is clicked once {% endcomment %}
+        <a href="{% url 'follow' profile.id %}" class="button" id="followingLink">
+            Follow 
+            {% comment %} {{ profile.displayName }} {% endcomment %}
+        </a> 
+
+        <script>
+            var followingLink = document.getElementById('followingLink');
+            followingLink.addEventListener('click', function() {
+                followingLink.style.display = 'none';
+            });
+        </script>
+
+        {% endif %}
+
+<h3>{{ profile.displayName }}'s Friends</h3>
+{% if friends %}
+    
+        {% for fr in friends %}      
+            <a href="{% url 'profile' fr.id %}">
+                {{ fr.name }}
+            </a> 
+        {% endfor %}
+    
+{% else %}
+            empty
+{% endif %}
+</br></br></br>
+
+<h3>{{ profile.displayName}}'s Followers</h3>
+{% if followers %}
+    
+        {% for fl in followers %}      
+            <a href="{% url 'profile' fl.id %}">
+                {{ fl.name }}
+            </br>
+            </a> 
+        {% endfor %}
+    
+{% else %}
+    empty
+{% endif %}
+
+
+
+</br>   </br>   </br>   </br>   
+{% if posts %}
+<h3>{{ profile.displayName }}'s Posts</h3>
+
+{% for post in posts %}
+<div class="card mb-4">
+    {{ post.title }}
+    </br>
+    Posted at {{ post.published }}
+    </br>
+    {{ post.content }}
+</div>
+{% endfor %}
+
 {% endblock %}

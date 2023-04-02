@@ -22,7 +22,8 @@
                 </script>
               </div> -->
 
-              {% comment %} <p>Post's link: <a href="{% url 'post' post.id %}">{{ post.id }}</a><p> {% endcomment %}
+       
+            <p>Post's link: <a href="{% url 'post' post.id %}">{{ post.id }}</a><p>
             </p>
             {% if post.image %}
             <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
