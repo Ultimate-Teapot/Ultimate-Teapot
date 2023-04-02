@@ -8,9 +8,6 @@ VISIBILITY = [
     ('FRIENDS', 'FRIENDS'),
 ]
 
-
-
-
 class UploadForm(forms.ModelForm):
     content = forms.CharField(required=False,
                               widget=forms.widgets.Textarea(
@@ -28,6 +25,8 @@ class UploadForm(forms.ModelForm):
     title = forms.CharField()
     visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
     unlisted = forms.BooleanField(label='Unlisted?', required=False)
+    image = forms.ImageField(required=False)
+  
 
     contentType = forms.CharField(widget=forms.HiddenInput(), required=False)
     #image = forms.ImageField()
@@ -41,22 +40,23 @@ class UploadForm(forms.ModelForm):
         exclude = ("user", "visibility", "likes", 'author', 'contentType')
 
     # is_public = forms.BooleanField(required=False)
-    
-# class PostForm(forms.ModelForm):
-#     text = forms.CharField(required=True, 
-#         widget=forms.widgets.Textarea(
-#             attrs = {
-#                 "placeholder": "Enter Your Thoughts!",
-#                 "class": "form-control",
-#             }
-#             ),
-#             label = "",
-#         )
-    
-#     class Meta:
-#         model = Post
-#         fields = ('text', 'image', 'pub_date', 'post_id', 'author')
-#         exclude = ("user", "visibility", "likes")
+
+class CommentForm(forms.ModelForm):
+    comment = forms.CharField(
+        required=True,
+        widget=forms.widgets.Textarea(
+        attrs={
+            "placeholder": "Enter a comment!",
+            "class": "form-control",
+            }
+        ),
+        label="",
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('comment',)
+
 
 #if needed extra fields for sign up form
 class SignUpForm(UserCreationForm):
@@ -71,19 +71,3 @@ class SignUpForm(UserCreationForm):
         model = User
         fields = ('username', 'email',)
         #fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
-
-
-
-class CommentForm(forms.ModelForm):
-    content = forms.CharField(required=True, 
-            widget=forms.widgets.Textarea(
-            attrs = {
-                "placeholder": "Enter Your Comment!",
-                "class": "form-control",
-            }
-            ),
-            label = "",
-        )
-    class Meta:
-        model = Comment
-        fields = ['content']

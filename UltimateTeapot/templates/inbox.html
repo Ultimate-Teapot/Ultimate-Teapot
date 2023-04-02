@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 {% if user.is_authenticated %}
 <title>Inbox</title>
 
@@ -11,13 +12,14 @@
         appearance: none;
         background-color: inherit;
         transition: transform .7s ease-in-out;
-        margin-left:10px;
 
+        margin-left: 10px;
       }
-      button:hover{
+
+      .card button:hover {
         transform: rotate(360deg);
-
       }
+
 </style> {% endcomment %}
 
 <div class="container">
@@ -47,9 +49,9 @@
           <p>Post id: {{ item.object_id }}</p>
           {% endif %}
           
+
         </div>
       </div>
-      {% endfor %}
     </div>
   </div>
 </div>
@@ -68,4 +70,5 @@
   </div>
 </div>
 {% endif %}
+
 {% endblock %}
