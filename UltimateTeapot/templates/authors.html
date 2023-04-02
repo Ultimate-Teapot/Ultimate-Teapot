@@ -4,14 +4,7 @@
 <h1>List of Authors</h1>
 <br/>
 
-{% if authors %}
-    {% for author in authors %}
-        <div class="card mb-4">
-            <img src="{{ author.profileImage }}" height="40" width="40">
-            <a href="{% url 'profile' author.id %}">Name: @{{ author.displayName }}</a>
-            
-            <br/>
-            Host: {{ author.host }}
+
 
     {% if authors %}
         <div class="row row-cols-1 row-cols-md-2 g-4">
@@ -34,4 +27,6 @@
     {% else %}
         <p>No authors found.</p>
     {% endif %}
+
+
 {% endblock %}

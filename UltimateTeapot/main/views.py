@@ -329,7 +329,6 @@ def home(request):
 
                 # if form.data['markdown_content'] is not None:
                 #     form.contentType = "text/markdown"
-
                 
                 post = form.save(commit=False)
                 post.author = request.user.profile
@@ -352,6 +351,8 @@ def home(request):
 
         # posts = Post.objects.all().order_by("-pub_date")
         current_user_posts = None
+
+        viewable_posts = []
         #author_list = Profile.objects.all()
         if request.user.is_authenticated:
             if request.user.is_staff:
@@ -363,6 +364,24 @@ def home(request):
                 # private_posts = Post.objects.filter(post_type__in=[0, 2], author=author_profile)
                 # unlisted_posts = Post.objects.filter(post_type=4)
                 # private_posts_of_friends = Post.objects.none()
+
+                all_authors_posts = []
+                nodes = Node.objects.all()
+                for node in nodes:
+                    res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+                    foreign_authors = res.json()
+                    for author in foreign_authors['items']:
+                        author_posts = requests.get(author['id'] + "/posts/", auth=HTTPBasicAuth(node.username, node.password))
+                        all_authors_posts.extend(author_posts.json())
+
+
+                for post in all_authors_posts:
+                    if post['visibility'] == "PUBLIC":
+                        viewable_posts.append(post)
+                    elif post['visibility'] == "FRIENDS":
+                        if author_profile.friends.filter(id=post['author']['id']).exists() or author_profile.url == post['author']['id']:
+                            viewable_posts.append(post)
+
                 friend_posts = Post.objects.none()
                 my_friends = author_profile.friends.all()
 
@@ -379,7 +398,7 @@ def home(request):
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":current_user_posts, "upload_form":upload_form})
+        return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
 
 
 def inbox(request):
@@ -465,6 +484,19 @@ def profile(request, id):
         # print(user_this_page)
         friends = user_this_page.friend_list.all()
         followers = user_this_page.follower_list.all()
+
+        follower_list_json = []
+        for follower in followers:
+            for author in all_authors:
+                if follower.id == author['id']:
+                    follower_list_json.append(author)
+
+        friend_list_json = []
+        for friend in friends:
+            for author in all_authors:
+                if friend.id == author['id']:
+                    friend_list_json.append(author)
+
         can_follow = True
         
         for fr in friends:
@@ -478,7 +510,7 @@ def profile(request, id):
             if (fl.id == request.user.profile.url):
                 can_follow = False
         
-        return render(request, "profile.html", {"profile":author_object, "posts":post_list, "friends":friends, "followers":followers, "can_follow": can_follow})
+        return render(request, "profile.html", {"profile":author_object, "posts":post_list, "friends":friend_list_json, "followers":follower_list_json, "can_follow": can_follow})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')

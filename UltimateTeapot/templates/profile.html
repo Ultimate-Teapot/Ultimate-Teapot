@@ -64,7 +64,7 @@
     
         {% for fl in followers %}      
             <a href="{% url 'profile' fl.id %}">
-                {{ fl.name }}
+                {{ fl.displayName }}
             </br>
             </a> 
         {% endfor %}
@@ -80,13 +80,11 @@
 <h3>{{ profile.displayName }}'s Posts</h3>
 
 {% for post in posts %}
-<div class="card mb-4">
-    {{ post.title }}
-    </br>
-    Posted at {{ post.published }}
-    </br>
-    {{ post.content }}
-</div>
+{% include 'post_structure.html' %}
 {% endfor %}
+
+{% endif %}
+
+{% endif %}
 
 {% endblock %}

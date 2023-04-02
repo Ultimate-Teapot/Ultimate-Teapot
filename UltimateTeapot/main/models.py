@@ -6,6 +6,23 @@ from django.db.models.signals import post_save
 import uuid
 import datetime
 
+'''
+Set up in the admin page
+'''
+class Node(models.Model):
+    # service we are connecting to
+    host = models.CharField(max_length=255)
+    # Auth type ("BASIC" or "TOKEN")
+    auth_type = models.CharField(max_length=255, default="BASIC")
+    # Our username for the service (if applicable)
+    username = models.CharField(max_length=255)
+    # Our password for the service (if applicable)
+    password = models.CharField(max_length=255)
+
+    # Authorization header for token auth (if applicable)
+    token = models.CharField(max_length=255)
+
+
 class Object(models.Model):
     # post, comment, like or FollowRequest
     type = models.TextField()
@@ -21,6 +38,10 @@ class Follower(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
     # host as url
     host = models.CharField(max_length=255)
+
+    def is_friend(self, author_id):
+        node = Node.objects.get(host=self.host)
+
 
 class Like(models.Model):
     # id of the object being liked as url
@@ -190,13 +211,3 @@ class Post(models.Model):
 #     # DO NOT USE
 #     data = models.JSONField(default=dict, blank=True, null=True)
 
-'''
-Set up in the admin page
-'''
-class Node(models.Model):
-    # service we are connecting to
-    host = models.CharField(max_length=255)
-    # Our username for the service
-    username = models.CharField(max_length=255)
-    # Our password for the service
-    password = models.CharField(max_length=255)
