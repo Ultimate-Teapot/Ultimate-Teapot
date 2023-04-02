@@ -39,84 +39,7 @@
   </br>
   </br>
 
-  <div class="col-md-4">
-    <h3 class="text-center">Post something!</h3>
-    <button type="button" onclick=MakeMarkdown()>Markdown Post</button> 
-    <button type="button" onclick=MakeText()>TextPost</button>  
-    <button type="button" onclick=MakeImage()>ImagePost</button> 
-    <br>
-
-    {% if upload_form %}
-      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        {{ upload_form.contentType.hidden }}
-        {{ upload_form.as_p }}
-
-
-        <button type="submit" class="btn btn-primary btn-block">Post!</button>
-      </form> 
-    {% endif %}
-
-
-
-
-  </div>
-
-  <script type="text/javascript">
-    
-
-    window.onload = function(){
-      document.getElementById('id_image').hidden = true
-      document.getElementById('id_content').hidden = true
-      //document.getElementById('id_markdown_content').hidden = true
-      //document.getElementById('id_contentType').hidden = true
-      
-    }
-    function MakeMarkdown(){
-      document.getElementById('id_content').hidden = false
-      document.getElementById('id_image').hidden = true
-      
-      //document.getElementById('id_markdown_content').hidden = false
-      document.getElementById('id_contentType').value = "text/markdown"
-      //document.getElementById('id_contentType').hidden = true
-    }
-
-    
-
-    function MakeImage(){
-      document.getElementById('id_image').hidden = false
-      document.getElementById('id_content').hidden = true
-      //document.getElementById('id_markdown_content').hidden = true
-      document.getElementById('id_contentType').value = "application/base64"
-      //document.getElementById('id_contentType').hidden = true
-    }
-
-
-    function MakeText(){
-      document.getElementById('id_content').hidden = false
-      document.getElementById('id_image').hidden = true
-      //document.getElementById('id_markdown_content').hidden = true
-      document.getElementById('id_contentType').value = "text/plain"
-      //document.getElementById('id_contentType').hidden = true
-
-    }
-
-
-
-  </script>
   
-    {% comment %} <div class="col-md-8" style=" background-color: pink">
-      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div style="padding: 20px">
-          <h5>Share your thoughts!</h5>
-          <input type="text" style="width: 100%;" name="text_post" placeholder="What is in your mind?"></textarea></br></br>
-          <input type="file" name="image_upload"></br></br>
-          <button type="submit">Upload</button>
-        </div>
-      </form>
-    </div> {% endcomment %}
 
     <div class="col-md-8">
       {% for post in posts %}
@@ -131,19 +54,19 @@
 
                   {% if post.visibility == 'PUBLIC' %}
 
-                  <p> VISIBILTY: {{ post.visibility }}</p>
+                  
                   <p> This post is public</p>
                   {% include 'post_structure.html' %}
 
                   {% elif post.visibility == 'FRIENDS' %}
 
-                  <p> VISIBILTY: {{ post.visibility }}</p>
+                  
                   <p> This post is a friend post</p>
                   {% include 'post_structure.html' %}
 
                   {% else%}
                   Not friends nor public post!!!!!!!!!
-                  <p> VISIBILTY: {{ post.visibility }}</p>
+                  
                   <p> This post is a friend post</p>
                   {% include 'post_structure.html' %}
 
@@ -152,7 +75,7 @@
                     This is an unlisted post comment this line later
                 {% endif %}
 
-            {% if request.user.id == post.author.user.id %}
+            {% if request.user.profile.url == post.author.id %}
             <a href="{%url 'edit_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>   
         
             {% endif %}
@@ -178,7 +101,7 @@
             <a href="{% url 'comment_create' post.id %}" style="text-decoration:none;color:rgb(256,256,256)">Comment!</a>
           </button>
           {% endcomment %}
-          {% if request.user.id == post.author.user.id %}
+          {% if request.user.profile.url == post.author.id %}
           <a href="{%url 'delete_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Delete</i></a>
           {% endif %}
           

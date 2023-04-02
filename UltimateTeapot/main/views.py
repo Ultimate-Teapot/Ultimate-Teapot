@@ -120,12 +120,14 @@ def foreign_post(request, id):
 #         return render(request, 'signup.html')
 
 def delete_post(request, id):
-    post = Post.objects.get(id = id)
+    uuid = id.split("posts/")[1]
+    post = Post.objects.get(id = uuid)
     post.delete()
     return redirect('home')
 
 def edit_post(request, id):
-    post = Post.objects.get(id = id)
+    uuid = id.split("posts/")[1]
+    post = Post.objects.get(id = uuid)
     form = UploadForm(request.POST or None, instance=post)
     if request.method == "POST":
         if form.is_valid():
@@ -135,7 +137,7 @@ def edit_post(request, id):
             return redirect('home')
     #upload_form = UploadForm()
 
-    post.delete()
+    
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
 
 def signup(request):
@@ -243,6 +245,7 @@ def posts(request):
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
                                            visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
             new_post.save()
+            print("AAAAAAAAA: ", new_post.pub_date)
 
         # return redirect('home')
         # return render(request, 'home.html', {"upload_form":upload_form})
@@ -313,6 +316,15 @@ def like_post(request, id):
 @login_required(login_url='signin')
 def like(request):
     return redirect('home')
+
+
+
+def make_post(request):
+    upload_form = UploadForm()
+    #return render(request, 'home.html', {"posts":posts, "form":form})
+    return render(request, 'make_post.html', {"upload_form":upload_form})
+
+
 
 def home(request):
         form = UploadForm(request.POST or None, request.FILES)
@@ -396,6 +408,10 @@ def home(request):
 
 def inbox(request):
     #should not repeat this code
+    if (request.user.is_authenticated == False):
+        return redirect("home")
+    
+    
     all_authors = []
     nodes = Node.objects.all()
     for node in nodes:
@@ -406,6 +422,7 @@ def inbox(request):
     #postMessage = Post.objects.filter(reciever = request.user)
 
     curr_user = request.user.profile
+
     
     inbox = curr_user.inbox.all()
     #n^2

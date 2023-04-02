@@ -3,6 +3,7 @@
     <div class="card-body">
       <p class="card-text" >
         <!-- <input type="hidden" id="myVar" name="variable" value="{{post.contentType}}"> -->
+
             <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
             <p>Created: {{ post.pub_date}}</p>
 
@@ -23,7 +24,7 @@
               </div> -->
 
        
-            <p>Post's link: <a href="{% url 'foreign_post' post.id %}">{{ post.id }}</a><p>
+            
             </p>
             {% if post.image %}
             <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
