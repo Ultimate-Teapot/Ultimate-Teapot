@@ -23,7 +23,8 @@
 <div class="container">
   <div class="row">
     <div class="col-md-8">
-      <h1 class="text-center">Ultimate Teapot!</h1>
+      <h1 class="text-center">You've got new notifications</h1>
+      <h6 class="text-center">Mark as seen or repond to remove notification</h6>
       <br>
       {% for item in items %}
       <div class="card mb-4">
@@ -31,6 +32,7 @@
 
           {% if item.type == "Follow" %}
           {% comment %} <a href="{% url 'profile' item.actor %}">{{ item.actor }}</a> wants to follow you! {% endcomment %}
+          {% comment %} TODO check if an actor is a in follower_list if yes -> dont display the follow request {% endcomment %}
             <p>{{ item.name }} wants to follow you!</p>
 
             <form action="/main/follow_response/" method="POST" enctype="multipart/form-data">

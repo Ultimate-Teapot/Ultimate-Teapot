@@ -57,10 +57,10 @@ class Profile(models.Model):
 
 
     def __str__(self):
-        #return self.displayName
-        return(f"{self.displayName} "
-              f"{self.follower_list}"
-        )
+        return self.displayName
+        # return(f"{self.displayName} "
+        #       f"{self.follower_list}"
+        # )
 
 class FollowRequest(models.Model):
     # id of author sending the request

@@ -27,8 +27,8 @@
     <br/>
 
     </br>    
-
-        {% if profile.url != user.profile.url %}
+        {% comment %} a user cannot follow himself {% endcomment %}
+        {% if profile.url != user.profile.url and can_follow %}
          
         {% comment %} TODO make sure follow is clicked once {% endcomment %}
         <a href="{% url 'follow' profile.id %}" class="button" id="followingLink">
@@ -45,28 +45,34 @@
 
         {% endif %}
 
+<h3>{{ profile.displayName }}'s Friends</h3>
 {% if friends %}
-    {% if profile.url == user.profile.url %}
-        <h3>Your Friends</h3>
+    
         {% for fr in friends %}      
             <a href="{% url 'profile' fr.id %}">
                 {{ fr.name }}
             </a> 
         {% endfor %}
-    {% endif %} 
+    
+{% else %}
+            empty
 {% endif %}
 </br></br></br>
+
+<h3>{{ profile.displayName}}'s Followers</h3>
 {% if followers %}
-    {% if profile.url == user.profile.url %}
-        <h3>Your Followers</h3>
+    
         {% for fl in followers %}      
             <a href="{% url 'profile' fl.id %}">
                 {{ fl.name }}
             </br>
             </a> 
         {% endfor %}
-    {% endif %} 
+    
+{% else %}
+    empty
 {% endif %}
+
 
 
 </br>   </br>   </br>   </br>   

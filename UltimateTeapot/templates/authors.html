@@ -7,8 +7,9 @@
 {% if authors %}
     {% for author in authors %}
         <div class="card mb-4">
-            <img src={{ author.profileImage }} height="40" width="40">
+            <img src="{{ author.profileImage }}" height="40" width="40">
             <a href="{% url 'profile' author.id %}">Name: @{{ author.displayName }}</a>
+            
             <br/>
             Host: {{ author.host }}
 
