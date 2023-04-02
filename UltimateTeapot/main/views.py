@@ -130,19 +130,15 @@ def edit_post(request, id):
     post = Post.objects.get(id = id)
     form = UploadForm(request.POST or None, instance=post)
     if request.method == "POST":
-        if form.is_valid():      
+        if form.is_valid():
+            form.contentType = post.contentType
             form.save()
             messages.success(request, ("You Successfully Edited!"))
             return redirect('home')
     #upload_form = UploadForm()
+
     post.delete()
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
-
-
-        
-
-
-
 
 def signup(request):
     if request.method == 'POST':
@@ -226,7 +222,7 @@ def posts(request):
                     contentType = "application/base64"
              
 
-            if contentType == ("image/png;base64") or ("image/jpeg;base64") or ("application/base64"):
+            if (contentType == "image/png;base64") or (contentType == "image/jpeg;base64") or (contentType == "application/base64"):
                 image = request.FILES.get('image')
                 b_64 = base64.b64encode(image.file.read())
                 content = b_64
