@@ -1,5 +1,6 @@
 import base64
 import datetime
+import json
 import os
 import urllib.parse
 import uuid
@@ -324,8 +325,6 @@ def make_post(request):
     #return render(request, 'home.html', {"posts":posts, "form":form})
     return render(request, 'make_post.html', {"upload_form":upload_form})
 
-
-
 def home(request):
         form = UploadForm(request.POST or None, request.FILES)
         if request.method == "POST":
@@ -377,10 +376,22 @@ def home(request):
                 all_authors_posts = []
                 nodes = Node.objects.all()
                 for node in nodes:
-                    foreign_authors = get_request(node.host + "authors/", node)
-                    for author in foreign_authors['items']:
-                        author_posts = get_request(author['id'] + "/posts/", node)
-                        all_authors_posts.extend(author_posts)
+                    try:
+                        foreign_authors = get_request(node.host + "authors/?page=1&size=2", node)
+                    except json.JSONDecodeError:
+                        None
+                    else:
+                        for author in foreign_authors['items']:
+                            try:
+                                author_posts = get_request(author['id'] + "/posts/", node)
+                            except json.JSONDecodeError:
+                                None
+                            else:
+                                if isinstance(author_posts, dict):
+                                    all_authors_posts.extend(author_posts['items'])
+                                else:
+                                    all_authors_posts.extend(author_posts)
+
 
 
                 for post in all_authors_posts:
@@ -678,7 +689,7 @@ class NodePermission(BasePermission):
 # TODO: add nodepermission to all remote api requests
 
 class AuthorList(APIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request):
         profiles = Profile.objects.all()
@@ -689,7 +700,7 @@ class AuthorList(APIView):
 
 
 class SingleAuthor(APIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
 
         #uri = request.build_absolute_uri('?')
@@ -719,7 +730,7 @@ class SingleAuthor(APIView):
 '''api/authors/<str:id>/posts/'''
 
 class PostsList(ListCreateAPIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     pagination_class = NewPaginator
     serializer_class = PostsSerializer
@@ -753,7 +764,7 @@ class PostsList(ListCreateAPIView):
 
 '''api/authors/<str:id>/posts/<str:pid>'''
 class SinglePost(GenericAPIView):
-   #permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     serializer_class = PostSerializer
     queryset = Post.objects.all()
@@ -823,6 +834,7 @@ class SinglePost(GenericAPIView):
 '''api/authors/<str:id>/posts/<str:pid>/image'''
 
 class ImagePostsList(GenericAPIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     serializer_class = PostImageSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
@@ -839,6 +851,7 @@ class ImagePostsList(GenericAPIView):
 
 
 class FollowerList(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
         #uri = request.build_absolute_uri('?')
         #uri = uri.replace("/followers", "")
@@ -855,6 +868,7 @@ class singleFollowerList(APIView):
     '''
     Check if foreign id is a follower of this author
     '''
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         author = Profile.objects.get(id=id)
@@ -900,6 +914,7 @@ class singleFollowerList(APIView):
 
 
 class Commentlist(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id, pid):
         post = Post.objects.get(id=pid)
         serializer = CommentListSerializer(post)
@@ -914,12 +929,14 @@ class Commentlist(APIView):
 
 
 class postLikes(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id,pid):
         post = Post.objects.get(id=pid)
         serializer = PostLikeSerializer(post)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class commentLikes(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id,pid,cid):
         comment = Comment.objects.get(id=cid)
         serializer = CommentLikeSerializer(comment)
@@ -928,6 +945,7 @@ class commentLikes(APIView):
 
 
 class authorLikes(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id):
         author = Profile.objects.get(id=id)
         serializer = AuthorLikeSerializer(author)
@@ -936,6 +954,7 @@ class authorLikes(APIView):
 
 
 class InboxList(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
         serializer = InboxSerializer(profile)
