@@ -144,18 +144,21 @@ def edit_post(request, id):
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
 
 
-def edit_profile(request):
+def edit_profile(request,id):
+    if request.user.is_authenticated:
+        uuid = id.split("/authors/")[1]
+        profile = Profile.objects.get(id=uuid)
 
-    # oldprofile = request.user.profile
-    # print(profile)
-    # form = SignUpForm(request.POST or None, instance=oldprofile)
+        form = SignUpForm(request.POST or None, instance=profile)
+        if request.method == 'POST':
 
-    # if request.method == "POST":
-    #     if form.is_valid():
-    #         form.contentType = post.contentType
-    #         form.save()
-    #         messages.success(request, ("You Successfully Edited!"))
-    #         return redirect('home')
+            if form.is_valid():
+                form.save()
+
+        return render(request, "edit_profile.html", {"profile": profile, "form": form})
+    else:
+        messages.success(request, ("You must be logged in to view this page"))
+        return redirect('home')
 
     return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
 
