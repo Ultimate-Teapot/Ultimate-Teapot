@@ -27,6 +27,9 @@
     <div class="col-md-8">
       <h1 class="text-center">You've got new notifications</h1>
       <h6 class="text-center">Mark as seen or repond to remove notification</h6>
+      <br><br>
+      <a href="{%url 'clear_inbox' %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float:right">Clear Everything</i></a>
+      <br><br>
       <br>
       {% for item in items %}
       <div class="card mb-4">
