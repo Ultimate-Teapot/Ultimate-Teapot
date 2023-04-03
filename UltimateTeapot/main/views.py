@@ -62,20 +62,20 @@ def post(request, id):
     current_user = request.user.profile
     print("onasfnsafnonoisafinosafinofsaninsafnsaflnsainfnioafsoinafsopasfonpfspo")
     print(new_post)
-    if current_user == new_post.author:
-        messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
-        return render(request, "post.html", {"post": new_post})
-
-    elif current_user not in new_post.author.friends.all():
-        # User is not authorized to view this post.
-        # Redirect to a login page or display an error message.
-        messages.add_message(request, messages.INFO,
-                             'You cannot view this post. This is a friend posts. Only author and his/her friends can see.')
-        return render(request, "not_friend.html")
-    else:
-        # User is authorized to view this post.
-        # return render(request, 'view_post.html', {'post': post})
-        return render(request, "post.html", {"post": new_post})
+    # if current_user == new_post.author:
+    #     messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
+    #     return render(request, "post.html", {"post": new_post})
+    #
+    # elif current_user not in new_post.author.friends.all():
+    #     # User is not authorized to view this post.
+    #     # Redirect to a login page or display an error message.
+    #     messages.add_message(request, messages.INFO,
+    #                          'You cannot view this post. This is a friend posts. Only author and his/her friends can see.')
+    #     return render(request, "not_friend.html")
+    # else:
+    #     # User is authorized to view this post.
+    #     # return render(request, 'view_post.html', {'post': post})
+    return render(request, "post.html", {"post": new_post})
 
 def foreign_post(request, id):
     # Pass in the full URL of a post, make a get request and display it on a page
@@ -252,11 +252,35 @@ def posts(request):
                 content = b_64
             else:
                 content = request.POST['content']
-            
-            
+
 
 
             visibility = request.POST['visibility']
+
+            if visibility == "FRIENDS":
+                current_user = request.user.profile
+                actor = ProfileSerializer(current_user).data
+                print("INSIDE FRIEND POSTS")
+
+                for friend in current_user.friend_list.all():
+                    id = friend.id
+                    target_host = id.split("author")[0]
+                    target_node = Node.objects.get(host=target_host)
+
+                    object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
+                    object_json = object.json()
+                    data_to_send = {
+                        "type": "post",
+                        "summary": actor['displayName'] + " has posted a new friend post. ",
+                        # display the uRL later maybe?
+                        "author": actor,
+                        "object": object_json,
+                        "id": actor['id'] + "/posts/" + post_id,
+                    }
+
+                    requests.post(id + "/inbox/", json=data_to_send,
+                                  auth=HTTPBasicAuth(target_node.username, target_node.password))
+
             title = request.POST['title']
             if ('unlisted' in request.POST):
                 unlisted = request.POST['unlisted']
@@ -1049,7 +1073,8 @@ class InboxList(APIView):
         elif (type == "post") or (type == "Post"):
             object = Object.objects.create(
                 type="post",
-                object_id=data["id"]
+                object_id=data["id"],
+                actor=data["author"]["id"]
             )
             profile.inbox.add(object)
             profile.save()
@@ -1058,7 +1083,8 @@ class InboxList(APIView):
         elif (type == "Like") or (type == "like"):
             object = Object.objects.create(
                 type="like",
-                object_id=data["object"]
+                object_id=data["object"],
+                actor = data["author"]["id"]
             )
             profile.inbox.add(object)
             profile.save()
@@ -1083,7 +1109,8 @@ class InboxList(APIView):
         elif (type == "comment") or (type == "Comment"):
             object = Object.objects.create(
                 type="comment",
-                object_id=data["id"]
+                object_id=data["id"],
+                actor = data["author"]["id"]
             )
             profile.inbox.add(object)
             profile.save()
