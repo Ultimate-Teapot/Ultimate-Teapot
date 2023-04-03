@@ -31,7 +31,7 @@
         {% if profile.url != user.profile.url and can_follow %}
          
         {% comment %} TODO make sure follow is clicked once {% endcomment %}
-        <a href="{% url 'follow' profile.id %}" class="button" id="followingLink">
+        <a href="{% url 'follow' profile.url %}" class="button" id="followingLink">
             Follow 
             {% comment %} {{ profile.displayName }} {% endcomment %}
         </a> 
@@ -42,20 +42,28 @@
                 followingLink.style.display = 'none';
             });
         </script>
+        {% elif profile.url != user.profile.url %}
+        <form action="/main/unfollow/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <button type="submit" name="unfollow" value="unfollow" class="btn btn-outline-danger">Unfollow</button>
+          </form>
 
         {% endif %}
 
+{% if is_local %}
 <h3>{{ profile.displayName }}'s Friends</h3>
 {% if friends %}
     
         {% for fr in friends %}      
             <a href="{% url 'profile' fr.id %}">
-                {{ fr.name }}
+                {{ fr.displayName }}
+                </br>
             </a> 
         {% endfor %}
-    
+
 {% else %}
             empty
+{% endif %}
 {% endif %}
 </br></br></br>
 

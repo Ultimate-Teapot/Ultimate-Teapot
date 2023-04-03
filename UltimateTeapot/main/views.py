@@ -457,63 +457,71 @@ def singlePost(request, author_id, post_id):
         post = Post.objects.get(id=post_id)
 
 
-
 def profile(request, id):
     if request.user.is_authenticated:
         host = id.split('authors')[0]
-        author_node = Node.objects.get(host=host)
+        if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
+            # This is local
+            local = True
+            uuid = id.split('authors/')[1]
+            profile = Profile.objects.get(id=uuid)
 
-        author_object = get_request(id + '/', author_node)
-        post_json = get_request(id + '/posts/', author_node)
+            friends = profile.friend_list.all()
+            followers = profile.follower_list.all()
 
-        post_list = []
+            author_node = Node.objects.get(host=host)
 
-        if isinstance(post_json, dict):
-            post_list = post_json['items']
-        else:
-            post_list = post_json
-            
-        #should not repeat this code
-        all_authors = []
-        nodes = Node.objects.all()
-        for node in nodes:
-            foreign_authors = get_request(node.host + "authors/", node)
-            all_authors.extend(foreign_authors['items'])
-        
-        this_user_id = author_object['id']
-        # current_user = request.user.profile
-        user_this_page = Profile.objects.get(url=this_user_id)
-        # print("lllll")
-        # print(user_this_page)
-        friends = user_this_page.friend_list.all()
-        followers = user_this_page.follower_list.all()
+            post_json = get_request(id + '/posts/', author_node)
 
-        follower_list_json = []
-        for follower in followers:
-            for author in all_authors:
-                if follower.id == author['id']:
-                    follower_list_json.append(author)
-
-        friend_list_json = []
-        for friend in friends:
-            for author in all_authors:
-                if friend.id == author['id']:
-                    friend_list_json.append(author)
-
-        can_follow = True
-        
-        for fr in friends:
-            temp_profile = Profile.objects.filter(url=fr.id)[0]
-            fr.name = temp_profile.displayName
-                    
-        for fl in followers:
-            temp_profile = Profile.objects.filter(url=fl.id)[0]
-            fl.name = temp_profile.displayName
-  
-            if (fl.id == request.user.profile.url):
+            if request.user.profile.id == id:
                 can_follow = False
+            else:
+                can_follow = True
+
+            for fr in friends:
+                temp_profile = Profile.objects.filter(url=fr.id)[0]
+                fr.displayName = temp_profile.displayName
+
+            for fl in followers:
+                temp_profile = Profile.objects.filter(url=fl.id)[0]
+                fl.displayName = temp_profile.displayName
+
+                if (fl.id == request.user.profile.url):
+                    can_follow = False
+        else:
+            # This is remote
+            local = False
+            can_follow = True
+
+            author_node = Node.objects.get(host=host)
+
+            profile = get_request(id + '/', author_node)
+            post_json = get_request(id + '/posts/', author_node)
+            followers = get_request(id + '/followers/', author_node)['items']
+            friends = None
+
+            post_list = []
+
+            if isinstance(post_json, dict):
+                post_list = post_json['items']
+            else:
+                post_list = post_json
+
+            #should not repeat this code
+            all_authors = []
+            nodes = Node.objects.all()
+            for node in nodes:
+                foreign_authors = get_request(node.host + "authors/", node)
+                all_authors.extend(foreign_authors['items'])
+
+            this_user_id = profile['id']
+            # current_user = request.user.profile
+            # user_this_page = Profile.objects.get(url=this_user_id)
+            # print("lllll")
+            # print(user_this_page)
+
         
-        return render(request, "profile.html", {"profile":author_object, "posts":post_list, "friends":friend_list_json, "followers":follower_list_json, "can_follow": can_follow})
+        return render(request, "profile.html", {"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
@@ -545,7 +553,8 @@ def follow(request, id):
 
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
-    
+
+
 def follow_response(request):
     print("in follow_response")
     if request.user.is_authenticated:
@@ -556,48 +565,58 @@ def follow_response(request):
             following_user = Profile.objects.get(url=follower_id)
             print(current_user)
             print(following_user)
-            
-            #TODO: add this later doesnt work right now
+
             follower_host = request.POST['follower_host']
-            
+
             author_node = Node.objects.get(host=follower_host)
             print("JSON: ", follower_id)
+
             follow_request = Object.objects.get(actor=follower_id, object=current_user.url)
-            # follow_request = Object.objects.all().delete()
-                      
+
             if action == "accept" or action == "decline":
                 current_user.inbox.remove(follow_request)
                 follow_request.delete()
-                
-            if action == "accept":               
+
+            if action == "accept":
                 print("in accept")
-                
-                # current_user.friend_list.clear()      
+
+                # current_user.friend_list.clear()
                 # s = Follower.objects.all().delete()
+                # f = Object.objects.all().delete()
                 # following_user.friend_list.clear()
                 # following_user.follower_list.clear()
-                
-                # follower_list = current_user.follower_list.all()    
-                #accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
-                follower = Follower.objects.create(id=follower_id, host=follower_host)
-                current_user.follower_list.add(follower)    
-                
+                # follower_list = current_user.follower_list.all()
+
+                try:
+                    follower = Follower.objects.get(id=follower_id, host=follower_host)
+                    current_user.follower_list.add(follower)
+                except Follower.DoesNotExist:
+                    # If the follower doesn't exist, create a new one
+                    follower = Follower.objects.create(id=follower_id, host=follower_host)
+                    current_user.follower_list.add(follower)
+                else:
+                    print("Unknown error")
+
+                # accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
+                # follower = Follower.objects.create(id=follower_id, host=follower_host)
+                # current_user.follower_list.add(follower)
+                # follower.delete()
+
                 followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
                 for follower in followers_object['items']:
                     if follower['id'] == current_user.url:
                         print("FOUND")
-                        friends_to_current_user = Follower.objects.get(id=follower_id) 
+                        friends_to_current_user = Follower.objects.get(id=follower_id)
                         current_user.friend_list.add(friends_to_current_user)
-                        
-                        friends_to_following_user = Follower.objects.get(id=current_user.url) 
+
+                        friends_to_following_user = Follower.objects.get(id=current_user.url)
                         following_user.friend_list.add(friends_to_following_user)
-                        
+
             elif action == "decline":
-                #declined dont do anything
+                # declined dont do anything
                 print("in decline dont do anything")
-                
-                
+
         return redirect(inbox)
     else:
         messages.success(request, ("You must be logged in to view this page"))
@@ -930,12 +949,23 @@ class InboxList(APIView):
         type = data["type"]
 
         if (type == "Follow") or (type == "follow"):
-            object = Object.objects.create(
-                type="Follow",
-                actor=data["actor"]["id"],
-                object=data["object"]["id"],
-            )
-            profile.inbox.add(object)
+            print("Trying to make follow request")
+            try:
+                object = Object.objects.get(actor=data["actor"]["id"],object=data["object"]["id"])
+                print("We found the object")
+                profile.inbox.add(object)
+            except Object.DoesNotExist:
+                print("we didn't get the object")
+                # If the follower doesn't exist, create a new one
+                object = Object.objects.create(
+                    type="Follow",
+                    actor=data["actor"]["id"],
+                    object=data["object"]["id"],
+                )
+                profile.inbox.add(object)
+            else:
+                print("Unknown error")
+
             profile.save()
             return Response(status=status.HTTP_200_OK)
 
