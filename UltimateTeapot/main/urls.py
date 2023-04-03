@@ -37,6 +37,7 @@ urlpatterns = [
   # path('posts/', views.posts, name='posts'),
   path('authors/', views.authors, name='authors'),
   path('authors/<path:id>', views.profile, name='profile'),
+  path('profile/<path:id>/edit_profile', views.edit_profile, name='edit_profile'),
   path('profile/<str:id>', views.user_profile, name='user_profile'),
   path('follow/<path:id>', views.follow, name='follow'),
   path('inbox/', views.inbox, name='inbox'),

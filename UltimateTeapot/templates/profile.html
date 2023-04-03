@@ -3,9 +3,10 @@
 {% block content %}
 
 {% if profile %}
+{% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %}
     <style>
 
-        {% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %}
+        
         .button {
             background-color: blue;
             border: solid;
@@ -22,6 +23,7 @@
     </style>
     <h1>{{ profile.displayName }}'s Profile</h1>
     <p>From: {{ profile.host }}</p>
+    <a href="{%url 'edit_profile' request.user.profile.url%}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>
     <p>Github: {{ profile.github }}</p>
     <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100">
     <br/>
