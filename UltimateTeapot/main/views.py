@@ -504,6 +504,24 @@ def singlePost(request, author_id, post_id):
         post = Post.objects.get(id=post_id)
 
 
+def edit_profile(request, id):
+    if request.user.is_authenticated:
+        uuid = id.split("/authors/")[1]
+        profile = Profile.objects.get(id = uuid)
+        
+        
+        form = SignUpForm(request.POST or None, instance=profile)
+        if request.method == 'POST':
+            
+            if form.is_valid():
+                form.save()
+
+        
+        return render(request, "edit_profile.html", {"profile":profile,"form":form })
+    else:
+        messages.success(request, ("You must be logged in to view this page"))
+        return redirect('home')
+        
 def profile(request, id):
     if request.user.is_authenticated:
         host = id.split('authors')[0]
@@ -572,7 +590,8 @@ def profile(request, id):
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
-    
+
+
 def user_profile(request, id):
     if request.user.is_authenticated:
         profile = Profile.objects.get(id = id)
