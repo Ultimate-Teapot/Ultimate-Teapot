@@ -40,6 +40,8 @@ urlpatterns = [
   path('profile/<str:id>', views.user_profile, name='user_profile'),
   path('follow/<path:id>', views.follow, name='follow'),
   path('inbox/', views.inbox, name='inbox'),
+  path('inbox/delete/', views.clear_inbox, name='clear_inbox'),
+
   path('follow_response/', views.follow_response, name='follow_response'),
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
