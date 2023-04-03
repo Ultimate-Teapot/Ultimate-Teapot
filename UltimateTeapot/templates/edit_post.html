@@ -1,22 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-  </ul>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <h2 class="text-center">Edit Your Post</h2>
+      <hr>
+      <ul class="messages">
+        {% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+      </ul>
+      <br>
 
-{% if upload_form %}
-      <form  method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+      {% if upload_form %}
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ upload_form.contentType.hidden }}
+          {{ upload_form.as_p }}
 
-        {{ upload_form.contentType.hidden }}
-        {{ upload_form.as_p }}
-
-
-        <button type="submit" class="btn btn-primary btn-block">Update!</button>
-      </form> 
-    {% endif %}
-
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary btn-block">Update</button>
+          </div>
+        </form> 
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock content %}

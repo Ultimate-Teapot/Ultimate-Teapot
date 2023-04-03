@@ -59,7 +59,8 @@ def post(request, id):
 
     new_post = Post.objects.get(id=id)
     current_user = request.user.profile
-
+    print("onasfnsafnonoisafinosafinofsaninsafnsaflnsainfnioafsoinafsopasfonpfspo")
+    print(new_post)
     if current_user == new_post.author:
         messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
         return render(request, "post.html", {"post": new_post})
@@ -140,6 +141,23 @@ def edit_post(request, id):
 
     
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
+
+
+def edit_profile(request):
+
+    # oldprofile = request.user.profile
+    # print(profile)
+    # form = SignUpForm(request.POST or None, instance=oldprofile)
+
+    # if request.method == "POST":
+    #     if form.is_valid():
+    #         form.contentType = post.contentType
+    #         form.save()
+    #         messages.success(request, ("You Successfully Edited!"))
+    #         return redirect('home')
+
+    return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
+
 
 def signup(request):
     if request.method == 'POST':
@@ -243,10 +261,12 @@ def posts(request):
             if (unlisted == 'on'):
                 unlisted = True
 
+            # pub_date = datetime.datetime.now().isoformat()
+
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
                                            visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
             new_post.save()
-            print("AAAAAAAAA: ", new_post.pub_date)
+            # print("AAAAAAAAA: ", new_post.pub_date)
 
         # return redirect('home')
         # return render(request, 'home.html', {"upload_form":upload_form})
@@ -320,10 +340,24 @@ def like(request):
 
 
 
+
+@login_required(login_url='signin')
+def myprofile(request):
+
+      current_user = User.objects.get(username=request.user)
+      author_profile = Profile.objects.get(user=current_user)
+
+
+
+      return render(request, 'myprofile.html', {"author":author_profile})
+
+
+# DOUBLE CHECK THIS LINE FROM 343 to 359 
 def make_post(request):
     upload_form = UploadForm()
     #return render(request, 'home.html', {"posts":posts, "form":form})
     return render(request, 'make_post.html', {"upload_form":upload_form})
+
 
 def home(request):
         form = UploadForm(request.POST or None, request.FILES)
@@ -410,12 +444,13 @@ def home(request):
                 current_user_posts = (public_posts | friend_posts).order_by("-pub_date")
                 # print("HAHA: ", current_user_posts[0].visibility,current_user_posts[0].text_post )
          
+
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
-
+        
 
 def inbox(request):
     #should not repeat this code
