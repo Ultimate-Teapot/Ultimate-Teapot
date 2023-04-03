@@ -1,5 +1,6 @@
 import base64
 import datetime
+import json
 import os
 import urllib.parse
 import uuid
@@ -58,7 +59,8 @@ def post(request, id):
 
     new_post = Post.objects.get(id=id)
     current_user = request.user.profile
-
+    print("onasfnsafnonoisafinosafinofsaninsafnsaflnsainfnioafsoinafsopasfonpfspo")
+    print(new_post)
     if current_user == new_post.author:
         messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
         return render(request, "post.html", {"post": new_post})
@@ -139,6 +141,23 @@ def edit_post(request, id):
 
     
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
+
+
+def edit_profile(request):
+
+    # oldprofile = request.user.profile
+    # print(profile)
+    # form = SignUpForm(request.POST or None, instance=oldprofile)
+
+    # if request.method == "POST":
+    #     if form.is_valid():
+    #         form.contentType = post.contentType
+    #         form.save()
+    #         messages.success(request, ("You Successfully Edited!"))
+    #         return redirect('home')
+
+    return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
+
 
 def signup(request):
     if request.method == 'POST':
@@ -242,10 +261,12 @@ def posts(request):
             if (unlisted == 'on'):
                 unlisted = True
 
+            # pub_date = datetime.datetime.now().isoformat()
+
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
                                            visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
             new_post.save()
-            print("AAAAAAAAA: ", new_post.pub_date)
+            # print("AAAAAAAAA: ", new_post.pub_date)
 
         # return redirect('home')
         # return render(request, 'home.html', {"upload_form":upload_form})
@@ -319,11 +340,23 @@ def like(request):
 
 
 
+
+@login_required(login_url='signin')
+def myprofile(request):
+
+      current_user = User.objects.get(username=request.user)
+      author_profile = Profile.objects.get(user=current_user)
+
+
+
+      return render(request, 'myprofile.html', {"author":author_profile})
+
+
+# DOUBLE CHECK THIS LINE FROM 343 to 359 
 def make_post(request):
     upload_form = UploadForm()
     #return render(request, 'home.html', {"posts":posts, "form":form})
     return render(request, 'make_post.html', {"upload_form":upload_form})
-
 
 
 def home(request):
@@ -377,10 +410,22 @@ def home(request):
                 all_authors_posts = []
                 nodes = Node.objects.all()
                 for node in nodes:
-                    foreign_authors = get_request(node.host + "authors/", node)
-                    for author in foreign_authors['items']:
-                        author_posts = get_request(author['id'] + "/posts/", node)
-                        all_authors_posts.extend(author_posts)
+                    try:
+                        foreign_authors = get_request(node.host + "authors/?page=1&size=2", node)
+                    except json.JSONDecodeError:
+                        None
+                    else:
+                        for author in foreign_authors['items']:
+                            try:
+                                author_posts = get_request(author['id'] + "/posts/", node)
+                            except json.JSONDecodeError:
+                                None
+                            else:
+                                if isinstance(author_posts, dict):
+                                    all_authors_posts.extend(author_posts['items'])
+                                else:
+                                    all_authors_posts.extend(author_posts)
+
 
 
                 for post in all_authors_posts:
@@ -399,12 +444,13 @@ def home(request):
                 current_user_posts = (public_posts | friend_posts).order_by("-pub_date")
                 # print("HAHA: ", current_user_posts[0].visibility,current_user_posts[0].text_post )
          
+
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
-
+        
 
 def inbox(request):
     #should not repeat this code
@@ -457,7 +503,6 @@ def singlePost(request, author_id, post_id):
         post = Post.objects.get(id=post_id)
 
 
-
 def edit_profile(request, id):
     if request.user.is_authenticated:
         uuid = id.split("/authors/")[1]
@@ -475,64 +520,72 @@ def edit_profile(request, id):
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
-
-
+        
 def profile(request, id):
     if request.user.is_authenticated:
         host = id.split('authors')[0]
-        author_node = Node.objects.get(host=host)
+        if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
+            # This is local
+            local = True
+            uuid = id.split('authors/')[1]
+            profile = Profile.objects.get(id=uuid)
 
-        author_object = get_request(id + '/', author_node)
-        post_json = get_request(id + '/posts/', author_node)
+            friends = profile.friend_list.all()
+            followers = profile.follower_list.all()
 
-        post_list = []
+            author_node = Node.objects.get(host=host)
 
-        if isinstance(post_json, dict):
-            post_list = post_json['items']
-        else:
-            post_list = post_json
-            
-        #should not repeat this code
-        all_authors = []
-        nodes = Node.objects.all()
-        for node in nodes:
-            foreign_authors = get_request(node.host + "authors/", node)
-            all_authors.extend(foreign_authors['items'])
-        
-        this_user_id = author_object['id']
-        # current_user = request.user.profile
-        user_this_page = Profile.objects.get(url=this_user_id)
-        # print("lllll")
-        # print(user_this_page)
-        friends = user_this_page.friend_list.all()
-        followers = user_this_page.follower_list.all()
+            post_json = get_request(id + '/posts/', author_node)
 
-        follower_list_json = []
-        for follower in followers:
-            for author in all_authors:
-                if follower.id == author['id']:
-                    follower_list_json.append(author)
-
-        friend_list_json = []
-        for friend in friends:
-            for author in all_authors:
-                if friend.id == author['id']:
-                    friend_list_json.append(author)
-
-        can_follow = True
-        
-        for fr in friends:
-            temp_profile = Profile.objects.filter(url=fr.id)[0]
-            fr.name = temp_profile.displayName
-                    
-        for fl in followers:
-            temp_profile = Profile.objects.filter(url=fl.id)[0]
-            fl.name = temp_profile.displayName
-  
-            if (fl.id == request.user.profile.url):
+            if request.user.profile.id == id:
                 can_follow = False
+            else:
+                can_follow = True
+
+            for fr in friends:
+                temp_profile = Profile.objects.filter(url=fr.id)[0]
+                fr.displayName = temp_profile.displayName
+
+            for fl in followers:
+                temp_profile = Profile.objects.filter(url=fl.id)[0]
+                fl.displayName = temp_profile.displayName
+
+                if (fl.id == request.user.profile.url):
+                    can_follow = False
+        else:
+            # This is remote
+            local = False
+            can_follow = True
+
+            author_node = Node.objects.get(host=host)
+
+            profile = get_request(id + '/', author_node)
+            post_json = get_request(id + '/posts/', author_node)
+            followers = get_request(id + '/followers/', author_node)['items']
+            friends = None
+
+            post_list = []
+
+            if isinstance(post_json, dict):
+                post_list = post_json['items']
+            else:
+                post_list = post_json
+
+            #should not repeat this code
+            all_authors = []
+            nodes = Node.objects.all()
+            for node in nodes:
+                foreign_authors = get_request(node.host + "authors/", node)
+                all_authors.extend(foreign_authors['items'])
+
+            this_user_id = profile['id']
+            # current_user = request.user.profile
+            # user_this_page = Profile.objects.get(url=this_user_id)
+            # print("lllll")
+            # print(user_this_page)
+
         
-        return render(request, "profile.html", {"profile":author_object, "posts":post_list, "friends":friend_list_json, "followers":follower_list_json, "can_follow": can_follow})
+        return render(request, "profile.html", {"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
@@ -565,7 +618,8 @@ def follow(request, id):
 
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
-    
+
+
 def follow_response(request):
     print("in follow_response")
     if request.user.is_authenticated:
@@ -576,48 +630,58 @@ def follow_response(request):
             following_user = Profile.objects.get(url=follower_id)
             print(current_user)
             print(following_user)
-            
-            #TODO: add this later doesnt work right now
+
             follower_host = request.POST['follower_host']
-            
+
             author_node = Node.objects.get(host=follower_host)
             print("JSON: ", follower_id)
+
             follow_request = Object.objects.get(actor=follower_id, object=current_user.url)
-            # follow_request = Object.objects.all().delete()
-                      
+
             if action == "accept" or action == "decline":
                 current_user.inbox.remove(follow_request)
                 follow_request.delete()
-                
-            if action == "accept":               
+
+            if action == "accept":
                 print("in accept")
-                
-                # current_user.friend_list.clear()      
+
+                # current_user.friend_list.clear()
                 # s = Follower.objects.all().delete()
+                # f = Object.objects.all().delete()
                 # following_user.friend_list.clear()
                 # following_user.follower_list.clear()
-                
-                # follower_list = current_user.follower_list.all()    
-                #accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
-                follower = Follower.objects.create(id=follower_id, host=follower_host)
-                current_user.follower_list.add(follower)    
-                
+                # follower_list = current_user.follower_list.all()
+
+                try:
+                    follower = Follower.objects.get(id=follower_id, host=follower_host)
+                    current_user.follower_list.add(follower)
+                except Follower.DoesNotExist:
+                    # If the follower doesn't exist, create a new one
+                    follower = Follower.objects.create(id=follower_id, host=follower_host)
+                    current_user.follower_list.add(follower)
+                else:
+                    print("Unknown error")
+
+                # accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
+                # follower = Follower.objects.create(id=follower_id, host=follower_host)
+                # current_user.follower_list.add(follower)
+                # follower.delete()
+
                 followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
                 for follower in followers_object['items']:
                     if follower['id'] == current_user.url:
                         print("FOUND")
-                        friends_to_current_user = Follower.objects.get(id=follower_id) 
+                        friends_to_current_user = Follower.objects.get(id=follower_id)
                         current_user.friend_list.add(friends_to_current_user)
-                        
-                        friends_to_following_user = Follower.objects.get(id=current_user.url) 
+
+                        friends_to_following_user = Follower.objects.get(id=current_user.url)
                         following_user.friend_list.add(friends_to_following_user)
-                        
+
             elif action == "decline":
-                #declined dont do anything
+                # declined dont do anything
                 print("in decline dont do anything")
-                
-                
+
         return redirect(inbox)
     else:
         messages.success(request, ("You must be logged in to view this page"))
@@ -679,7 +743,7 @@ class NodePermission(BasePermission):
 # TODO: add nodepermission to all remote api requests
 
 class AuthorList(APIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     def get(self, request):
         profiles = Profile.objects.all()
@@ -690,7 +754,7 @@ class AuthorList(APIView):
 
 
 class SingleAuthor(APIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
 
         #uri = request.build_absolute_uri('?')
@@ -720,7 +784,7 @@ class SingleAuthor(APIView):
 '''api/authors/<str:id>/posts/'''
 
 class PostsList(ListCreateAPIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     pagination_class = NewPaginator
     serializer_class = PostsSerializer
@@ -754,7 +818,7 @@ class PostsList(ListCreateAPIView):
 
 '''api/authors/<str:id>/posts/<str:pid>'''
 class SinglePost(GenericAPIView):
-   #permission_classes = [NodePermission, IsAuthenticated]
+    permission_classes = [NodePermission, IsAuthenticated]
 
     serializer_class = PostSerializer
     queryset = Post.objects.all()
@@ -824,6 +888,7 @@ class SinglePost(GenericAPIView):
 '''api/authors/<str:id>/posts/<str:pid>/image'''
 
 class ImagePostsList(GenericAPIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     serializer_class = PostImageSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
@@ -840,6 +905,7 @@ class ImagePostsList(GenericAPIView):
 
 
 class FollowerList(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
         #uri = request.build_absolute_uri('?')
         #uri = uri.replace("/followers", "")
@@ -856,6 +922,7 @@ class singleFollowerList(APIView):
     '''
     Check if foreign id is a follower of this author
     '''
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         author = Profile.objects.get(id=id)
@@ -901,6 +968,7 @@ class singleFollowerList(APIView):
 
 
 class Commentlist(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id, pid):
         post = Post.objects.get(id=pid)
         serializer = CommentListSerializer(post)
@@ -915,12 +983,14 @@ class Commentlist(APIView):
 
 
 class postLikes(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id,pid):
         post = Post.objects.get(id=pid)
         serializer = PostLikeSerializer(post)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class commentLikes(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id,pid,cid):
         comment = Comment.objects.get(id=cid)
         serializer = CommentLikeSerializer(comment)
@@ -929,6 +999,7 @@ class commentLikes(APIView):
 
 
 class authorLikes(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id):
         author = Profile.objects.get(id=id)
         serializer = AuthorLikeSerializer(author)
@@ -937,6 +1008,7 @@ class authorLikes(APIView):
 
 
 class InboxList(APIView):
+    permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
         serializer = InboxSerializer(profile)
@@ -950,12 +1022,23 @@ class InboxList(APIView):
         type = data["type"]
 
         if (type == "Follow") or (type == "follow"):
-            object = Object.objects.create(
-                type="Follow",
-                actor=data["actor"]["id"],
-                object=data["object"]["id"],
-            )
-            profile.inbox.add(object)
+            print("Trying to make follow request")
+            try:
+                object = Object.objects.get(actor=data["actor"]["id"],object=data["object"]["id"])
+                print("We found the object")
+                profile.inbox.add(object)
+            except Object.DoesNotExist:
+                print("we didn't get the object")
+                # If the follower doesn't exist, create a new one
+                object = Object.objects.create(
+                    type="Follow",
+                    actor=data["actor"]["id"],
+                    object=data["object"]["id"],
+                )
+                profile.inbox.add(object)
+            else:
+                print("Unknown error")
+
             profile.save()
             return Response(status=status.HTTP_200_OK)
 

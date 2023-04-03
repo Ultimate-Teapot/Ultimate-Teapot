@@ -5,7 +5,6 @@
 {% if profile %}
 {% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %}
     <style>
-
         
         .button {
             background-color: blue;
@@ -18,14 +17,95 @@
             display: inline-block; 
             cursor: pointer;   
             border-radius: 15%;
+        } */
+        .Profiletitle{
+            display:flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: flex-start;
+            
+        }
+        
+
+
+
+        #profile_img{
+           
+            width: 20%;
+            height: 20%;
+            border: solid;
+            border-radius: 50%;
         }
 
+        #FriendsFollowers{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            padding: 0.5%;
+        }
+
+        #Followers{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            
+        }
+
+
+        #Friends{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+
+        }
+
+        /* #name{
+            display:flex;
+            justify-content:left;
+            
+   
+        } */
+
+       /* #EditProfile{
+        display:flex;
+        align-items: center;
+        justify-content: center;
+       } */
+
+        
+
     </style>
-    <h1>{{ profile.displayName }}'s Profile</h1>
-    <p>From: {{ profile.host }}</p>
-    <a href="{%url 'edit_profile' request.user.profile.url%}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>
-    <p>Github: {{ profile.github }}</p>
-    <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100">
+
+
+    <div class="Profiletitle">
+        <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100" id="profile_img">
+        <h1 id="name">{{ profile.displayName }}'s Profile</h1>
+        <a href="{%url 'edit_profile' request.user.profile.url%}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>
+
+        
+        <!-- LOAD HOST -->
+        {% if profile.host %}
+        <p id="From">From: {{ profile.host }}</p>
+        {% else %}
+        <p id="From">From: None</p>
+        {% endif %}
+
+        <!-- LOAD GITHUB -->
+        {% if profile.Github %}
+        <p id="Github">Github: {{ profile.github }}</p>
+        {% else %}
+        <p id="Github">Github: None</p>
+        {% endif %}
+
+        <a href="{%url 'edit_profile' %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit Profile</i></a>
+     
+    </div>
+
+
+    
+    
+
     <br/>
 
     </br>    
@@ -33,7 +113,7 @@
         {% if profile.url != user.profile.url and can_follow %}
          
         {% comment %} TODO make sure follow is clicked once {% endcomment %}
-        <a href="{% url 'follow' profile.id %}" class="button" id="followingLink">
+        <a href="{% url 'follow' profile.url %}" class="button" id="followingLink">
             Follow 
             {% comment %} {{ profile.displayName }} {% endcomment %}
         </a> 
@@ -44,37 +124,56 @@
                 followingLink.style.display = 'none';
             });
         </script>
+        {% elif profile.url != user.profile.url %}
+        <form action="/main/unfollow/" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <button type="submit" name="unfollow" value="unfollow" class="btn btn-outline-danger">Unfollow</button>
+          </form>
 
+        
         {% endif %}
 
-<h3>{{ profile.displayName }}'s Friends</h3>
-{% if friends %}
-    
-        {% for fr in friends %}      
-            <a href="{% url 'profile' fr.id %}">
-                {{ fr.name }}
-            </a> 
-        {% endfor %}
-    
-{% else %}
-            empty
-{% endif %}
+
 </br></br></br>
 
-<h3>{{ profile.displayName}}'s Followers</h3>
-{% if followers %}
-    
-        {% for fl in followers %}      
-            <a href="{% url 'profile' fl.id %}">
-                {{ fl.displayName }}
-            </br>
-            </a> 
-        {% endfor %}
-    
-{% else %}
-    empty
-{% endif %}
+<div id="FriendsFollowers">
 
+    {% if is_local %}
+    <div id="Friends">
+    <h3>{{ profile.displayName }}'s Friends</h3>
+        {% if friends %}
+
+                {% for fr in friends %}
+                    <a href="{% url 'profile' fr.id %}">
+                        {{ fr.displayName }}
+                        </br>
+                    </a>
+                {% endfor %}
+
+        {% else %}
+                    empty
+        {% endif %}
+    {% endif %}
+
+    </div>
+
+    <div id ="Followers">
+        <h3>{{ profile.displayName}}'s Followers</h3>
+        {% if followers %}
+            
+                {% for fl in followers %}      
+                    <a href="{% url 'profile' fl.id %}" >
+                        {{ fl.displayName }}
+                    </br>
+                    </a> 
+                {% endfor %}
+            
+        {% else %}
+            empty
+        {% endif %}
+    </div>
+
+</div>
 
 
 </br>   </br>   </br>   </br>   

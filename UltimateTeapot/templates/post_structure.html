@@ -1,12 +1,29 @@
 {% load markdownify %}
+
+<style>
+  .Title{
+    display:flex;
+    justify-content:space-between;
+    border-bottom: dotted;
+    border-width: 0.1em;
+    margin-bottom: 5%;
+    color: rgb(201, 198, 198);
+    
+  }
+
+
+
+</style>
+
 <div class="card mb-4">
     <div class="card-body">
       <p class="card-text" >
         <!-- <input type="hidden" id="myVar" name="variable" value="{{post.contentType}}"> -->
 
-            <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
-            <p>Created: {{ post.pub_date}}</p>
-
+            <div class="Title">
+              <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
+              <p>Published: {{ post.published}}</p>
+            </div>
             {% if post.contentType == 'text/plain' %}
             <p>{{ post.content }}</p>
             {% endif %}
