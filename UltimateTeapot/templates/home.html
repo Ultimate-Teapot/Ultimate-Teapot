@@ -135,11 +135,17 @@
             <div class="post_icons">
               <a href="{%url 'edit_post' id=post.id %}"class="edit-button btn btn-secondary btn-block edit-button bi-pen-fill" style="float: right;"></a>  
             
+
               <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
               
 
               <a href="{%url 'delete_post' id=post.id %}"class="ui button bi-trash btn btn-secondary btn-block" style="float: right;"></a>
             </div>
+            {% else %}
+            <div class="post_icons">
+              <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
+            </div>
+
             
             {% endif %}
           </p>
