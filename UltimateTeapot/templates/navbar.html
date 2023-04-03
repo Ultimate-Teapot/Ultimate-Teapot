@@ -1,37 +1,38 @@
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'home' %}">Ultimate Teapot</a>
+      <a class="navbar-brand bi-card-list" href="{% url 'home' %}">Ultimate Teapot</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" 
+            <a class="nav-link bi-people-fill" 
             href="{% url 'authors' %}">Authors</a>
           </li>
     
           {% if user.is_authenticated %}
 
           <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'profile' request.user.profile.url %}">Your Profile</a>
+            <a class="nav-link bi-person-circle" 
+            href="{% url 'profile' request.user.profile.url %}">My Profile</a>
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" 
+            <a class="nav-link bi-mailbox2" 
             href="{% url 'inbox' %}">Your Inbox</a>
           </li>
 
           
 
           <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'make_post' %}"> Create a Teapot</a>
+            <a class="nav-link bi-pencil-fill" 
+            href="{% url 'make_post' %}"> Create a teaPOST</a>
           </li>
 
           <li class="nav-item">
-            <a class="nav-link" 
+            <a class="nav-link bi-box-arrow-right" 
             href="{% url 'logout' %}"> Log Out</a>
           </li>
 

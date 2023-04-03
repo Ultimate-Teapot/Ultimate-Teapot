@@ -1,34 +1,93 @@
 {% extends "base.html" %}
 {% load markdownify %}
 {% block content %}
+<h1 >{{post.title}}</h1>
 {% include 'post_structure.html' %}
+<style>
+    .likebutton{
+        margin-bottom: 3em;
+        float: right;
+        
+    }
 
-<form action="/main/like_post/{{ post.id }}" method="POST">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-primary btn-block">Like</button>
-</form>
+    h2{
+        margin-top: 3em;
+    }
 
-<h>Comments</h>
+    #id_comment{
+        height: 4em;
+    }
 
-<form action="/main/make_comment/{{ post.id }}" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ comment_form.as_p }}
 
-    <button type="submit" class="btn btn-primary btn-block">Submit</button>
-</form>
+    .submitcomment{
+        float:right;
+        margin-bottom: 3em;
+
+    }
+
+    #profilepic{
+        border-radius: 50%;
+        border: solid;
+        border-width: 1pt;
+        width: 3em;
+        height: 3em;
+        margin-top: 1em;
+        margin-left: 1em;
+    }
+
+    .comment{
+        display:flex;
+      
+    }
+
+    .addcomment{
+        margin-bottom:1em;
+    }
+
+    .userinfo{
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        border-bottom: dotted;
+    }
+
+
+</style>
+
+
+<div class="likebutton">  
+    <form action="/main/like_post/{{ post.id }}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-block bi-hand-thumbs-up-fill">Like</button>
+    </form>
+</div>
+
+<div class="addcomment">
+    <h2>Add a Comment</h2>
+    <form action="/main/make_comment/{{ post.id }}" method="POST" enctype="multipart/form-data" style="display:flex; flex-direction:column;">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <button type="submit" class="btn btn-primary btn-block submitcomment">Submit</button>
+        
+    </form>
+    
+</div>
 
 {% if comments %}
 
 {% for comment in comments %}
 
-<div class="card mb-4">
-    <img src="{{ comment.author.profileImage }}" alt="Profile Image" height="100" width="100">
-    <p>{{ comment.author.displayName }}</p>
+<div class="card mb-4 comment"style="border:solid">
+    <div class="userinfo" >
+        <img id="profilepic" src="{{ comment.author.profileImage }}" alt="Profile Image" height="100" width="100">
+        <p>{{ comment.author.displayName }}</p>
+    </div>
+    
     <p>{{ comment.comment }}</p>
 
     <form action="/main/like_comment/{{ comment.id }}" method="POST">
     {% csrf_token %}
-    <button type="submit" class="btn btn-primary btn-block">Like</button>
+    <button type="submit" class="btn btn-primary btn-block bi-hand-thumbs-up-fill">Like</button>
 </form>
 </div>
 
