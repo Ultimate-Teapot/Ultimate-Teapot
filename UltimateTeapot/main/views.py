@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminU
 from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object, Follower
 
 from django.shortcuts import render, redirect
-from .forms import SignUpForm, UploadForm, CommentForm
+from .forms import SignUpForm, UploadForm, CommentForm, ProfilePicForm
 from django.contrib import messages
 from django.contrib import messages
 
@@ -180,7 +180,6 @@ def signup(request):
             #     }
             # )
             # new_inbox.save()
-
             user = authenticate(username=username, password=raw_password)
             login(request, user)
             return redirect('home')
@@ -462,9 +461,10 @@ def edit_profile(request, id):
     if request.user.is_authenticated:
         uuid = id.split("/authors/")[1]
         profile = Profile.objects.get(id = uuid)
+        print(profile)
         
         
-        form = SignUpForm(request.POST or None, instance=profile)
+        form = ProfilePicForm(request.POST or None, instance=profile)
         if request.method == 'POST':
             
             if form.is_valid():
