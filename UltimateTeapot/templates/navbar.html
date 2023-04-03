@@ -1,78 +1,92 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'home' %}">Ultimate Teapot</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'authors' %}">Authors</a>
-          </li>
-    
-          {% if user.is_authenticated %}
+<!DOCTYPE html>
+<html>
+    <head>
+     
+    <head>
 
-          <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'profile' request.user.profile.url %}">Your Profile</a>
-          </li>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand bi-card-list" href="{% url 'home' %}"> Ultimate Teapot</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-          <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'inbox' %}">Your Inbox</a>
-          </li>
+            <div class="fixed">
+              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-          <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'logout' %}"> Log Out</a>
-          </li>
+                <li class="nav-item">
+                  <a class="nav-link bi-people-fill" 
+                  href="{% url 'authors' %}">Authors</a>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                  <a class="nav-link bi-person-circle" 
+                  href="{% url 'profile' request.user.profile.url %}">Your Profile</a>
+                </li>
 
-          <li class="nav-item">
-            <a class="nav-link" 
-            href="{% url 'make_post' %}"> Create a Teapot</a>
-          </li>
+                <li class="nav-item">
+                  <a class="nav-link bi-mailbox2" 
+                  href="{% url 'inbox' %}">Your Inbox</a>
+                </li>
+
+                
+
+                <li class="nav-item" >
+                  <a class="nav-link bi-pencil-fill" 
+                  href="{% url 'make_post' %}"> Create a Teapost</a>
+                </li>
 
 
-          
-          {% comment %} <a href="{% url 'profile' user.profile.id %}">Friends</a>
-          <a href="{% url 'authors' %}">Authors</a>
-          <a href="{% url 'logout' %}"> Log Out</a> {% endcomment %}
-          {% endif %}
-        </ul>
-        {% comment %}
-        {% if user.is_authenticated %}
-        <a href="{% url 'inbox' %}">Inbox</a>
-        <a href="{% url 'user_profile' user.profile.id %}">Friends</a>
-        <a href="{% url 'authors' %}">Authors</a>
-        <a href="{% url 'logout' %}"> Log Out</a>
-        {% endif %}
-        {% endcomment %}
-      </div>
+                <li class="nav-item">
+                  <a class="nav-link bi-box-arrow-right"
+                  href="{% url 'logout' %}"> Log Out</a>
+                </li>
+                
+                {% comment %} <a href="{% url 'profile' user.profile.id %}">Friends</a>
+                <a href="{% url 'authors' %}">Authors</a>
+                <a href="{% url 'logout' %}"> Log Out</a> {% endcomment %}
+                {% endif %}
+              </ul>
+            
+              {% comment %}
+              {% if user.is_authenticated %}
+              <a href="{% url 'inbox' %}">Inbox</a>
+              <a href="{% url 'user_profile' user.profile.id %}">Friends</a>
+              <a href="{% url 'authors' %}">Authors</a>
+              <a href="{% url 'logout' %}"> Log Out</a>
+              {% endif %}
+              {% endcomment %}
+            </div>
+          </div>
 
-          {% if user.is_authenticated %}
+              {% if user.is_authenticated %}
 
-          <li class="nav-item">
-            <a class="nav-link" 
+              <li class="nav-item">
+                <a class="nav-link" 
 
-              href="{{ user.profile.id }}">My Profile</a>
+                  href="{{ user.profile.id }}">My Profile</a>
 
-          </li>
-          {% endif %}
-        </ul>
-        
-      </div>
+              </li>
+              {% endif %}
+            </ul>
+            
+          </div>
 
-        {% if user.is_authenticated %}
-        <li class="nav-item">
-          <a class="nav-link" 
-            href="{% url 'profile' request.user.username  %}">My Profile</a>
-        </li>
-        {% endif %}
-          
-        </ul>
+            {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" 
+                href="{% url 'profile' request.user.username  %}">My Profile</a>
+            </li>
+            {% endif %}
+              
+            </ul>
 
-      </div>
+          </div>
 
-    </div>
-  </nav>
+        </div>
+      </nav>
+
+  </body>
+</html>

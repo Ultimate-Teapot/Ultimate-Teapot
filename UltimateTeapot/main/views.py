@@ -58,7 +58,8 @@ def post(request, id):
 
     new_post = Post.objects.get(id=id)
     current_user = request.user.profile
-
+    print("onasfnsafnonoisafinosafinofsaninsafnsaflnsainfnioafsoinafsopasfonpfspo")
+    print(new_post)
     if current_user == new_post.author:
         messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
         return render(request, "post.html", {"post": new_post})
@@ -242,10 +243,12 @@ def posts(request):
             if (unlisted == 'on'):
                 unlisted = True
 
+            # pub_date = datetime.datetime.now().isoformat()
+
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
                                            visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
             new_post.save()
-            print("AAAAAAAAA: ", new_post.pub_date)
+            # print("AAAAAAAAA: ", new_post.pub_date)
 
         # return redirect('home')
         # return render(request, 'home.html', {"upload_form":upload_form})
@@ -399,12 +402,13 @@ def home(request):
                 current_user_posts = (public_posts | friend_posts).order_by("-pub_date")
                 # print("HAHA: ", current_user_posts[0].visibility,current_user_posts[0].text_post )
          
+
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
-
+        
 
 def inbox(request):
     #should not repeat this code
