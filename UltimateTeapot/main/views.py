@@ -455,7 +455,12 @@ def home(request):
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
         
-
+def clear_inbox(request):
+    profile = request.user.profile
+    for object in profile.inbox.all():
+        object.delete()
+    profile.save()
+    return redirect("inbox")
 def inbox(request):
     #should not repeat this code
     if (request.user.is_authenticated == False):

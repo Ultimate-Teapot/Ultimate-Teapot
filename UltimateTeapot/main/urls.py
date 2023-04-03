@@ -13,6 +13,7 @@ from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList
 
 
 urlpatterns = [
+  path('inbox/delete/', views.clear_inbox, name='clear_inbox'),
   path('', views.home, name='home'),
   path('teapot', views.teapot, name='teapot'),
   path('signup', views.signup, name='signup'),
