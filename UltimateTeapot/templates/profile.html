@@ -81,8 +81,10 @@
     <div class="Profiletitle">
         <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100" id="profile_img">
         <h1 id="name">{{ profile.displayName }}'s Profile</h1>
+        
+        {% if request.user.profile.url == profile.url %}
         <a href="{%url 'edit_profile' request.user.profile.url%}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>
-
+        {% endif %}
         
         <!-- LOAD HOST -->
         {% if profile.host %}
