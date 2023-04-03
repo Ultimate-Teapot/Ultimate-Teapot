@@ -142,6 +142,23 @@ def edit_post(request, id):
     
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
 
+
+def edit_profile(request):
+
+    # oldprofile = request.user.profile
+    # print(profile)
+    # form = SignUpForm(request.POST or None, instance=oldprofile)
+
+    # if request.method == "POST":
+    #     if form.is_valid():
+    #         form.contentType = post.contentType
+    #         form.save()
+    #         messages.success(request, ("You Successfully Edited!"))
+    #         return redirect('home')
+
+    return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
+
+
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -319,6 +336,22 @@ def like_post(request, id):
 @login_required(login_url='signin')
 def like(request):
     return redirect('home')
+
+
+
+@login_required(login_url='signin')
+def myprofile(request):
+
+      current_user = User.objects.get(username=request.user)
+      author_profile = Profile.objects.get(user=current_user)
+
+
+
+      return render(request, 'myprofile.html', {"author":author_profile})
+
+
+
+
 
 def home(request):
         form = UploadForm(request.POST or None, request.FILES)

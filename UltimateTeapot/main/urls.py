@@ -36,10 +36,13 @@ urlpatterns = [
   # path('posts/', views.posts, name='posts'),
   path('authors/', views.authors, name='authors'),
   path('authors/<path:id>', views.profile, name='profile'),
-  path('profile/<str:id>', views.user_profile, name='user_profile'),
+  path('authors/profileedit',views.edit_profile, name="edit_profile"),
+  path('profile/<str:id>', views.user_profile, name='user_profile'), # not sure what this is
   path('follow/<path:id>', views.follow, name='follow'),
   path('inbox/', views.inbox, name='inbox'),
+  path("myprofile/",views.myprofile, name = "user_profile2"),
   path('follow_response/', views.follow_response, name='follow_response'),
+  
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
   # path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
