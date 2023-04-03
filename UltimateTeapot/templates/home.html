@@ -6,6 +6,7 @@
 <title>Homepage</title>
 
 <style>
+
     button{
         border-style: solid;
         border-radius: 5px;
@@ -14,6 +15,7 @@
         background-color: inherit;
         transition: transform .7s ease-in-out;
         margin-left:10px;
+       
 
       }
       button:hover{
@@ -25,125 +27,100 @@
       }
 
       .col-md-8 {
-        margin: 25px;
+        margin: 0.5%;
       }
+
+      .row{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: -5%;
+
+        
+      }
+
+      .card-mb-4{
+        border: solid;
+        border-width: 2pt;
+        border-radius: 20pt;
+        padding:5%;
+        margin-bottom: 3em;
+    
+
+      }
+
+      /* .card-body{
+       
+
+
+      } */
+
+
+      .post_icons{
+        display: flex;
+  
+        justify-content: space-evenly;
+      }
+      /* Style buttons */
+      
+
+      /* Darker background on mouse-over */
+      
+
+      /* .edit-button{
+        background-image:url('{{ STATIC_URL }}images/sample.JPG');
+        background-repeat:no-repeat;
+        background-size:100%;
+      } */
+      
+
+     
+
+      
       
 </style>
 <div class="container">
+
   <div class="row">
 
     <div class="col-md-8">
       <h1 class="text-center">Welcome <span style="color: red">{{user.username}}</span> to Ultimate Teapot!!!</h1>
-    
+     
+        
     </div>
-  </br>
-  </br>
 
-  <div class="col-md-4">
-    <h3 class="text-center">Post something!</h3>
-    <button type="button" onclick=MakeMarkdown()>Markdown Post</button> 
-    <button type="button" onclick=MakeText()>TextPost</button>  
-    <button type="button" onclick=MakeImage()>ImagePost</button> 
-    <br>
+    </br>
+    </br>
 
-    {% if upload_form %}
-      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        {{ upload_form.contentType.hidden }}
-        {{ upload_form.as_p }}
-
-
-        <button type="submit" class="btn btn-primary btn-block">Post!</button>
-      </form> 
-    {% endif %}
-
-
-
-
-  </div>
-
-  <script type="text/javascript">
-    
-
-    window.onload = function(){
-      document.getElementById('id_image').hidden = true
-      document.getElementById('id_content').hidden = true
-      //document.getElementById('id_markdown_content').hidden = true
-      //document.getElementById('id_contentType').hidden = true
-      
-    }
-    function MakeMarkdown(){
-      document.getElementById('id_content').hidden = false
-      document.getElementById('id_image').hidden = true
-      
-      //document.getElementById('id_markdown_content').hidden = false
-      document.getElementById('id_contentType').value = "text/markdown"
-      //document.getElementById('id_contentType').hidden = true
-    }
-
-    
-
-    function MakeImage(){
-      document.getElementById('id_image').hidden = false
-      document.getElementById('id_content').hidden = true
-      //document.getElementById('id_markdown_content').hidden = true
-      document.getElementById('id_contentType').value = "application/base64"
-      //document.getElementById('id_contentType').hidden = true
-    }
-
-
-    function MakeText(){
-      document.getElementById('id_content').hidden = false
-      document.getElementById('id_image').hidden = true
-      //document.getElementById('id_markdown_content').hidden = true
-      document.getElementById('id_contentType').value = "text/plain"
-      //document.getElementById('id_contentType').hidden = true
-
-    }
-
-
-
-  </script>
   
-    {% comment %} <div class="col-md-8" style=" background-color: pink">
-      <form action="/main/posts/" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div style="padding: 20px">
-          <h5>Share your thoughts!</h5>
-          <input type="text" style="width: 100%;" name="text_post" placeholder="What is in your mind?"></textarea></br></br>
-          <input type="file" name="image_upload"></br></br>
-          <button type="submit">Upload</button>
-        </div>
-      </form>
-    </div> {% endcomment %}
 
     <div class="col-md-8">
       {% for post in posts %}
-      <div class="card mb-4">
+      <div class="card-mb-4">
         <div class="card-body">
           <p class="card-text">
             {% if post.unlisted == False %}
-            <a href="{%url 'foreign_post' post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" >{{post.title}}</i></a>
+
+
+                 
         
                   <h2>{{post.title}}</h2>
                   {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
 
                   {% if post.visibility == 'PUBLIC' %}
 
-                  <p> VISIBILTY: {{ post.visibility }}</p>
+                  
                   <p> This post is public</p>
                   {% include 'post_structure.html' %}
 
                   {% elif post.visibility == 'FRIENDS' %}
-
-                  <p> VISIBILTY: {{ post.visibility }}</p>
+                  
                   <p> This post is a friend post</p>
                   {% include 'post_structure.html' %}
 
                   {% else%}
                   Not friends nor public post!!!!!!!!!
-                  <p> VISIBILTY: {{ post.visibility }}</p>
+                  
                   <p> This post is a friend post</p>
                   {% include 'post_structure.html' %}
 
@@ -153,8 +130,17 @@
                 {% endif %}
 
             {% if request.user.profile.url == post.author.id %}
-            <a href="{%url 'edit_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>   
-        
+            
+            
+            <div class="post_icons">
+              <a href="{%url 'edit_post' id=post.id %}"class="edit-button btn btn-secondary btn-block edit-button bi-pen-fill" style="float: right;"></a>  
+            
+              <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
+              
+
+              <a href="{%url 'delete_post' id=post.id %}"class="ui button bi-trash btn btn-secondary btn-block" style="float: right;"></a>
+            </div>
+            
             {% endif %}
           </p>
           <!-- {% if post.image %}
@@ -179,7 +165,6 @@
           </button>
           {% endcomment %}
           {% if request.user.profile.url == post.author.id %}
-          <a href="{%url 'delete_post' id=post.id %}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Delete</i></a>
           {% endif %}
           
 
@@ -198,7 +183,7 @@
       
     </div>
 
-    <div class="card mb-4">
+    <div class="card-mb-4">
       {% if foreign_post %}
 
       {% if foreign_post.author.profileImage %}
@@ -219,7 +204,7 @@
       {% endif %}
     </div>
 
-    <div class="card mb-4">
+    <div class="card-mb-4">
       {% if foreign_post2 %}
 
       {% if foreign_post2.author.profileImage %}
