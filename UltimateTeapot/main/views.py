@@ -45,7 +45,8 @@ from .paginations import NewPaginator
 import base64
 from django.core.files.base import ContentFile
 
-
+def teapot(request):
+    return render(request, 'teapot.html', status=418)
 
 @login_required(login_url='signin')
 def index(request):

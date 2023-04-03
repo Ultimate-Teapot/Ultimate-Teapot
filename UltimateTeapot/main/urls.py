@@ -14,6 +14,7 @@ from .views import AuthorList, SingleAuthor, PostsList, SinglePost, FollowerList
 
 urlpatterns = [
   path('', views.home, name='home'),
+  path('teapot', views.teapot, name='teapot'),
   path('signup', views.signup, name='signup'),
   path('login', views.login, name='login'),
   path('logout', views.logout, name='logout'),
