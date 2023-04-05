@@ -443,7 +443,12 @@ def home(request):
                     except json.JSONDecodeError:
                         None
                     else:
-                        for author in foreign_authors['items']:
+                        if isinstance(foreign_authors, dict):
+                            foreign_author_list = foreign_authors['items']
+                        else:
+                            foreign_author_list = foreign_authors
+                            
+                        for author in foreign_author_list:
                             try:
                                 author_posts = get_request(author['id'] + "/posts/", node)
                             except json.JSONDecodeError:
@@ -590,11 +595,17 @@ def profile(request, id):
             local = False
             can_follow = True
 
-            author_node = Node.objects.get(host=host)
+            if "/api" in host:
+                author_node = Node.objects.get(host=host)
+            else:
+                host = host+"api/"
+                author_node = Node.objects.get(host=host)
 
-            profile = get_request(id + '/', author_node)
-            post_json = get_request(id + '/posts/', author_node)
-            followers = get_request(id + '/followers/', author_node)['items']
+            author_id = host + "authors/" + id.split('authors/')[1] + "/"
+
+            profile = get_request(author_id, author_node)
+            post_json = get_request(author_id + 'posts/', author_node)
+            followers = None
             friends = None
 
             post_list = []
@@ -616,7 +627,6 @@ def profile(request, id):
             # user_this_page = Profile.objects.get(url=this_user_id)
             # print("lllll")
             # print(user_this_page)
-
         
         return render(request, "profile.html", {"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
@@ -637,9 +647,15 @@ def follow(request, id):
     # Send a follow request to the specified id
     current_user = request.user.profile
     actor = ProfileSerializer(current_user).data
-    target_host = id.split("author")[0]
+    host = id.split("authors")[0]
+    if "/api" in host:
+        target_host = host
+    else:
+        target_host = host + "api/"
+
+    target_id = target_host + "authors/" + id.split("authors/")[1] + "/"
     target_node = Node.objects.get(host=target_host)
-    object_json = get_request(id + '/', target_node)
+    object_json = get_request(target_id, target_node)
     data_to_send = {
         "type": "Follow",
         "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
@@ -647,7 +663,7 @@ def follow(request, id):
         "object":object_json
     }
     
-    post_request(id + "/inbox/", target_node, data_to_send)
+    post_request(target_id + "inbox/", target_node, data_to_send)
 
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
