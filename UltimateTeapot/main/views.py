@@ -85,7 +85,13 @@ def foreign_post(request, id):
     host = id.split("authors")[0]
     node = Node.objects.get(host=host)
     post_json = get_request(id + '/', node)
-    post_comments_json = get_request(id + '/comments/', node)
+    try:
+        post_comments_json = get_request(id + '/comments/', node)
+    except json.JSONDecodeError:
+        try:
+            post_comments_json = get_request(id + '/comments', node)
+        except json.JSONDecodeError:
+            post_comments_json = None
 
     return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_json['comments'], "comment_form":comment_form})
 
