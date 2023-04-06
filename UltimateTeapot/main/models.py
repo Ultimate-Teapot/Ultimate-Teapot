@@ -65,7 +65,7 @@ class Profile(models.Model):
     host = models.URLField()
     displayName = models.CharField(max_length=100)
     github = models.URLField()
-    profileImage = models.URLField()
+    profileImage = models.URLField(default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
     
     last_date = models.DateField(default=datetime.datetime.now)
     user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials
