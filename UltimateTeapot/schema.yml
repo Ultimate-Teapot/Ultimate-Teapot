@@ -8,24 +8,13 @@ paths:
     get:
       operationId: main_api_authors_retrieve
       tags:
-      - main
+      - authors
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
-    post:
-      operationId: main_api_authors_create
-      tags:
-      - main
-      security:
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /main/api/authors/{id}:
+  /main/api/authors/{id}/:
     get:
       operationId: main_api_authors_retrieve_2
       parameters:
@@ -35,15 +24,14 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - author
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
     post:
-      operationId: main_api_authors_create_2
+      operationId: main_api_authors_create
       parameters:
       - in: path
         name: id
@@ -51,14 +39,13 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - author
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
-  /main/api/authors/{id}/followers:
+  /main/api/authors/{id}/followers/:
     get:
       operationId: main_api_authors_followers_retrieve
       parameters:
@@ -68,16 +55,16 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - followers
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
-  /main/api/authors/{id}/followers/{fid}:
+  /main/api/authors/{id}/followers/{fid}/:
     get:
       operationId: main_api_authors_followers_retrieve_2
+      description: Check if foreign id is a follower of this author
       parameters:
       - in: path
         name: fid
@@ -90,15 +77,15 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - followers
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
     post:
       operationId: main_api_authors_followers_create
+      description: Check if foreign id is a follower of this author
       parameters:
       - in: path
         name: fid
@@ -111,15 +98,15 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - followers
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
-    put:
-      operationId: main_api_authors_followers_update
+    delete:
+      operationId: main_api_authors_followers_destroy
+      description: Check if foreign id is a follower of this author
       parameters:
       - in: path
         name: fid
@@ -132,14 +119,13 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - followers
       security:
       - basicAuth: []
-      - {}
       responses:
-        '200':
+        '204':
           description: No response body
-  /main/api/authors/{id}/inbox:
+  /main/api/authors/{id}/inbox/:
     get:
       operationId: main_api_authors_inbox_retrieve
       parameters:
@@ -149,10 +135,9 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - inbox
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -165,10 +150,9 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - inbox
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -184,28 +168,10 @@ paths:
       - main
       security:
       - basicAuth: []
-      - {}
       responses:
         '204':
           description: No response body
-  /main/api/authors/{id}/inbox/:
-    post:
-      operationId: main_api_authors_inbox_create_2
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-        required: true
-      tags:
-      - main
-      security:
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /main/api/authors/{id}/liked:
+  /main/api/authors/{id}/liked/:
     get:
       operationId: main_api_authors_liked_retrieve
       parameters:
@@ -215,10 +181,9 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - liked
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -238,10 +203,9 @@ paths:
         schema:
           type: integer
       tags:
-      - main
+      - posts
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -258,7 +222,7 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - posts
       requestBody:
         content:
           application/json:
@@ -273,7 +237,6 @@ paths:
         required: true
       security:
       - basicAuth: []
-      - {}
       responses:
         '201':
           content:
@@ -281,7 +244,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Posts'
           description: ''
-  /main/api/authors/{id}/posts/{pid}:
+  /main/api/authors/{id}/posts/{pid}/:
     get:
       operationId: main_api_authors_posts_retrieve
       parameters:
@@ -296,12 +259,16 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - posts
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
     post:
       operationId: main_api_authors_posts_create_2
       parameters:
@@ -316,12 +283,28 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - posts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Post'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Post'
+        required: true
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
     put:
       operationId: main_api_authors_posts_update
       parameters:
@@ -336,12 +319,28 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - posts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Post'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Post'
+        required: true
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
     delete:
       operationId: main_api_authors_posts_destroy
       parameters:
@@ -356,13 +355,13 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - posts
       security:
       - basicAuth: []
       responses:
         '204':
           description: No response body
-  /main/api/authors/{id}/posts/{pid}/comments:
+  /main/api/authors/{id}/posts/{pid}/comments/:
     get:
       operationId: main_api_authors_posts_comments_retrieve
       parameters:
@@ -377,10 +376,9 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - comments
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -398,14 +396,13 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - comments
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
-  /main/api/authors/{id}/posts/{pid}/comments{cid}/likes:
+  /main/api/authors/{id}/posts/{pid}/comments/{cid}/likes/:
     get:
       operationId: main_api_authors_posts_comments_likes_retrieve
       parameters:
@@ -425,14 +422,13 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - likes
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
-  /main/api/authors/{id}/posts/{pid}/image:
+  /main/api/authors/{id}/posts/{pid}/image/:
     get:
       operationId: main_api_authors_posts_image_retrieve
       parameters:
@@ -447,14 +443,17 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - image post
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
-          description: No response body
-  /main/api/authors/{id}/posts/{pid}/likes:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostImage'
+          description: ''
+  /main/api/authors/{id}/posts/{pid}/likes/:
     get:
       operationId: main_api_authors_posts_likes_retrieve
       parameters:
@@ -469,10 +468,9 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - likes
       security:
       - basicAuth: []
-      - {}
       responses:
         '200':
           description: No response body
@@ -498,6 +496,73 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Posts'
+    Post:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+        title:
+          type: string
+        id:
+          type: string
+          readOnly: true
+        source:
+          type: string
+          readOnly: true
+        origin:
+          type: string
+          readOnly: true
+        description:
+          type: string
+        contentType:
+          type: string
+        content:
+          type: string
+        author:
+          allOf:
+          - $ref: '#/components/schemas/Profile'
+          readOnly: true
+        categories:
+          type: string
+          readOnly: true
+        count:
+          type: integer
+          readOnly: true
+        comments:
+          type: string
+          readOnly: true
+        published:
+          type: string
+          format: date-time
+          readOnly: true
+        visibility:
+          type: string
+          maxLength: 10
+        unlisted:
+          type: boolean
+      required:
+      - author
+      - categories
+      - comments
+      - content
+      - contentType
+      - count
+      - description
+      - id
+      - origin
+      - published
+      - source
+      - title
+      - type
+    PostImage:
+      type: object
+      properties:
+        content:
+          type: string
+          readOnly: true
+      required:
+      - content
     Posts:
       type: object
       properties:
@@ -508,15 +573,13 @@ components:
           type: string
         id:
           type: string
-          maxLength: 200
+          readOnly: true
         source:
           type: string
-          format: uri
-          maxLength: 200
+          readOnly: true
         origin:
           type: string
-          format: uri
-          maxLength: 200
+          readOnly: true
         description:
           type: string
         contentType:
@@ -526,37 +589,48 @@ components:
           type: string
         author:
           allOf:
-          - $ref: '#/components/schemas/ProfilePost'
+          - $ref: '#/components/schemas/Profile'
           readOnly: true
         categories:
           type: string
           readOnly: true
         count:
           type: integer
+          readOnly: true
         comments:
           type: string
           readOnly: true
         published:
           type: string
           format: date-time
+          readOnly: true
+        visibility:
+          type: string
+          maxLength: 10
         unlisted:
           type: boolean
-        likes:
-          type: integer
       required:
       - author
       - categories
       - comments
       - content
+      - contentType
+      - count
       - id
       - origin
       - published
       - source
       - title
       - type
-    ProfilePost:
+    Profile:
       type: object
       properties:
+        type:
+          type: string
+          readOnly: true
+        id:
+          type: string
+          maxLength: 100
         url:
           type: string
           format: uri
@@ -580,7 +654,8 @@ components:
       - displayName
       - github
       - host
-      - profileImage
+      - id
+      - type
       - url
   securitySchemes:
     basicAuth:

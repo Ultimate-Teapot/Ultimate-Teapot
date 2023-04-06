@@ -44,6 +44,7 @@ from django.conf import settings
 from .paginations import NewPaginator
 import base64
 from django.core.files.base import ContentFile
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
 def teapot(request):
     return render(request, 'teapot.html', status=418)
@@ -722,6 +723,7 @@ def like_create(request, post_id):
 
 
 ################################################################################################################################################################
+
 class NodePermission(BasePermission):
     def has_permission(self, request, view):
         if request.user.groups.filter(name='node').exists():
@@ -739,6 +741,16 @@ class AuthorList(APIView):
         updated_data = {"type": "authors", "items": serializer.data}
 
         return Response(updated_data, status=status.HTTP_200_OK)
+    
+# @extend_schema(
+#     examples=[OpenApiExample(
+#         value=[
+#             {'title': 'A title'},
+#             {'title': 'Another title'},
+#         ],
+#     )],
+# )
+    
 
 
 class SingleAuthor(APIView):
