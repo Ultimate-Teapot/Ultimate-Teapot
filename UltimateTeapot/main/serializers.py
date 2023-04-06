@@ -206,8 +206,15 @@ class CommentSerializer(serializers.ModelSerializer):
         representation['type'] = "comment"
         author_id = instance.author_id
         host = author_id.split("authors")[0]
-        node = Node.objects.get(host=host)
-        author_json = get_request(author_id + '/', node)
+        if "/api" in host:
+            author_node = Node.objects.get(host=host)
+        else:
+            host = host + "api/"
+            author_node = Node.objects.get(host=host)
+
+        real_id = host + "authors/" + author_id.split('authors/')[1] + "/"
+
+        author_json = get_request(real_id, author_node)
         representation['author'] = author_json
         representation['comment'] = instance.comment
         representation['published'] = instance.created_at
@@ -248,6 +255,7 @@ class PostImageSerializer(serializers.ModelSerializer):
     
     
     class Meta:
+        model = Post
         fields = ['content']
 
 class PostsPutSerializer(serializers.ModelSerializer):
