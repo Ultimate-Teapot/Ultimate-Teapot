@@ -188,9 +188,8 @@
       
     </div>
 
+    {% if foreign_post %}
     <div class="card-mb-4">
-      {% if foreign_post %}
-
       {% if foreign_post.author.profileImage %}
       <img src={{ foreign_post.author.profileImage }} width="50" height="50">
       {% endif %}
@@ -206,11 +205,12 @@
       <p>
         {{ foreign_post.content }}
       </p>
-      {% endif %}
     </div>
+    {% endif %}
 
+    {% if foreign_post2 %}
     <div class="card-mb-4">
-      {% if foreign_post2 %}
+      
 
       {% if foreign_post2.author.profileImage %}
       <img src={{ foreign_post2.author.profileImage }} width="50" height="50">
@@ -227,8 +227,9 @@
       <p>
         {{ foreign_post2.content }}
       </p>
-      {% endif %}
+      
     </div>
+    {% endif %}
 
     <div>
       {% if authors %}
