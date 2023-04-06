@@ -25,7 +25,7 @@ class UploadForm(forms.ModelForm):
     title = forms.CharField()
     visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
     unlisted = forms.BooleanField(label='Unlisted?', required=False)
-    image = forms.ImageField(required=False)
+    image = forms.ImageField() #turned of required = False
   
 
     contentType = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -65,7 +65,7 @@ class SignUpForm(UserCreationForm):
 
     display_name = forms.CharField(max_length=100, required=True,)
     github = forms.URLField(max_length=100, required=False,)
-    profile_image = forms.URLField(max_length=200, required=False,)
+    profile_image = forms.URLField(max_length=200, required=False)
     
     class Meta:
         model = User

@@ -11,6 +11,11 @@ from rest_framework.serializers import CharField, DateTimeField
 from django.conf import settings
 from urllib.parse import urlparse
 import requests
+from django.core.files.base import ContentFile
+import uuid
+import base64
+
+
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -127,6 +132,26 @@ class PostsSerializer(serializers.ModelSerializer):
 
     #     return super(PostsSerializer,self).update(instance,validated_data)
 
+class Base64ContentField(serializers.ModelSerializer):
+    """
+    For image, send base64 string as json
+    """
+
+    def to_internal_value(self, data):
+        try:
+            format, datastr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            file = ContentFile(base64.b64decode(datastr), name=str(uuid.uuid4())+'.'+ext)
+        except:
+            raise serializers.ValidationError('Error in decoding base64 data')
+        return file
+
+    def to_representation(self, value):
+        if not value:
+            return None
+        return value.url
+
+
 class PostSerializer(serializers.ModelSerializer):
     type = CharField(read_only=True)
     title = CharField(required=True)
@@ -145,7 +170,7 @@ class PostSerializer(serializers.ModelSerializer):
     published = DateTimeField(source="pub_date",read_only=True)
     source = serializers.SerializerMethodField("get_source",required=False)
     origin = serializers.SerializerMethodField("get_origin",required=False)
-
+    img = Base64ContentField(required=False)
    
 
 
@@ -187,7 +212,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','visibility','unlisted'] # add back is_public
+        fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','comments','published','visibility','unlisted','img'] # add back is_public
         
         #extra_kwargs = {'title': {'write_only': True},'description': {'write_only': True},'content': {'write_only': True},'published': {'write_only': True},'unlisted': {'write_only': True}}
 
@@ -238,6 +263,10 @@ class CommentListSerializer(serializers.ModelSerializer):
 
         return representation
 
+################################################################################################
+
+
+
 class PostImageSerializer(serializers.ModelSerializer):
 
     content = serializers.SerializerMethodField("get_image",required=False)
@@ -249,6 +278,10 @@ class PostImageSerializer(serializers.ModelSerializer):
     
     class Meta:
         fields = ['content']
+
+
+
+################################################################################################################################
 
 class PostsPutSerializer(serializers.ModelSerializer):
     author = ProfileSerializer()

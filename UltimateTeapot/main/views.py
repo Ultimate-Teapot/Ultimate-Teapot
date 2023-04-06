@@ -60,8 +60,6 @@ def post(request, id):
 
     new_post = Post.objects.get(id=id)
     current_user = request.user.profile
-    print("onasfnsafnonoisafinosafinofsaninsafnsaflnsainfnioafsoinafsopasfonpfspo")
-    print(new_post)
     if current_user == new_post.author:
         messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
         return render(request, "post.html", {"post": new_post})
@@ -89,38 +87,6 @@ def foreign_post(request, id):
 
     return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_json['comments'], "comment_form":comment_form})
 
-
-# def signup(request):
-#     if request.method == 'POST':
-#         username = request.POST['username']
-#         email = request.POST['email']
-#         password = request.POST['password']
-#         confirmpassword = request.POST['confirmpassword']
-        
-#         if password == confirmpassword:
-#             if User.objects.filter(email=email).exists():
-#                 messages.info(request, 'Email Taken')
-#                 return redirect('signup')
-#             elif User.objects.filter(username=username).exists():
-#                 messages.info(request, 'Username Taken')
-#                 return redirect('signup')
-#             else:
-#                 user = User.objects.create_user(username=username, email=email, password=password)
-#                 user.save()
-                
-#                 #log user in and redirect to settings page
-                
-#                 #create a Profile object for the new user
-#                 user_model = User.objects.get(username=username)
-#                 new_profile = Profile.objects.create(user=user_model)
-#                 new_profile.save()
-#                 return redirect('login')
-                
-#         else:
-#             messages.info(request, 'Password Not Matching')
-#             return redirect('signup')
-#     else:
-#         return render(request, 'signup.html')
 
 def delete_post(request, id):
     uuid = id.split("posts/")[1]
@@ -167,6 +133,8 @@ def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
+    
+
             form.save()
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
@@ -177,6 +145,10 @@ def signup(request):
             authorID = str(uniqueID) # settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" +
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
+
+            # if form.fields['profile_image']=="":
+            #     form.fields['profile_image'].initial = "https://i.imgur.com/lu0eCzU.jpeg"
+
             profile_image = form.cleaned_data.get('profile_image')
 
             new_profile = Profile.objects.create(
@@ -233,7 +205,8 @@ def posts(request):
 
             contentType = request.POST['contentType']
             image = request.FILES.get('image')
-
+            # image = request.POST('image')
+            content = request.POST['content']
 
             # See what to set content type to #
             if image:
@@ -248,8 +221,14 @@ def posts(request):
 
             if (contentType == "image/png;base64") or (contentType == "image/jpeg;base64") or (contentType == "application/base64"):
                 image = request.FILES.get('image')
-                b_64 = base64.b64encode(image.file.read())
-                content = b_64
+
+
+                # how to decode base 64 taken from
+                #  https://stackoverflow.com/questions/6375942/how-do-you-base-64-encode-a-png-image-for-use-in-a-data-uri-in-a-css-file
+                b_64 = base64.b64encode(image.file.read()).decode('ascii')
+                content = "data:"+ contentType + "," + b_64
+
+               
             else:
                 content = request.POST['content']
             
@@ -906,11 +885,9 @@ class ImagePostsList(GenericAPIView):
     def get(self, request, id, pid):
         # uri = request.build_absolute_uri('?')
         post = Post.objects.get(id=pid)
-        serializer = PostImageSerializer(post)
-        if(post.contentType!="application/base64"):
-            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+        return Response(base64.b64decode(post.content), status=status.HTTP_200_OK)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class FollowerList(APIView):

@@ -99,35 +99,34 @@
       <div class="card-mb-4">
         <div class="card-body">
           <p class="card-text">
+           
             {% if post.unlisted == False %}
+            
+              <h2>{{post.title}}</h2>
+              {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
 
+              {% if post.visibility == 'PUBLIC' %}
 
-                 
-        
-                  <h2>{{post.title}}</h2>
-                  {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
+              
+              <p> This post is public</p>
+              {% include 'post_structure.html' %}
 
-                  {% if post.visibility == 'PUBLIC' %}
+              {% elif post.visibility == 'FRIENDS' %}
+              
+              <p> This post is a friend post</p>
+              {% include 'post_structure.html' %}
 
-                  
-                  <p> This post is public</p>
-                  {% include 'post_structure.html' %}
+              {% else%}
+              Not friends nor public post!!!!!!!!!
+              
+              <p> This post is a friend post</p>
+              {% include 'post_structure.html' %}
 
-                  {% elif post.visibility == 'FRIENDS' %}
-                  
-                  <p> This post is a friend post</p>
-                  {% include 'post_structure.html' %}
-
-                  {% else%}
-                  Not friends nor public post!!!!!!!!!
-                  
-                  <p> This post is a friend post</p>
-                  {% include 'post_structure.html' %}
-
-                  {% endif %}
-                {% else %}
-                    This is an unlisted post comment this line later
-                {% endif %}
+              {% endif %}
+            {% else %}
+              <p> This post is unlisted</p>
+              {% include 'post_structure.html' %}
+            {% endif %}
 
             {% if request.user.profile.url == post.author.id %}
             

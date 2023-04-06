@@ -188,6 +188,8 @@ class Post(models.Model):
               f"{self.content}"
         )
 
+    class Meta:
+        ordering = ['-pub_date']
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)

@@ -1,5 +1,6 @@
 {% load markdownify %}
 
+
 <style>
   .Title{
     display:flex;
@@ -11,6 +12,8 @@
     
   }
 
+  
+
 
 
 </style>
@@ -18,12 +21,13 @@
 <div class="card mb-4">
     <div class="card-body">
       <p class="card-text" >
-        <!-- <input type="hidden" id="myVar" name="variable" value="{{post.contentType}}"> -->
+       
 
             <div class="Title">
               <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
               <p>Published: {{ post.published}}</p>
             </div>
+
             {% if post.contentType == 'text/plain' %}
             <p>{{ post.content }}</p>
             {% endif %}
@@ -40,12 +44,56 @@
                 </script>
               </div> -->
 
-       
             
-            </p>
-            {% if post.image %}
-            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
-            {% endif %}
+
+
+
+            <p><img id={{post.id}} style="max-width: 100%; border: solid;" class="center"></img></p>
+            <!-- <img src="{{ MEDIA_URL }}/images/cat.png" alt="{{ post.title }}" class="img-fluid"> -->
+            
+            <script>
+              var b = "{{post.contentType}}"
+
+              if (b=="image/png;base64"|| b=="image/jpeg;base64" || b=="application/base64"){ 
+                var a = "{{post.content}}";
+                var c = "{{post.id}}"
+                if (a!=''){
+                  // const b = a.replace("b'");
+                  // var c = "data:image/png;base64" + b;
+
+                  console.log("before decoding");
+                  console.log(a);
+
+        
+
+                 
+
+                  // const myArray = a.split(";");
+
+                  // a = myArray[1]
+                  // const myArray2 = a.split("==");
+                  // a = myArray2[0] + "=="
+
+                  // console.log(a);
+
+    
+                  var baseStr64=a;
+
+                  var image = document.getElementById(c);
+
+                  //"data:image/jpg;base64," +
+                 
+                  image.setAttribute('src',  baseStr64);
+                }
+              }
+              </script>
+
+            
+
+            <!-- {% if post.image %} -->
+            
+            <!-- <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid"> -->
+            <!-- {% endif %} -->
             <br><br>
            
     </div>
