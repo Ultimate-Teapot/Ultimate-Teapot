@@ -139,5 +139,3 @@ class LikeTestCase(TestCase):
 
             assert(newlike.object_id=="1")
 
-
-

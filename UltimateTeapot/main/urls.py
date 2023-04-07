@@ -31,6 +31,7 @@ urlpatterns = [
   path('make_post/', views.make_post, name='make_post'),
   path('make_comment/<path:id>', views.make_comment, name='make_comment'),
   path('like_post/<path:id>', views.like_post, name='like_post'),
+  path('like_comment/<path:id>', views.like_comment, name='like_comment'),
   # For testing posts and comments from other servers
   path('foreign_post/<path:id>/', views.foreign_post, name='foreign_post'),
   path('authors/<str:author_id>/posts/<str:post_id>', views.singlePost, name='singlePost'),
@@ -43,8 +44,9 @@ urlpatterns = [
   path('profile/<str:id>', views.user_profile, name='user_profile'),
   path('follow/<path:id>', views.follow, name='follow'),
   path('inbox/', views.inbox, name='inbox'),
-  path("myprofile/",views.myprofile, name = "user_profile2"),
+  # path("myprofile/",views.myprofile, name = "user_profile2"),
   path('follow_response/', views.follow_response, name='follow_response'),
+  path('send_unlisted_post/', views.send_unlisted_post, name='send_unlisted_post'),
   
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),

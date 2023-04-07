@@ -11,22 +11,17 @@
     color: rgb(201, 198, 198);    
   }
 
-  
-
-
-
 </style>
-
+<br/>
 <div class="card mb-4">
     <div class="card-body">
       <p class="card-text" >
        
 
-            <div class="Title">
+            <div class="Title" >
               <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
               <p>Published at: {{ post.published }}</p>
             </div>
-
             {% if post.contentType == 'text/plain' %}
             <p>{{ post.content }}</p>
             {% endif %}
@@ -45,8 +40,10 @@
 
 
 
-
+            {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' or post.contentType == 'application/base64' %}
             <p><img id={{post.id}} style="max-width: 100%; border: solid;" class="center"></img></p>
+            {% endif %}
+
             <!-- <img src="{{ MEDIA_URL }}/images/cat.png" alt="{{ post.title }}" class="img-fluid"> -->
             
             <script>
@@ -59,8 +56,7 @@
                   // const b = a.replace("b'");
                   // var c = "data:image/png;base64" + b;
 
-                  console.log("before decoding");
-                  console.log(a);
+                  
 
         
 

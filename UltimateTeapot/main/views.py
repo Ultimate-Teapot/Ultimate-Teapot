@@ -22,7 +22,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminU
 from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object, Follower
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
-from .forms import SignUpForm, UploadForm, CommentForm
+from .forms import SignUpForm, UploadForm, CommentForm, ProfileForm
 from django.contrib import messages
 from django.contrib import messages
 
@@ -41,10 +41,12 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, GenericAPIView
 from urllib.parse import urlparse
 from django.conf import settings
-from .paginations import NewPaginator
-import base64
 from django.core.files.base import ContentFile
 from drf_spectacular.utils import extend_schema, OpenApiExample
+from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
+from django.db.models.query import QuerySet
+
 
 def teapot(request):
     return render(request, 'teapot.html', status=418)
@@ -130,29 +132,39 @@ def edit_post(request, id):
             messages.success(request, ("You Successfully Edited!"))
             return redirect('home')
     #upload_form = UploadForm()
-
-    
+ 
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
 
 
-def edit_profile(request,id):
-    if request.user.is_authenticated:
-        uuid = id.split("/authors/")[1]
-        profile = Profile.objects.get(id=uuid)
+# def edit_profile(request,id):
+#     if request.user.is_authenticated:
+#         uuid = id.split("/authors/")[1]
+#         profile = Profile.objects.get(id=uuid)
 
-        form = SignUpForm(request.POST or None, instance=profile)
-        if request.method == 'POST':
+#         form = SignUpForm(request.POST or None, instance=profile)
+#         if request.method == 'POST':
 
-            if form.is_valid():
-                form.save()
+#             if form.is_valid():
+#                 form.save()
 
-        return render(request, "edit_profile.html", {"profile": profile, "form": form})
+#         return render(request, "edit_profile.html", {"profile": profile, "form": form})
+#     else:
+#         messages.success(request, ("You must be logged in to view this page"))
+#         return redirect('home')
+
+#     return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
+
+@login_required
+def edit_profile(request, id):
+    profile = Profile.objects.get(user=request.user)
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return render(request, "edit_message.html")
     else:
-        messages.success(request, ("You must be logged in to view this page"))
-        return redirect('home')
-
-    return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
-
+        form = ProfileForm(instance=profile)
+    return render(request, 'edit_profile.html', {'form': form})
 
 def signup(request):
     if request.method == 'POST':
@@ -252,7 +264,6 @@ def posts(request):
             if (contentType == "image/png;base64") or (contentType == "image/jpeg;base64") or (contentType == "application/base64"):
                 image = request.FILES.get('image')
 
-
                 # how to decode base 64 taken from
                 #  https://stackoverflow.com/questions/6375942/how-do-you-base-64-encode-a-png-image-for-use-in-a-data-uri-in-a-css-file
                 b_64 = base64.b64encode(image.file.read()).decode('ascii')
@@ -261,7 +272,6 @@ def posts(request):
                
             else:
                 content = request.POST['content']
-
 
 
             visibility = request.POST['visibility']
@@ -301,15 +311,9 @@ def posts(request):
             # pub_date = datetime.datetime.now().isoformat()
 
             new_post = Post.objects.create(title=title,id=post_id, author=author_profile, content=content,
-                                           visibility=visibility, unlisted=unlisted,contentType=contentType,image=image)
+                                           visibility=visibility, unlisted=unlisted,contentType=contentType)
             new_post.save()
-            # print("AAAAAAAAA: ", new_post.pub_date)
-
-        # return redirect('home')
-        # return render(request, 'home.html', {"upload_form":upload_form})
-    # else:
-    #     #return redirect('home')
-    #     upload_form = UploadForm()
+           
 
     return redirect('home')
 
@@ -361,7 +365,6 @@ def like_post(request, id):
 
         print(obj_json)
 
-
         author_id = id.split("/posts/")[0]
         host = author_id.split("authors/")[0]
 
@@ -372,24 +375,41 @@ def like_post(request, id):
     return redirect('foreign_post', id)
 
 @login_required(login_url='signin')
+def like_comment(request, id):
+    if request.method == 'POST':
+        profile = request.user.profile
+        author_data = ProfileSerializer(profile).data
+        # comment_instance = Comment.objects.get(id=id)
+        # comment_author_id = comment_instance.author_id
+
+
+        obj_json = {
+            "@context":"https://wwww.w3.org/ns/activitystreams",
+            "summary":profile.displayName + " likes the comments",
+            "type":"Like",
+            "author":author_data,
+            "object":id,
+        }
+
+        print(obj_json)
+
+
+        author_id = id.split("/posts/")[0]
+        host = author_id.split("authors/")[0]
+        
+
+        node = Node.objects.get(host=host)
+        post_request(author_id + "/inbox/", node, obj_json)
+
+    post_id = id.split("/comments/")[0]
+
+    return redirect('foreign_post', post_id)
+
+@login_required(login_url='signin')
 def like(request):
     return redirect('home')
 
 
-
-
-@login_required(login_url='signin')
-def myprofile(request):
-
-      current_user = User.objects.get(username=request.user)
-      author_profile = Profile.objects.get(user=current_user)
-
-
-
-      return render(request, 'myprofile.html', {"author":author_profile})
-
-
-# DOUBLE CHECK THIS LINE FROM 343 to 359 
 def make_post(request):
     upload_form = UploadForm()
     #return render(request, 'home.html', {"posts":posts, "form":form})
@@ -397,38 +417,7 @@ def make_post(request):
 
 
 def home(request):
-        form = UploadForm(request.POST or None, request.FILES)
-        if request.method == "POST":
-            if form.is_valid():
-                # if form.data['image'] is not None:
-                #     form.contentType = "application/base64"
-                
-                # if form.data['content'] is not None:
-                #     form.contentType = "text/plain"
-
-                # if form.data['markdown_content'] is not None:
-                #     form.contentType = "text/markdown"
-                
-                post = form.save(commit=False)
-                post.author = request.user.profile
-                post.save()
-
-                messages.success(request, ("You Successfully Posted!"))
-                return redirect('home')
-
-        # posts = Post.objects.all().order_by("-pub_date")
-        #return render(request, 'home.html', {"posts":posts, "form":form})
         
-        # form = PostForm(request.POST or None, request.FILES)
-        # if request.method == "POST":
-        #     if form.is_valid():
-        #         post = form.save(commit=False)
-        #         post.user = request.user
-        #         post.save()
-        #         messages.success(request, ("You Successfully Posted!"))
-        #         return redirect('home')
-
-        # posts = Post.objects.all().order_by("-pub_date")
         current_user_posts = None
 
         viewable_posts = []
@@ -447,31 +436,43 @@ def home(request):
                 all_authors_posts = []
                 nodes = Node.objects.all()
                 for node in nodes:
-                    try:
-                        foreign_authors = get_request(node.host + "authors/?page=1&size=2", node)
-                    except json.JSONDecodeError:
-                        None
+
+                    if node.host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
+                        for local_post in Post.objects.filter(visibility="PUBLIC"):
+                            print(PostSerializer(local_post).data)
+                            all_authors_posts.append(PostSerializer(local_post).data)
                     else:
-                        if isinstance(foreign_authors, dict):
-                            foreign_author_list = foreign_authors['items']
+                        try:
+                            foreign_authors = get_request(node.host + "authors/?page=1&size=2", node)
+                        except json.JSONDecodeError:
+                            None
                         else:
-                            foreign_author_list = foreign_authors
-                            
-                        for author in foreign_author_list:
-                            try:
-                                author_posts = get_request(author['id'] + "/posts/", node)
-                            except json.JSONDecodeError:
-                                None
+                            if isinstance(foreign_authors, dict):
+                                foreign_author_list = foreign_authors['items']
                             else:
-                                if isinstance(author_posts, dict):
-                                    all_authors_posts.extend(author_posts['items'])
+                                foreign_author_list = foreign_authors
+
+                            for author in foreign_author_list:
+                                try:
+                                    author_posts = get_request(author['id'] + "/posts/", node)
+                                except json.JSONDecodeError:
+                                    None
                                 else:
-                                    all_authors_posts.extend(author_posts)
+                                    if isinstance(author_posts, dict):
+                                        all_authors_posts.extend(author_posts['items'])
+                                    else:
+                                        all_authors_posts.extend(author_posts)
 
                 for post in all_authors_posts:
-                    if post['visibility'] == "PUBLIC":
+                    print("PPPPPPPPPPPPPPP")
+                    print(post)
+                    if post['unlisted'] == True: 
+                        if request.user.profile.url == post['author']['url']:
+                            print("Heeee")
+                            viewable_posts.append(post)
+                    elif post['visibility'] == "PUBLIC" and post['unlisted'] == False:
                         viewable_posts.append(post)
-                    elif post['visibility'] == "FRIENDS":
+                    elif post['visibility'] == "FRIENDS" and post['unlisted'] == False:
                         if author_profile.friend_list.filter(id=post['author']['id']).exists() or author_profile.url == post['author']['id']:
                             viewable_posts.append(post)
 
@@ -487,8 +488,17 @@ def home(request):
 
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
+            
+        all_authors = []
+        nodes = Node.objects.all()
+        for node in nodes:
+            res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+            foreign_authors = res.json()
+            all_authors.extend(foreign_authors['items'])
+            
         upload_form = UploadForm()
         
+
         # date_string = viewable_posts[0]['published']
         # dt = datetime.fromisoformat(date_string[:-1])
         # viewable_posts[0]['published'] = dt
@@ -502,7 +512,31 @@ def home(request):
                 pass
 
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
+        return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form, "authors":all_authors})
+    
+def send_unlisted_post(request):
+  
+    print("share_unlisted_post ")
+    post_id = request.POST['post_id']
+    print("post_id: ", post_id)
+    chosen_author = request.POST['my-option'] #receiver
+    print("chosen_author", chosen_author)
+    # Send a post to the specified id -> copied
+    current_user = request.user.profile
+    # actor = ProfileSerializer(current_user).data
+    # target_host = chosen_author.split("author/")[0]
+    # target_node = Node.objects.get(host=target_host)
+    # print("GGGGGGGGGGG", target_host)
+    # print("GGGGGGGGGGG", target_node)
+    # object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
+    # object_json = object.json()
+    # data_to_send = {
+    #     "type": "post",
+    #     "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
+    #     "actor":actor,
+    #     "object":object_json
+    # }
+    return render(request, "send_unlistedpost.html")
         
 def clear_inbox(request):
     profile = request.user.profile
@@ -561,26 +595,31 @@ def singlePost(request, author_id, post_id):
         post = Post.objects.get(id=post_id)
 
 
-def edit_profile(request, id):
-    if request.user.is_authenticated:
-        uuid = id.split("/authors/")[1]
-        profile = Profile.objects.get(id = uuid)
+# def edit_profile(request, id):
+#     if request.user.is_authenticated:
+#         uuid = id.split("/authors/")[1]
+#         profile = Profile.objects.get(id = uuid)
         
         
-        form = SignUpForm(request.POST or None, instance=profile)
-        if request.method == 'POST':
+#         form = SignUpForm(request.POST or None, instance=profile)
+#         if request.method == 'POST':
             
-            if form.is_valid():
-                form.save()
+#             if form.is_valid():
+#                 form.save()
 
         
-        return render(request, "edit_profile.html", {"profile":profile,"form":form })
-    else:
-        messages.success(request, ("You must be logged in to view this page"))
-        return redirect('home')
+#         return render(request, "edit_profile.html", {"profile":profile,"form":form })
+#     else:
+#         messages.success(request, ("You must be logged in to view this page"))
+#         return redirect('home')
         
 def profile(request, id):
     if request.user.is_authenticated:
+        current_user = request.user.profile
+        print("aaaaaaaaaaaaaaaaaaaaaaaa")
+        print(current_user)
+        print(current_user.id)
+
         host = id.split('authors')[0]
         github = ""
         if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
@@ -590,11 +629,42 @@ def profile(request, id):
             uuid = id.split('authors/')[1]
             profile = Profile.objects.get(id=uuid)
 
+            #friends = profile.friend_list.all()
+
             github = profile.github
 
-            friends = profile.friend_list.all()
             followers = profile.follower_list.all()
-
+            friends = None
+                 
+            # current user is viewing his own page     
+            if current_user.id == uuid:
+                print("current user is viewing his own page")
+                friends = current_user.friend_list.all()
+            else:
+                for fl in followers:
+                    fl.uuid = fl.id.split('authors/')[1]
+                    # current user is in this user follower list
+                    if current_user.id == fl.uuid:
+                        print("current user is in this user follower list")
+                        print(followers)
+                        print(fl)
+                        print(Follower.objects.get(id=current_user.url, host=host))
+                        try:
+                            follower = Follower.objects.get(id=current_user.url, host=host)
+                            profile.friend_list.add(follower)
+                            print("AA")
+                            friends = profile.friend_list.all()
+                            print(friends)
+                        except Follower.DoesNotExist:
+                            # If the follower doesn't exist, create a new one
+                            follower = Follower.objects.create(id=current_user.url, host=host)
+                            profile.friend_list.add(follower)
+                            print("BB")
+                            friends = profile.friend_list.all()
+                        
+                    else:
+                        print("Unknown error if-else in def profile")
+            
             author_node = Node.objects.get(host=host)
 
             post_list = get_request(id + '/posts/', author_node)
@@ -603,11 +673,14 @@ def profile(request, id):
                 can_follow = False
             else:
                 can_follow = True
-
-            for fr in friends:
-                temp_profile = Profile.objects.filter(url=fr.id)[0]
-                fr.displayName = temp_profile.displayName
-
+                
+            if friends is not None:
+                for fr in friends:
+                    temp_profile = Profile.objects.filter(url=fr.id)[0]
+                    fr.displayName = temp_profile.displayName
+            else:
+                friends = None
+                
             for fl in followers:
                 temp_profile = Profile.objects.filter(url=fl.id)[0]
                 fl.displayName = temp_profile.displayName
@@ -619,6 +692,7 @@ def profile(request, id):
             # This is remote
             local = False
             can_follow = True
+            friends = None
 
             if "/api" in host:
                 author_node = Node.objects.get(host=host)
@@ -632,7 +706,6 @@ def profile(request, id):
             post_json = get_request(author_id + 'posts/', author_node)
             github = profile['github']
             followers = None
-            friends = None
 
             post_list = []
 
@@ -656,6 +729,7 @@ def profile(request, id):
             # print(user_this_page)
         
         #profile github
+
         if github != "":
             github_username = github.split(".com/")[1]
             url = f"https://api.github.com/users/{github_username}/events"
@@ -709,6 +783,8 @@ def follow(request, id):
     
     post_request(target_id + "inbox/", target_node, data_to_send)
 
+
+
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
 
@@ -738,13 +814,9 @@ def follow_response(request):
             if action == "accept":
                 print("in accept")
 
-                # current_user.friend_list.clear()
-                # s = Follower.objects.all().delete()
-                # f = Object.objects.all().delete()
-                # following_user.friend_list.clear()
-                # following_user.follower_list.clear()
-                # follower_list = current_user.follower_list.all()
+              
 
+                # accept and add follower into your list
                 try:
                     follower = Follower.objects.get(id=follower_id, host=follower_host)
                     current_user.follower_list.add(follower)
@@ -755,10 +827,6 @@ def follow_response(request):
                 else:
                     print("Unknown error")
 
-                # accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
-                # follower = Follower.objects.create(id=follower_id, host=follower_host)
-                # current_user.follower_list.add(follower)
-                # follower.delete()
 
                 followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
@@ -768,8 +836,8 @@ def follow_response(request):
                         friends_to_current_user = Follower.objects.get(id=follower_id)
                         current_user.friend_list.add(friends_to_current_user)
 
-                        friends_to_following_user = Follower.objects.get(id=current_user.url)
-                        following_user.friend_list.add(friends_to_following_user)
+                        # friends_to_following_user = Follower.objects.get(id=current_user.url)
+                        # following_user.friend_list.add(friends_to_following_user)
 
             elif action == "decline":
                 # declined dont do anything
@@ -781,21 +849,6 @@ def follow_response(request):
         return redirect('home')
 
 
-# class ProfileViewSet(viewsets.ModelViewSet):
-#     queryset = Profile.objects.all()
-#     serializer_class = ProfileSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-
-
-# class PostViewSet(viewsets.ModelViewSet):
-#     queryset = Post.objects.all()
-#     serializer_class = PostSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-
-# class UserViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     permission_classes = [permissions.IsAuthenticated]
 
 def comment_create(request, post_id):
     post = get_object_or_404(Post, post_id=post_id)
@@ -818,12 +871,8 @@ def like_create(request, post_id):
             like.delete()
         return redirect('home')
 
-# def followers(request, username):
-#     if request.user.is_authenticated:
-#         user = User.objects.get(username=username)
-#         profile = Profile.objects.get(user=user)
-#         followers = profile.followers
-#         return render(request, "followers.html", {""})
+
+
 
 
 ################################################################################################################################################################
@@ -833,45 +882,81 @@ class NodePermission(BasePermission):
         if request.user.groups.filter(name='node').exists():
             return True
         return False
+  
 
 # TODO: add nodepermission to all remote api requests
 
+class customPaginator(PageNumberPagination):
+    page_size_query_param = 'size'
+    page_query_param = 'page'
+
+    def get_paginated_response(self, data):
+        return Response(data)
+
+
+
 class AuthorList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    # queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
+    @extend_schema(
+        description = "retrieve all profiles on the server (paginated)",
+        tags = ["Authors"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/?page=10&size=5 ",
+        request_only=True,
+        )],
+    )
+  
     def get(self, request):
+        
         profiles = Profile.objects.all()
-        serializer = ProfileSerializer(profiles, many=True)
+        paginator= customPaginator()
+        paginated = paginator.paginate_queryset(profiles, request)
+        serializer = ProfileSerializer(paginated, many=True)
         updated_data = {"type": "authors", "items": serializer.data}
-
         return Response(updated_data, status=status.HTTP_200_OK)
     
-# @extend_schema(
-#     examples=[OpenApiExample(
-#         value=[
-#             {'title': 'A title'},
-#             {'title': 'Another title'},
-#         ],
-#     )],
-# )
     
+
 
 
 class SingleAuthor(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = ProfileSerializer
+
+
+    @extend_schema(
+        description = " retrieve ID’s profile",
+        tags = ["Authors"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}",
+        request_only=True,
+        )],
+
+    )
     def get(self, request, id):
-
-        #uri = request.build_absolute_uri('?')
-        # id = request.get_full_path().split("Author/")[1]
-
-        # o = urlparse(request)
-
         profile = Profile.objects.get(id=id)
         serializer = ProfileSerializer(profile)
         updated_data = serializer.data
 
         return Response(updated_data, status=status.HTTP_200_OK)
 
+
+    @extend_schema(
+        description = "update ID’s profile",
+        tags = ["Authors"],
+       
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}",
+        request_only=True,
+        )],
+        
+    )
     def post(self, request, id, format=None):
         uri = request.build_absolute_uri('?')
         try:
@@ -889,11 +974,15 @@ class SingleAuthor(APIView):
 
 class PostsList(ListCreateAPIView):
     permission_classes = [NodePermission, IsAuthenticated]
-
-    pagination_class = NewPaginator
+    pagination_class = customPaginator
     serializer_class = PostsSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
+
+    @extend_schema(
+        description = "get the recent posts from author ID (paginated)",
+        tags = ["Posts"],  
+    )
 
     def get_queryset(self):
         id = self.kwargs.get(self.lookup_url_kwarg)
@@ -902,6 +991,11 @@ class PostsList(ListCreateAPIView):
         posts = Post.objects.filter(author_id=id).all()
         return posts
 
+
+    @extend_schema(
+        description = "create a new post but generate a new id ",
+        tags = ["Posts"]
+    )
     def perform_create(self, serializer):
 
         id = self.kwargs.get(self.lookup_url_kwarg)
@@ -923,12 +1017,19 @@ class PostsList(ListCreateAPIView):
 '''api/authors/<str:id>/posts/<str:pid>'''
 class SinglePost(GenericAPIView):
     permission_classes = [NodePermission, IsAuthenticated]
-
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
 
-
+    @extend_schema(
+        description = "get the public post whose id is PID",
+        tags = ["Posts"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+    )
     def get(self, request, id, pid):
         # uri = request.build_absolute_uri('?')
         posts = Post.objects.get(id=pid)
@@ -939,6 +1040,16 @@ class SinglePost(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+    @extend_schema(
+        description = "update the post whose id is PID (must be authenticated)",
+        tags = ["Posts"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+        
+    )
     def post(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         try:
@@ -951,17 +1062,17 @@ class SinglePost(GenericAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        description = "create a post where its id is PID",
+        tags = ["Posts"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u PUT https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+    )
     def put(self, request, id, pid):
         uri = request.build_absolute_uri('?')
-        # try:
-        #     postobj = Post.objects.get(id=pid)
-        # except postobj.DoesNotExist:
-        #     serializer = PostSerializer(postobj,data=request.data)
-        #     if serializer.is_valid():
-        #         serializer.save()
-        #         return Response(serializer.data)
-        # else:
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
         if Post.objects.filter(id=pid).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -982,7 +1093,15 @@ class SinglePost(GenericAPIView):
             )
             return Response(status=status.HTTP_200_OK)
 
-
+    @extend_schema(
+        description = "remove the post whose id is PID",
+        tags = ["Posts"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u DELETE https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+    )
     def delete(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         Post.objects.get(id=pid).delete()
@@ -991,26 +1110,48 @@ class SinglePost(GenericAPIView):
 
 '''api/authors/<str:id>/posts/<str:pid>/image'''
 
-class ImagePostsList(GenericAPIView):
+class ImagePostsList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
-    serializer_class = PostImageSerializer
-    queryset = Post.objects.all()
-    lookup_url_kwarg = "id"
-
- # TODO check if this works
-    def get(self, request, id, pid):
-        # uri = request.build_absolute_uri('?')
+    serializer_class = PostImageSerializer # DON"T ACTUALLY NEED THIS JUST SO DRF SPECTACULAR DOESN"T YELL AT US
+    # queryset = Post.objects.all()
+    # lookup_url_kwarg = "id"
+    
+    @extend_schema(
+        description = "get the public post converted to binary as an image ",
+        tags = ["Posts"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/image/",
+        request_only=True,
+        )],
+    )
+    def get(self, request,id,pid):
+        
         post = Post.objects.get(id=pid)
-        return Response(base64.b64decode(post.content), status=status.HTTP_200_OK)
-
-
-
+        
+        # serializer = PostImageSerializer(post)
+        try:
+             if (post.contentType == "image/png;base64") or (post.contentType == "image/jpeg;base64") or (post.contentType == "application/base64"):
+                 return render(request, 'singleImage.html', {"mypost":post})
+        except:
+            raise Http404
+        
+       
 
 class FollowerList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = FollowerSerializer
+
+    @extend_schema(
+        description = "get a list of authors who are ID's followers",
+        tags = ["Followers"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/",
+        request_only=True,
+        )],
+    )
     def get(self, request, id):
-        #uri = request.build_absolute_uri('?')
-        #uri = uri.replace("/followers", "")
 
         author = Profile.objects.get(id=id)
         
@@ -1024,7 +1165,19 @@ class singleFollowerList(APIView):
     '''
     Check if foreign id is a follower of this author
     '''
+
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = FollowerSerializer
+
+    @extend_schema(
+        description = "check if FID is a follower of ID",
+        tags = ["Followers"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/{fid}",
+        request_only=True,
+        )],
+    )
     def get(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         author = Profile.objects.get(id=id)
@@ -1040,6 +1193,17 @@ class singleFollowerList(APIView):
             }
             return Response(data, status=status.HTTP_200_OK)
 
+
+    @extend_schema(
+        description = "Add FID as a follower of ID ",
+        tags = ["Followers"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/{fid}",
+        request_only=True,
+        )],
+        
+    )
     def post(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         foreign_host = foreign_id.split('authors')[0]
@@ -1053,6 +1217,15 @@ class singleFollowerList(APIView):
             author.save()
             return Response(status=status.HTTP_200_OK)
 
+    @extend_schema(
+        description = "remove FID as a follower of ID",
+        tags = ["Followers"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u DELETE https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/{fid}",
+        request_only=True,
+        )],
+    )
     def delete(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         foreign_host = foreign_id.split('/authors')[0]
@@ -1071,28 +1244,72 @@ class singleFollowerList(APIView):
 
 class Commentlist(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = CommentListSerializer
+
+    @extend_schema(
+        description = "get the list of comments of the post whose id is PID (paginated)",
+        tags = ["Comments"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/comments/",
+        request_only=True,
+        )],
+    )
     def get(self, request, id, pid):
         post = Post.objects.get(id=pid)
-        serializer = CommentListSerializer(post)
-
-        # print(serializer.data)
+        # paginator= customPaginator()
+        # paginated = paginator.paginate_queryset(post, request)
+        serializer = CommentListSerializer(post) 
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        description = " if you post an object of “type”:”comment”, it will add your comment to the post whose id is PID",
+        tags = ["Comments"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/comments/",
+        request_only=True,
+        )],
+    )
     def post(self,request,id,pid):
-        # TODO: Add this
+        # TODO: Add this :( 
         return Response(status=status.HTTP_200_OK)
+
 
 
 class postLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = PostLikeSerializer
+
+    @extend_schema(
+        description = "a list of likes from other authors on ID's post PID",
+        tags = ["Likes"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/likes/",
+        request_only=True,
+        )],
+    )
     def get(self, request, id,pid):
         post = Post.objects.get(id=pid)
         serializer = PostLikeSerializer(post)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class commentLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = CommentLikeSerializer
+
+    @extend_schema(
+        description = " a list of likes from other authors on ID’s post PID comment CID",
+        tags = ["Likes"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/comment/{cid}likes/",
+        request_only=True,
+        )],
+    )
     def get(self,request,id,pid,cid):
         comment = Comment.objects.get(id=cid)
         serializer = CommentLikeSerializer(comment)
@@ -1102,6 +1319,17 @@ class commentLikes(APIView):
 
 class authorLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = AuthorLikeSerializer
+
+    @extend_schema(
+        description = "list what public things Author ID liked",
+        tags = ["Likes"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/liked/",
+        request_only=True,
+        )],
+    )
     def get(self,request,id):
         author = Profile.objects.get(id=id)
         serializer = AuthorLikeSerializer(author)
@@ -1110,7 +1338,21 @@ class authorLikes(APIView):
 
 
 class InboxList(APIView):
+
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = InboxSerializer
+
+    @extend_schema(
+        description = "if authenticated get a list of posts sent to ID ",
+        tags = ["Inbox"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/",
+        request_only=True,
+        )],
+        
+    )
+
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
         serializer = InboxSerializer(profile)
@@ -1118,6 +1360,15 @@ class InboxList(APIView):
 
         return Response(updated_data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        description = "send a object to the author ID, object can be of type like, comment, post, follow ",
+        tags = ["Inbox"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/",
+        request_only=True,
+        )],
+    )
     def post(self,request,id):
         profile = Profile.objects.get(id=id)
         data = request.data
@@ -1155,14 +1406,17 @@ class InboxList(APIView):
             return Response(status=status.HTTP_200_OK)
 
         elif (type == "Like") or (type == "like"):
+            isComment = False
+            if "/comments/" in data["object"]:
+                isComment = True
             object = Object.objects.create(
                 type="like",
                 object_id=data["object"],
-                actor = data["author"]["id"]
+                actor = data["author"]["id"],
+                whether_comment_like=isComment
             )
             profile.inbox.add(object)
             profile.save()
-
             like = Like.objects.create(
                 object_id=data["object"],
                 author_id=data["author"]["id"]
@@ -1207,7 +1461,16 @@ class InboxList(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_200_OK)
-
+    
+    @extend_schema(
+        description = "clear the inbox",
+        tags = ["Inbox"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u DELETE https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/",
+        request_only=True,
+        )],
+    )
     def delete(self,request,id):
         # clear the inbox
         profile = Profile.objects.get(id=id)

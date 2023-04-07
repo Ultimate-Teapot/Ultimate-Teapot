@@ -24,41 +24,22 @@ class TestUrls(SimpleTestCase):
         url = reverse('signup')
         self.assertEquals(resolve(url).func, signup)
 
-
-
-
-
     def test_like_url(self):
         url = reverse('like')
         self.assertEquals(resolve(url).func, like)
 
-
-
-
-
-
-
     def test_posts_url(self):
         url = reverse('posts')
         self.assertEquals(resolve(url).func, posts)
-
-
-
-
 
     def test_make_post_url(self):
         url = reverse('make_post')
         self.assertEquals(resolve(url).func, make_post)
 
 
-
-
-
-
     def test_authors_url(self):
         url = reverse('authors')
         self.assertEquals(resolve(url).func, authors)
-
 
 
     def test_inbox_url(self):
@@ -72,3 +53,4 @@ class TestUrls(SimpleTestCase):
     def test_follow_response_url(self):
         url = reverse('follow_response')
         self.assertEquals(resolve(url).func, follow_response)
+
