@@ -9,7 +9,7 @@ Service: https://ultimate-teapot.herokuapp.com/main/
 
 Documentation: https://ultimate-teapot.herokuapp.com/docs/
 
-Video:
+Video: https://youtu.be/H4SRa5BY7JU
 
 
 Usage
