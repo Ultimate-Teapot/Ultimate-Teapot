@@ -97,8 +97,9 @@
     <div class="col-md-8">
       {% for post in posts %}
       <div class="card-mb-4">
-        <div class="card-body">
+        <div class="card-body" style= "height: 420px"; ;>
           <p class="card-text">
+<<<<<<< HEAD
            
             {% if post.unlisted == False %}
             
@@ -141,14 +142,83 @@
 
               <a href="{%url 'delete_post' id=post.id %}"class="ui button bi-trash btn btn-secondary btn-block" style="float: right;"></a>
             </div>
+=======
+            <h2>{{post.title}}</h2>
+            {% if post.unlisted == False %}
+                  {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
+                  
+                    {% if post.visibility == 'PUBLIC' %} 
+                    <div style="padding-bottom: 2px">
+                      <a href="{%url 'foreign_post' post.id %}"><i> [This post is public] </i></a> 
+                      
+                    </div>
+                    {% include 'post_structure.html' %}
+  
+                    {% elif post.visibility == 'FRIENDS' %}       
+                    <div style="padding-bottom: 2px">
+                      <a href="{%url 'foreign_post' post.id %}"><i> [This post is a friend post]</i></a> 
+                    </div>
+                    {% include 'post_structure.html' %}
+  
+                    {% else%}
+                    <div style="padding-bottom: 2px">
+                      <i> [Not friends nor public post!!!]</i>
+                    </div>
+                    {% include 'post_structure.html' %}
+  
+                    {% endif %}
+>>>>>>> Added new stuff
             {% else %}
-            <div class="post_icons">
-              <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
+            <div style="padding-bottom: 20px">
+              <a href="{%url 'foreign_post' post.id %}"><i> [This is an unlisted post] </i></a> 
             </div>
 
-            
+            <div style="height:250px;  border: medium solid transparent; padding: 20px; background-color: white; border-radius: 6px; ">
+                <form action="/main/send_unlisted_post/" method="POST" enctype="multipart/form-data">
+                  <div class="Title" >
+                    <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
+                    <p>Published at: {{ post.published }}</p>
+                  </div>
+                  <p>Please select an author to share this unlisted post.</p>
+                  <label for="my-select">Select an author:</label>
+                      <select id="my-select" name="my-option">
+                        <option value="">-- Please select --</option>
+                        {% for author in authors %}
+                          <option value="{{ author.id }}">{{ author.displayName }}</option>
+                        {% endfor %}
+                      </select>
+
+                  {% csrf_token %}
+                  <input type="hidden" value="{{ post.id }}" name="post_id" />
+                  
+                </br></br>
+                  <button type="submit" name="private" value="private" class="btn btn-outline-success">Send</button>
+                </form>
+              </div> 
+                
             {% endif %}
-          </p>
+                                  
+
+                    {% if request.user.profile.url == post.author.id %}
+                    
+                    
+                    <div class="post_icons" style="padding-top: 15px">
+                      <a href="{%url 'edit_post' id=post.id %}"class="edit-button btn btn-secondary btn-block edit-button bi-pen-fill" style="float: right;"></a>  
+                    
+
+                      <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
+                      
+
+                      <a href="{%url 'delete_post' id=post.id %}"class="ui button bi-trash btn btn-secondary btn-block" style="float: right;"></a>
+                    </div>
+                    {% else %}
+                    <div class="post_icons">
+                      <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
+                    </div>
+
+                    
+                    {% endif %}
+              
           <!-- {% if post.image %}
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %} -->
@@ -183,11 +253,12 @@
         </div>
       </div>
 
-      {% endfor %}
+    {% endfor %}
 
       
       
     </div>
+<<<<<<< HEAD
 
     {% if foreign_post %}
     <div class="card-mb-4">
@@ -232,6 +303,9 @@
     </div>
     {% endif %}
 
+=======
+{% comment %} 
+>>>>>>> Added new stuff
     <div>
       {% if authors %}
 
@@ -242,7 +316,7 @@
       {% endfor %}
 
       {% endif %}
-    </div>
+    </div> {% endcomment %}
 
   </div>
 </div>

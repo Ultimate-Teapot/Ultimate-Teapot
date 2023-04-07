@@ -22,7 +22,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminU
 from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object, Follower
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
-from .forms import SignUpForm, UploadForm, CommentForm
+from .forms import SignUpForm, UploadForm, CommentForm, ProfileForm
 from django.contrib import messages
 from django.contrib import messages
 
@@ -132,29 +132,39 @@ def edit_post(request, id):
             messages.success(request, ("You Successfully Edited!"))
             return redirect('home')
     #upload_form = UploadForm()
-
-    
+ 
     return render(request, "edit_post.html", {"post":post, "upload_form":form})
 
 
-def edit_profile(request,id):
-    if request.user.is_authenticated:
-        uuid = id.split("/authors/")[1]
-        profile = Profile.objects.get(id=uuid)
+# def edit_profile(request,id):
+#     if request.user.is_authenticated:
+#         uuid = id.split("/authors/")[1]
+#         profile = Profile.objects.get(id=uuid)
 
-        form = SignUpForm(request.POST or None, instance=profile)
-        if request.method == 'POST':
+#         form = SignUpForm(request.POST or None, instance=profile)
+#         if request.method == 'POST':
 
-            if form.is_valid():
-                form.save()
+#             if form.is_valid():
+#                 form.save()
 
-        return render(request, "edit_profile.html", {"profile": profile, "form": form})
+#         return render(request, "edit_profile.html", {"profile": profile, "form": form})
+#     else:
+#         messages.success(request, ("You must be logged in to view this page"))
+#         return redirect('home')
+
+#     return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
+
+@login_required
+def edit_profile(request, id):
+    profile = Profile.objects.get(user=request.user)
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return render(request, "edit_message.html")
     else:
-        messages.success(request, ("You must be logged in to view this page"))
-        return redirect('home')
-
-    return render(request, "edit_profile.html")#, {"profile":oldprofile}) #"upload_form":form, 
-
+        form = ProfileForm(instance=profile)
+    return render(request, 'edit_profile.html', {'form': form})
 
 def signup(request):
     if request.method == 'POST':
@@ -355,7 +365,6 @@ def like_post(request, id):
 
         print(obj_json)
 
-
         author_id = id.split("/posts/")[0]
         host = author_id.split("authors/")[0]
 
@@ -455,9 +464,15 @@ def home(request):
                                         all_authors_posts.extend(author_posts)
 
                 for post in all_authors_posts:
-                    if post['visibility'] == "PUBLIC":
+                    print("PPPPPPPPPPPPPPP")
+                    print(post)
+                    if post['unlisted'] == True: 
+                        if request.user.profile.url == post['author']['url']:
+                            print("Heeee")
+                            viewable_posts.append(post)
+                    elif post['visibility'] == "PUBLIC" and post['unlisted'] == False:
                         viewable_posts.append(post)
-                    elif post['visibility'] == "FRIENDS":
+                    elif post['visibility'] == "FRIENDS" and post['unlisted'] == False:
                         if author_profile.friend_list.filter(id=post['author']['id']).exists() or author_profile.url == post['author']['id']:
                             viewable_posts.append(post)
 
@@ -473,6 +488,14 @@ def home(request):
 
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
+            
+        all_authors = []
+        nodes = Node.objects.all()
+        for node in nodes:
+            res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
+            foreign_authors = res.json()
+            all_authors.extend(foreign_authors['items'])
+            
         upload_form = UploadForm()
         
 
@@ -489,7 +512,31 @@ def home(request):
                 pass
 
         #return render(request, 'home.html', {"posts":posts, "form":form})
-        return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
+        return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form, "authors":all_authors})
+    
+def send_unlisted_post(request):
+  
+    print("share_unlisted_post ")
+    post_id = request.POST['post_id']
+    print("post_id: ", post_id)
+    chosen_author = request.POST['my-option'] #receiver
+    print("chosen_author", chosen_author)
+    # Send a post to the specified id -> copied
+    current_user = request.user.profile
+    # actor = ProfileSerializer(current_user).data
+    # target_host = chosen_author.split("author/")[0]
+    # target_node = Node.objects.get(host=target_host)
+    # print("GGGGGGGGGGG", target_host)
+    # print("GGGGGGGGGGG", target_node)
+    # object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
+    # object_json = object.json()
+    # data_to_send = {
+    #     "type": "post",
+    #     "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
+    #     "actor":actor,
+    #     "object":object_json
+    # }
+    return render(request, "send_unlistedpost.html")
         
 def clear_inbox(request):
     profile = request.user.profile
@@ -548,23 +595,23 @@ def singlePost(request, author_id, post_id):
         post = Post.objects.get(id=post_id)
 
 
-def edit_profile(request, id):
-    if request.user.is_authenticated:
-        uuid = id.split("/authors/")[1]
-        profile = Profile.objects.get(id = uuid)
+# def edit_profile(request, id):
+#     if request.user.is_authenticated:
+#         uuid = id.split("/authors/")[1]
+#         profile = Profile.objects.get(id = uuid)
         
         
-        form = SignUpForm(request.POST or None, instance=profile)
-        if request.method == 'POST':
+#         form = SignUpForm(request.POST or None, instance=profile)
+#         if request.method == 'POST':
             
-            if form.is_valid():
-                form.save()
+#             if form.is_valid():
+#                 form.save()
 
         
-        return render(request, "edit_profile.html", {"profile":profile,"form":form })
-    else:
-        messages.success(request, ("You must be logged in to view this page"))
-        return redirect('home')
+#         return render(request, "edit_profile.html", {"profile":profile,"form":form })
+#     else:
+#         messages.success(request, ("You must be logged in to view this page"))
+#         return redirect('home')
         
 def profile(request, id):
     if request.user.is_authenticated:

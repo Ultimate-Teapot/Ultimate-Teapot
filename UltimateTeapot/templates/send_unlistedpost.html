@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<title>Follow</title>
+
+<style>
+    button{
+        border: none;
+        cursor: pointer;
+        appearance: none;
+        background-color: inherit;
+         transition: transform .7s ease-in-out;
+        margin-left:10px;
+
+      }
+      button:hover{
+        transform: rotate(360deg);
+
+      }
+</style>
+
+<div class="container">
+  <div class="row">
+    <div>
+      <h1 class="text-center">Ultimate Teapot!</h1>
+      <br>
+      <p class="text-center">Private post sent!</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
