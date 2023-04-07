@@ -8,26 +8,20 @@
     border-bottom: dotted;
     border-width: 0.1em;
     margin-bottom: 5%;
-    color: rgb(201, 198, 198);
-    
+    color: rgb(201, 198, 198);    
   }
 
-  
-
-
-
 </style>
-
+<br/>
 <div class="card mb-4">
     <div class="card-body">
       <p class="card-text" >
        
 
-            <div class="Title">
+            <div class="Title" >
               <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
-              <p>Published: {{ post.published}}</p>
+              <p>Published at: {{ post.published }}</p>
             </div>
-
             {% if post.contentType == 'text/plain' %}
             <p>{{ post.content }}</p>
             {% endif %}
@@ -44,7 +38,6 @@
                 </script>
               </div> -->
 
-            
 
 
             {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' or post.contentType == 'application/base64' %}
@@ -95,6 +88,7 @@
             
             <!-- <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid"> -->
             <!-- {% endif %} -->
+
             <br><br>
            
     </div>

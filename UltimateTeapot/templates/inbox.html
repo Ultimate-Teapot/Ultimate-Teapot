@@ -24,7 +24,7 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-8">
+    <div>
       <h1 class="text-center">You've got new notifications</h1>
       <h6 class="text-center">Mark as seen or repond to remove notification</h6>
       <br><br>
@@ -49,15 +49,23 @@
             </form> 
     
           {% elif item.type == "post" %}
-          <p>Post id: {{ item.object_id }}</p>
+          hello {{ item.name }}  sent you this
+          <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
 
           {% elif item.type == "like" %}
-          <p>{{ item.author.displayName }} liked your post!</p>
+            {% if item.whether_comment_like == True %}
+              <p>{{ item.name }} liked your comment!</p>
+              <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
+            {% else %}
+              <p>{{ item.name }} liked your post!</p>
+              <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
+            {% endif %}
+          
+          
 
           {% elif item.type == "comment" %}
-          <p>{{ item.author.displayName }} commented on your post:</p>
-          <p>{{ item.comment }}</p>
-
+          <p>{{ item.name }} commented on your post:</p>
+          <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
           {% endif %}
 
         </div>

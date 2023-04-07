@@ -353,6 +353,7 @@ paths:
         required: true
       tags:
       - Posts
+
       requestBody:
         content:
           application/json:
@@ -759,6 +760,7 @@ components:
       - github
       - host
       - id
+      - profileImage
       - type
       - url
   securitySchemes:

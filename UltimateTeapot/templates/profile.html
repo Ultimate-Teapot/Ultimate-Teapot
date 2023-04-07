@@ -2,38 +2,74 @@
 {% extends "base.html" %}
 {% block content %}
 
+
 {% if profile %}
-{% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %}
+{% comment %} TODO: make this same theme as our app I set it like this for now {% endcomment %} 
+
     <style>
+        .activity-container {
+            display: none;
+        }
+        .activity-container.visible {
+            display: block;
+        }
+        .activity {
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            background-color: #fff;
+            margin-bottom: 16px;
+        }
         
-        .button {
-            background-color: blue;
-            border: solid;
-            border-color: blue;
-            color: white; 
-            padding: 6px 12px; 
-            text-align: center; 
+        .event {
+            padding: 16px;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+        }
+        
+        .avatar {
+            margin-right: 16px;
+        }
+        
+        .avatar img {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .content {
+            flex: 1;
+        }
+        
+        .header {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .header a {
+            color: #0366d6;
             text-decoration: none;
-            display: inline-block; 
-            cursor: pointer;   
-            border-radius: 15%;
-        } */
+        }
+        
+        .message {
+            margin-bottom: 4px;
+        }
+        
+        .time {
+            font-size: 12px;
+            color: #6a737d;
+        }
+        
         .Profiletitle{
             display:flex;
             align-items: center;
             flex-direction: column;
             justify-content: flex-start;
-            
         }
-        
-
-
 
         #profile_img{
-           
-            width: 20%;
-            height: 20%;
-            border: solid;
+            vertical-align: middle;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
         }
 
@@ -42,6 +78,8 @@
             flex-direction: row;
             justify-content: space-around;
             padding: 0.5%;
+            border-top: dotted;
+            padding-top: 40px;
         }
 
         #Followers{
@@ -51,14 +89,13 @@
             
         }
 
-
         #Friends{
             display: flex;
             flex-direction: column;
             align-items: center;
-
-
         }
+
+        
 
         /* #name{
             display:flex;
@@ -79,11 +116,13 @@
 
 
     <div class="Profiletitle">
-        <img src="{{ profile.profileImage }}" alt="Profile Image" height="100" width="100" id="profile_img">
+    
+        <img src="{{ profile.profileImage }}" id="profile_img">
         <h1 id="name">{{ profile.displayName }}'s Profile</h1>
         
         {% if request.user.profile.url == profile.url %}
-        <a href="{%url 'edit_profile' request.user.profile.url%}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit</i></a>
+        
+        <a href="{%url 'edit_profile' request.user.profile.url%}"class="ui button"><i class = "btn btn-secondary btn-block" style="float: right;">Edit Profile</i></a>
         {% endif %}
         
         <!-- LOAD HOST -->
@@ -94,25 +133,56 @@
         {% endif %}
 
         <!-- LOAD GITHUB -->
-        {% if profile.Github %}
-        <p id="Github">Github: {{ profile.github }}</p>
+        {% if profile.github %}
+        <p id="Github">Github: <a href="{{ profile.github }}">{{ profile.github }}</a> <button class = "btn btn-secondary btn-block" id="toggle-activity">Show activity</button> </p>
+       
         {% else %}
         <p id="Github">Github: None</p>
         {% endif %}
+
+        <div class="activity-container">
+            <div class="activity">
+                <div class="activity">
+                    {% for event in events %}
+                        <div class="event">
+                            <div class="avatar">
+                                <img src="{{ event.actor.avatar_url }}" alt="{{ event.actor.login }}">
+                            </div>
+                            <div class="content">
+                                <div class="header">
+                                    <a href="{{ event.repo.url }}">{{ event.repo.name }}</a> 
+                                    {% if event.payload.ref %}
+                                        {{ event.payload.ref_type }} 
+                                        {{ event.payload.ref }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {{event.actor.login }} - {{ event.type }} on {{ event.repo.name }}: {{ event.payload.commits.0.message }} at {{ event.created_at }}
+                                </div>
+                            </div>
+                        </div>
+                       
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        
+        <script>     
+            const toggleActivityBtn = document.getElementById('toggle-activity');
+            const activityContainer = document.querySelector('.activity-container');
+            toggleActivityBtn.addEventListener('click', () => {
+                activityContainer.classList.toggle('visible');
+            });
+        </script>  
     </div>
-
-
-    
-    
-
-    <br/>
-
-    </br>    
+   
+    <div style="text-align: center;">
         {% comment %} a user cannot follow himself {% endcomment %}
         {% if profile.url != user.profile.url and can_follow %}
          
         {% comment %} TODO make sure follow is clicked once {% endcomment %}
-        <a href="{% url 'follow' profile.url %}" class="button" id="followingLink">
+        <a href="{% url 'follow' profile.url %}" class="btn btn-outline-success" id="followingLink">
             Follow 
             {% comment %} {{ profile.displayName }} {% endcomment %}
         </a> 
@@ -127,13 +197,11 @@
         <form action="/main/unfollow/" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <button type="submit" name="unfollow" value="unfollow" class="btn btn-outline-danger">Unfollow</button>
-          </form>
-
-        
+          </form>     
         {% endif %}
 
-
-</br></br></br>
+    </div>      
+    </br></br></br>
 
 <div id="FriendsFollowers">
 
@@ -150,7 +218,7 @@
                 {% endfor %}
 
         {% else %}
-                    empty
+        <i> [Empty] </i>
         {% endif %}
     {% endif %}
 
@@ -168,22 +236,27 @@
                 {% endfor %}
             
         {% else %}
-            empty
+        <i> [Empty] </i>
         {% endif %}
     </div>
 
 </div>
 
 
-</br>   </br>   </br>   </br>   
-{% if posts %}
-<h3>{{ profile.displayName }}'s Posts</h3>
+    </br>   </br>   </br>   </br>   
+    <div style="text-align: center; border-top: dotted; padding-top: 40px;">
+        <h3>{{ profile.displayName }}'s Posts</h3>
+        {% if posts %}
+        
 
-{% for post in posts %}
-{% include 'post_structure.html' %}
-{% endfor %}
-
-{% endif %}
+            {% for post in posts %}
+            {% include 'post_structure.html' %}
+            {% endfor %}
+        {% else %}
+        <i> [Empty] </i>
+        {% endif %}
+    </div>
+    </br>
 
 {% endif %}
 

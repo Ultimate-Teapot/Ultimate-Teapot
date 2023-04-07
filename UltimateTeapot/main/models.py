@@ -32,6 +32,7 @@ class Object(models.Model):
     # If the object is a follow request:
     actor = models.CharField(max_length=255)
     object = models.CharField(max_length=255)
+    whether_comment_like = models.BooleanField(null=True)
 
 class Follower(models.Model):
     # id as url
@@ -50,7 +51,7 @@ class Like(models.Model):
     author_id = models.CharField(max_length=255)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     # Please DO NOT USE
     # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
     #like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
@@ -65,7 +66,7 @@ class Profile(models.Model):
     host = models.URLField()
     displayName = models.CharField(max_length=100)
     github = models.URLField()
-    profileImage = models.URLField(default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
+    profileImage = models.URLField(default='https://camo.githubusercontent.com/eb6a385e0a1f0f787d72c0b0e0275bc4516a261b96a749f1cd1aa4cb8736daba/68747470733a2f2f612e736c61636b2d656467652e636f6d2f64663130642f696d672f617661746172732f6176615f303032322d3531322e706e67', null=True)
     
     last_date = models.DateField(default=datetime.datetime.now)
     user = models.OneToOneField(User, on_delete=models.CASCADE) # Holds authentication credentials

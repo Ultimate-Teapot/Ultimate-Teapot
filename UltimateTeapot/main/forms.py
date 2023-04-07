@@ -1,13 +1,17 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
-from .models import Post, Comment
+from .models import Post, Comment, Profile
 
 VISIBILITY = [
     ('PUBLIC', 'PUBLIC'),
     ('FRIENDS', 'FRIENDS'),
 ]
-
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ('displayName', 'github', 'profileImage')
+        
 class UploadForm(forms.ModelForm):
     content = forms.CharField(required=False,
                               widget=forms.widgets.Textarea(
@@ -62,7 +66,9 @@ class SignUpForm(UserCreationForm):
 
     display_name = forms.CharField(max_length=100, required=True,)
     github = forms.URLField(max_length=100, required=False,)
+
     profile_image = forms.URLField(max_length=200, required=False, initial="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
+
     
 
     def clean_field(self):
