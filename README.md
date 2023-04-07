@@ -14,7 +14,9 @@ Video: https://youtu.be/H4SRa5BY7JU
 
 Usage
 =====
-Clone the project, then use a virtual python environment with the latest version of Django, Django Extensions and pillow installed, then run manage.py with the runserver command.
+1. Clone the project 
+2. use a virtual python environment Install all dependencies using "pip install -r requirements.txt" 
+3. run "python manage.py runserver"
 
 One may also run ./manage.py tests to run the unit tests.
 
