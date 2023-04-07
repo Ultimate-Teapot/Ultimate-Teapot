@@ -33,3 +33,6 @@ Contributors:
     Zhouheng He
     Dave Goel
     Georgin Maliakal
+    
+References: 
+    https://stackoverflow.com/questions/59947314/how-to-allow-reject-api-permissions-based-on-user-group
