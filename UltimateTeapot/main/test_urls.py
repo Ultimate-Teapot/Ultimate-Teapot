@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from django.urls import reverse, resolve
 from django.contrib.auth import authenticate, login
-from main.views import teapot, index, post, foreign_post, delete_post, edit_post, edit_profile, signup,logout, posts, make_comment, like_post, like, myprofile, make_post, home, clear_inbox, inbox, authors, authors_list, singlePost, edit_profile, profile, user_profile, follow, follow_response, comment_create, like_create
+from .views import teapot, index, post, foreign_post, delete_post, edit_post, edit_profile, signup,logout, posts, make_comment, like_post, like, make_post, home, clear_inbox, inbox, authors, authors_list, singlePost, edit_profile, profile, user_profile, follow, follow_response, comment_create, like_create
 
 class TestUrls(SimpleTestCase):
     def test_clear_inbox_url(self):
@@ -45,10 +45,6 @@ class TestUrls(SimpleTestCase):
     def test_inbox_url(self):
         url = reverse('inbox')
         self.assertEquals(resolve(url).func, inbox)
-
-    def test_myprofile_url(self):
-        url = reverse('user_profile2')
-        self.assertEquals(resolve(url).func, myprofile)
 
     def test_follow_response_url(self):
         url = reverse('follow_response')

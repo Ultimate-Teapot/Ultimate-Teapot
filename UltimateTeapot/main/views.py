@@ -85,7 +85,7 @@ def foreign_post(request, id):
     # Pass in the full URL of a post, make a get request and display it on a page
     # Make comments
     comment_form = CommentForm(request.POST or None)
-
+    post_comments_list = []
 
     host = id.split("authors/")[0]
     if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
@@ -329,7 +329,7 @@ def make_comment(request, id):
             profile = request.user.profile
             author_data = ProfileSerializer(profile).data
 
-            pub_date = datetime.datetime.now().isoformat()
+            pub_date = datetime.now().isoformat()
             full_id = id + "/comments/" + comment_id
 
             obj_json = {
@@ -419,7 +419,7 @@ def make_post(request):
 def home(request):
         
         current_user_posts = None
-
+        all_authors = []
         viewable_posts = []
         #author_list = Profile.objects.all()
         if request.user.is_authenticated:
@@ -488,13 +488,14 @@ def home(request):
 
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
-            
-        all_authors = []
-        nodes = Node.objects.all()
-        for node in nodes:
-            res = requests.get(node.host + "authors/", auth=HTTPBasicAuth(node.username, node.password))
-            foreign_authors = res.json()
-            all_authors.extend(foreign_authors['items'])
+
+            nodes = Node.objects.all()
+            for node in nodes:
+                res = get_request(node.host + "authors/", node)
+                if isinstance(foreign_authors, dict):
+                    all_authors.extend(foreign_authors['items'])
+                else:
+                    all_authors.extend(foreign_authors)
             
         upload_form = UploadForm()
         
