@@ -503,6 +503,11 @@ def home(request):
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
+        
+        date_string = viewable_posts[0]['published']
+        dt = datetime.fromisoformat(date_string[:-1])
+        viewable_posts[0]['published'] = dt
+        
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
         
@@ -657,6 +662,10 @@ def profile(request, id):
         url = f"https://api.github.com/users/{github_username}/events"
         response = requests.get(url)
         events = response.json()
+        
+        date_string = post_json[0]['published']
+        dt = datetime.fromisoformat(date_string[:-1])
+        post_json[0]['published'] = dt
         
         return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
