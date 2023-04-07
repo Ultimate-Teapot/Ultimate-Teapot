@@ -12,6 +12,11 @@ from django.conf import settings
 from urllib.parse import urlparse
 import requests
 
+import uuid
+import base64
+
+
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -127,6 +132,7 @@ class PostsSerializer(serializers.ModelSerializer):
 
     #     return super(PostsSerializer,self).update(instance,validated_data)
 
+
 class PostSerializer(serializers.ModelSerializer):
     type = CharField(read_only=True)
     title = CharField(required=True)
@@ -145,7 +151,7 @@ class PostSerializer(serializers.ModelSerializer):
     published = DateTimeField(source="pub_date",read_only=True)
     source = serializers.SerializerMethodField("get_source",required=False)
     origin = serializers.SerializerMethodField("get_origin",required=False)
-
+    
    
 
 
@@ -245,6 +251,10 @@ class CommentListSerializer(serializers.ModelSerializer):
 
         return representation
 
+################################################################################################
+
+
+
 class PostImageSerializer(serializers.ModelSerializer):
 
     content = serializers.SerializerMethodField("get_image",required=False)
@@ -257,6 +267,11 @@ class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['content']
+
+
+
+
+################################################################################################################################
 
 class PostsPutSerializer(serializers.ModelSerializer):
     author = ProfileSerializer()

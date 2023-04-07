@@ -32,6 +32,7 @@ class Object(models.Model):
     # If the object is a follow request:
     actor = models.CharField(max_length=255)
     object = models.CharField(max_length=255)
+    whether_comment_like = models.BooleanField()
 
 class Follower(models.Model):
     # id as url
@@ -50,7 +51,7 @@ class Like(models.Model):
     author_id = models.CharField(max_length=255)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     # Please DO NOT USE
     # post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
     #like_author = models.ForeignKey(User, on_delete=models.CASCADE, related_name ='author_post_like')
@@ -188,6 +189,8 @@ class Post(models.Model):
               f"{self.content}"
         )
 
+    class Meta:
+        ordering = ['-pub_date']
 
 # class PostLike(models.Model):
 #     post = models.ForeignKey(Post, on_delete=models.CASCADE)

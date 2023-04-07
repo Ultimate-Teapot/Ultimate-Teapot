@@ -3,3 +3,4 @@
 *.env
 *.pyc
 /UltimateTeapot/main/migrations/*
+/UltimateTeapot/media/images/*
