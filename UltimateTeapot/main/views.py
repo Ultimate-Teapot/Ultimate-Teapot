@@ -372,6 +372,37 @@ def like_post(request, id):
     return redirect('foreign_post', id)
 
 @login_required(login_url='signin')
+def like_comment(request, id):
+    if request.method == 'POST':
+        profile = request.user.profile
+        author_data = ProfileSerializer(profile).data
+        # comment_instance = Comment.objects.get(id=id)
+        # comment_author_id = comment_instance.author_id
+
+
+        obj_json = {
+            "@context":"https://wwww.w3.org/ns/activitystreams",
+            "summary":profile.displayName + " likes the comments",
+            "type":"Like",
+            "author":author_data,
+            "object":id,
+        }
+
+        print(obj_json)
+
+
+        author_id = id.split("/posts/")[0]
+        host = author_id.split("authors/")[0]
+        
+
+        node = Node.objects.get(host=host)
+        post_request(author_id + "/inbox/", node, obj_json)
+
+    post_id = id.split("/comments/")[0]
+
+    return redirect('foreign_post', post_id)
+
+@login_required(login_url='signin')
 def like(request):
     return redirect('home')
 
@@ -494,6 +525,7 @@ def home(request):
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         
+
         # date_string = viewable_posts[0]['published']
         # dt = datetime.fromisoformat(date_string[:-1])
         # viewable_posts[0]['published'] = dt
@@ -586,6 +618,11 @@ def edit_profile(request, id):
         
 def profile(request, id):
     if request.user.is_authenticated:
+        current_user = request.user.profile
+        print("aaaaaaaaaaaaaaaaaaaaaaaa")
+        print(current_user)
+        print(current_user.id)
+        
         host = id.split('authors')[0]
         github = ""
         if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
@@ -595,11 +632,42 @@ def profile(request, id):
             uuid = id.split('authors/')[1]
             profile = Profile.objects.get(id=uuid)
 
+            #friends = profile.friend_list.all()
+
             github = profile.github
 
-            friends = profile.friend_list.all()
             followers = profile.follower_list.all()
-
+            friends = None
+                 
+            # current user is viewing his own page     
+            if current_user.id == uuid:
+                print("current user is viewing his own page")
+                friends = current_user.friend_list.all()
+            else:
+                for fl in followers:
+                    fl.uuid = fl.id.split('authors/')[1]
+                    # current user is in this user follower list
+                    if current_user.id == fl.uuid:
+                        print("current user is in this user follower list")
+                        print(followers)
+                        print(fl)
+                        print(Follower.objects.get(id=current_user.url, host=host))
+                        try:
+                            follower = Follower.objects.get(id=current_user.url, host=host)
+                            profile.friend_list.add(follower)
+                            print("AA")
+                            friends = profile.friend_list.all()
+                            print(friends)
+                        except Follower.DoesNotExist:
+                            # If the follower doesn't exist, create a new one
+                            follower = Follower.objects.create(id=current_user.url, host=host)
+                            profile.friend_list.add(follower)
+                            print("BB")
+                            friends = profile.friend_list.all()
+                        
+                    else:
+                        print("Unknown error if-else in def profile")
+            
             author_node = Node.objects.get(host=host)
 
             post_list = get_request(id + '/posts/', author_node)
@@ -608,11 +676,14 @@ def profile(request, id):
                 can_follow = False
             else:
                 can_follow = True
-
-            for fr in friends:
-                temp_profile = Profile.objects.filter(url=fr.id)[0]
-                fr.displayName = temp_profile.displayName
-
+                
+            if friends is not None:
+                for fr in friends:
+                    temp_profile = Profile.objects.filter(url=fr.id)[0]
+                    fr.displayName = temp_profile.displayName
+            else:
+                friends = None
+                
             for fl in followers:
                 temp_profile = Profile.objects.filter(url=fl.id)[0]
                 fl.displayName = temp_profile.displayName
@@ -637,7 +708,7 @@ def profile(request, id):
             post_json = get_request(author_id + 'posts/', author_node)
             github = profile['github']
             followers = None
-            friends = None
+            # friends = None
 
             post_list = []
 
@@ -661,6 +732,7 @@ def profile(request, id):
             # print(user_this_page)
         
         #profile github
+
         if github != "":
             github_username = github.split(".com/")[1]
             url = f"https://api.github.com/users/{github_username}/events"
@@ -750,6 +822,7 @@ def follow_response(request):
                 # following_user.follower_list.clear()
                 # follower_list = current_user.follower_list.all()
 
+                # accept and add follower into your list
                 try:
                     follower = Follower.objects.get(id=follower_id, host=follower_host)
                     current_user.follower_list.add(follower)
@@ -760,11 +833,6 @@ def follow_response(request):
                 else:
                     print("Unknown error")
 
-                # accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
-                # follower = Follower.objects.create(id=follower_id, host=follower_host)
-                # current_user.follower_list.add(follower)
-                # follower.delete()
-
                 followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
                 for follower in followers_object['items']:
@@ -773,8 +841,8 @@ def follow_response(request):
                         friends_to_current_user = Follower.objects.get(id=follower_id)
                         current_user.friend_list.add(friends_to_current_user)
 
-                        friends_to_following_user = Follower.objects.get(id=current_user.url)
-                        following_user.friend_list.add(friends_to_following_user)
+                        # friends_to_following_user = Follower.objects.get(id=current_user.url)
+                        # following_user.friend_list.add(friends_to_following_user)
 
             elif action == "decline":
                 # declined dont do anything
@@ -1160,14 +1228,17 @@ class InboxList(APIView):
             return Response(status=status.HTTP_200_OK)
 
         elif (type == "Like") or (type == "like"):
+            isComment = False
+            if "/comments/" in data["object"]:
+                isComment = True
             object = Object.objects.create(
                 type="like",
                 object_id=data["object"],
-                actor = data["author"]["id"]
+                actor = data["author"]["id"],
+                whether_comment_like=isComment
             )
             profile.inbox.add(object)
             profile.save()
-
             like = Like.objects.create(
                 object_id=data["object"],
                 author_id=data["author"]["id"]

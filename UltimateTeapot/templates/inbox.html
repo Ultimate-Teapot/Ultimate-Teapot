@@ -53,13 +53,19 @@
           <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
 
           {% elif item.type == "like" %}
-          <p>{{ item.name }} liked your post!</p>
-          <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
+            {% if item.whether_comment_like == True %}
+              <p>{{ item.name }} liked your comment!</p>
+              <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
+            {% else %}
+              <p>{{ item.name }} liked your post!</p>
+              <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
+            {% endif %}
+          
+          
 
           {% elif item.type == "comment" %}
           <p>{{ item.name }} commented on your post:</p>
           <p>Post id: <a href="{% url 'foreign_post' item.object_id %}">{{ item.object_id }}</a></p>
-
           {% endif %}
 
         </div>
