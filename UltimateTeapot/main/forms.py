@@ -65,7 +65,7 @@ class SignUpForm(UserCreationForm):
 
     display_name = forms.CharField(max_length=100, required=True,)
     github = forms.URLField(max_length=100, required=False,)
-    profile_image = forms.URLField(max_length=200, required=False,)
+    profile_Image = forms.URLField(max_length=200, required=False,)
     
     class Meta:
         model = User

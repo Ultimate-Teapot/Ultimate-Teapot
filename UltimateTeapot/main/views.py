@@ -20,7 +20,7 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
 from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object, Follower
-
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
 from django.contrib import messages
@@ -198,7 +198,10 @@ def signup(request):
             authorID = str(uniqueID) # settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" +
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
-            profile_image = form.cleaned_data.get('profile_image')
+            profileImage = form.cleaned_data.get('profileImage')
+            
+            if profileImage == None:
+                profileImage = "https://camo.githubusercontent.com/eb6a385e0a1f0f787d72c0b0e0275bc4516a261b96a749f1cd1aa4cb8736daba/68747470733a2f2f612e736c61636b2d656467652e636f6d2f64663130642f696d672f617661746172732f6176615f303032322d3531322e706e67"
 
             new_profile = Profile.objects.create(
                 user=user_model,
@@ -207,7 +210,7 @@ def signup(request):
                 host= settings.APP_HTTP + settings.APP_DOMAIN + "/",
                 displayName=display_name,
                 github=github,
-                profileImage=profile_image,
+                profileImage=profileImage,
             )
 
             new_profile.followers.clear()
@@ -480,8 +483,6 @@ def home(request):
                                 else:
                                     all_authors_posts.extend(author_posts)
 
-
-
                 for post in all_authors_posts:
                     if post['visibility'] == "PUBLIC":
                         viewable_posts.append(post)
@@ -611,6 +612,7 @@ def profile(request, id):
 
                 if (fl.id == request.user.profile.url):
                     can_follow = False
+                    
         else:
             # This is remote
             local = False
@@ -644,12 +646,19 @@ def profile(request, id):
                 all_authors.extend(foreign_authors['items'])
 
             this_user_id = profile['id']
+            
             # current_user = request.user.profile
             # user_this_page = Profile.objects.get(url=this_user_id)
             # print("lllll")
             # print(user_this_page)
         
-        return render(request, "profile.html", {"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
+        #profile github
+        github_username = profile.github.split(".com/")[1]
+        url = f"https://api.github.com/users/{github_username}/events"
+        response = requests.get(url)
+        events = response.json()
+        
+        return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
