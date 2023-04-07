@@ -5,6 +5,13 @@ See project.org (plain-text/org-mode) for a description of the project.
 
 Ultimate Teapot is a distributed social network.
 
+Service: https://ultimate-teapot.herokuapp.com/main/
+
+Documentation: https://ultimate-teapot.herokuapp.com/docs/
+
+Video:
+
+
 Usage
 =====
 Clone the project, then use a virtual python environment with the latest version of Django, Django Extensions and pillow installed, then run manage.py with the runserver command.
