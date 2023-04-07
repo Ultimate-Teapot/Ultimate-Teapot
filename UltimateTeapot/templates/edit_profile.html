@@ -1,4 +1,29 @@
-<!-- django_project/users/templates/users/profile.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+{% if user.is_authenticated %}
+<title>Follow</title>
+
+<div class="container" >
+  <div class="row">
+    <h1 class="text-center">Edit Profile</h1>
+    <div style="display: flex;justify-content: center; align-items: center;">
+      <br>
+      <div class="text-center" style="border: solid; height: 300px; width: 50%; text-align: center; padding: 50px; border-radius: 5px;">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit">Save</button>
+        </form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% comment %} <!-- django_project/users/templates/users/profile.html -->
 {% extends "base.html" %}
 {% block content %}
 
@@ -84,4 +109,4 @@
 
 {% endif %}
 
-{% endblock %}
+{% endblock %} {% endcomment %}
