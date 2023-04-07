@@ -99,78 +99,33 @@
       <div class="card-mb-4">
         <div class="card-body" style= "height: 420px"; ;>
           <p class="card-text">
-<<<<<<< HEAD
-           
-            {% if post.unlisted == False %}
-            
-              <h2>{{post.title}}</h2>
-              {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
-
-              {% if post.visibility == 'PUBLIC' %}
-
-              
-              <p> This post is public</p>
-              {% include 'post_structure.html' %}
-
-              {% elif post.visibility == 'FRIENDS' %}
-              
-              <p> This post is a friend post</p>
-              {% include 'post_structure.html' %}
-
-              {% else%}
-              Not friends nor public post!!!!!!!!!
-              
-              <p> This post is a friend post</p>
-              {% include 'post_structure.html' %}
-
-
-              {% endif %}
-            {% else %}
-              <p> This post is unlisted</p>
-              {% include 'post_structure.html' %}
-            {% endif %}
-
-            {% if request.user.profile.url == post.author.id %}
-            
-            
-            <div class="post_icons">
-              <a href="{%url 'edit_post' id=post.id %}"class="edit-button btn btn-secondary btn-block edit-button bi-pen-fill" style="float: right;"></a>  
-            
-
-              <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
-              
-
-              <a href="{%url 'delete_post' id=post.id %}"class="ui button bi-trash btn btn-secondary btn-block" style="float: right;"></a>
-            </div>
-=======
             <h2>{{post.title}}</h2>
             {% if post.unlisted == False %}
                   {% comment %} <p>People can view this post: {{ post.author.friends.all }} and {{request.user.profile}} {% endcomment %}
-                  
-                    {% if post.visibility == 'PUBLIC' %} 
+
+                    {% if post.visibility == 'PUBLIC' %}
                     <div style="padding-bottom: 2px">
-                      <a href="{%url 'foreign_post' post.id %}"><i> [This post is public] </i></a> 
-                      
+                      <a href="{%url 'foreign_post' post.id %}"><i> [This post is public] </i></a>
+
                     </div>
                     {% include 'post_structure.html' %}
-  
-                    {% elif post.visibility == 'FRIENDS' %}       
+
+                    {% elif post.visibility == 'FRIENDS' %}
                     <div style="padding-bottom: 2px">
-                      <a href="{%url 'foreign_post' post.id %}"><i> [This post is a friend post]</i></a> 
+                      <a href="{%url 'foreign_post' post.id %}"><i> [This post is a friend post]</i></a>
                     </div>
                     {% include 'post_structure.html' %}
-  
+
                     {% else%}
                     <div style="padding-bottom: 2px">
                       <i> [Not friends nor public post!!!]</i>
                     </div>
                     {% include 'post_structure.html' %}
-  
+
                     {% endif %}
->>>>>>> Added new stuff
             {% else %}
             <div style="padding-bottom: 20px">
-              <a href="{%url 'foreign_post' post.id %}"><i> [This is an unlisted post] </i></a> 
+              <a href="{%url 'foreign_post' post.id %}"><i> [This is an unlisted post] </i></a>
             </div>
 
             <div style="height:250px;  border: medium solid transparent; padding: 20px; background-color: white; border-radius: 6px; ">
@@ -190,35 +145,35 @@
 
                   {% csrf_token %}
                   <input type="hidden" value="{{ post.id }}" name="post_id" />
-                  
+
                 </br></br>
                   <button type="submit" name="private" value="private" class="btn btn-outline-success">Send</button>
                 </form>
-              </div> 
-                
+              </div>
+
             {% endif %}
-                                  
+
 
                     {% if request.user.profile.url == post.author.id %}
-                    
-                    
-                    <div class="post_icons" style="padding-top: 15px">
-                      <a href="{%url 'edit_post' id=post.id %}"class="edit-button btn btn-secondary btn-block edit-button bi-pen-fill" style="float: right;"></a>  
-                    
 
-                      <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
-                      
+
+                    <div class="post_icons" style="padding-top: 15px">
+                      <a href="{%url 'edit_post' id=post.id %}"class="edit-button btn btn-secondary btn-block edit-button bi-pen-fill" style="float: right;"></a>
+
+
+                      <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a>
+
 
                       <a href="{%url 'delete_post' id=post.id %}"class="ui button bi-trash btn btn-secondary btn-block" style="float: right;"></a>
                     </div>
                     {% else %}
                     <div class="post_icons">
-                      <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a> 
+                      <a href="{%url 'foreign_post' post.id %}"class="ui button btn btn-secondary btn-block bi-chat-left-text"><!-- {{post.title}} --></a>
                     </div>
 
-                    
+
                     {% endif %}
-              
+
           <!-- {% if post.image %}
           <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid">
           {% endif %} -->
@@ -242,7 +197,7 @@
           {% endcomment %}
           {% if request.user.profile.url == post.author.id %}
           {% endif %}
-          
+
 
           <br/><br/>
           {% for comment in post.comment.all %}
@@ -255,57 +210,10 @@
 
     {% endfor %}
 
-      
-      
+
+
     </div>
-<<<<<<< HEAD
-
-    {% if foreign_post %}
-    <div class="card-mb-4">
-      {% if foreign_post.author.profileImage %}
-      <img src={{ foreign_post.author.profileImage }} width="50" height="50">
-      {% endif %}
-      <h>
-        By {{ foreign_post.author.displayName }}
-        </br>
-        From {{ foreign_post.author.host }}
-      </h>
-
-      <h style="font-size:40;">
-        {{ foreign_post.title }}
-      </h>
-      <p>
-        {{ foreign_post.content }}
-      </p>
-    </div>
-    {% endif %}
-
-    {% if foreign_post2 %}
-    <div class="card-mb-4">
-      
-
-      {% if foreign_post2.author.profileImage %}
-      <img src={{ foreign_post2.author.profileImage }} width="50" height="50">
-      {% endif %}
-      <h>
-        By {{ foreign_post2.author.displayName }}
-        </br>
-        From {{ foreign_post2.author.host }}
-      </h>
-
-      <h style="font-size:40;">
-        {{ foreign_post2.title }}
-      </h>
-      <p>
-        {{ foreign_post2.content }}
-      </p>
-      
-    </div>
-    {% endif %}
-
-=======
-{% comment %} 
->>>>>>> Added new stuff
+{% comment %}
     <div>
       {% if authors %}
 
