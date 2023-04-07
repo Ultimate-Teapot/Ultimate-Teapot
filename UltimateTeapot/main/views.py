@@ -814,12 +814,7 @@ def follow_response(request):
             if action == "accept":
                 print("in accept")
 
-                # current_user.friend_list.clear()
-                # s = Follower.objects.all().delete()
-                # f = Object.objects.all().delete()
-                # following_user.friend_list.clear()
-                # following_user.follower_list.clear()
-                # follower_list = current_user.follower_list.all()
+              
 
                 # accept and add follower into your list
                 try:
@@ -831,6 +826,7 @@ def follow_response(request):
                     current_user.follower_list.add(follower)
                 else:
                     print("Unknown error")
+
 
                 followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
@@ -853,21 +849,6 @@ def follow_response(request):
         return redirect('home')
 
 
-# class ProfileViewSet(viewsets.ModelViewSet):
-#     queryset = Profile.objects.all()
-#     serializer_class = ProfileSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-
-
-# class PostViewSet(viewsets.ModelViewSet):
-#     queryset = Post.objects.all()
-#     serializer_class = PostSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-
-# class UserViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     permission_classes = [permissions.IsAuthenticated]
 
 def comment_create(request, post_id):
     post = get_object_or_404(Post, post_id=post_id)
@@ -890,12 +871,7 @@ def like_create(request, post_id):
             like.delete()
         return redirect('home')
 
-# def followers(request, username):
-#     if request.user.is_authenticated:
-#         user = User.objects.get(username=username)
-#         profile = Profile.objects.get(user=user)
-#         followers = profile.followers
-#         return render(request, "followers.html", {""})
+
 
 
 
@@ -922,7 +898,17 @@ class customPaginator(PageNumberPagination):
 class AuthorList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
     # queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
+    @extend_schema(
+        description = "retrieve all profiles on the server (paginated)",
+        tags = ["Authors"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/?page=10&size=5 ",
+        request_only=True,
+        )],
+    )
   
     def get(self, request):
         
@@ -932,12 +918,26 @@ class AuthorList(APIView):
         serializer = ProfileSerializer(paginated, many=True)
         updated_data = {"type": "authors", "items": serializer.data}
         return Response(updated_data, status=status.HTTP_200_OK)
-
+    
+    
 
 
 
 class SingleAuthor(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = ProfileSerializer
+
+
+    @extend_schema(
+        description = " retrieve ID’s profile",
+        tags = ["Authors"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}",
+        request_only=True,
+        )],
+
+    )
     def get(self, request, id):
         profile = Profile.objects.get(id=id)
         serializer = ProfileSerializer(profile)
@@ -945,6 +945,18 @@ class SingleAuthor(APIView):
 
         return Response(updated_data, status=status.HTTP_200_OK)
 
+
+    @extend_schema(
+        description = "update ID’s profile",
+        tags = ["Authors"],
+       
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}",
+        request_only=True,
+        )],
+        
+    )
     def post(self, request, id, format=None):
         uri = request.build_absolute_uri('?')
         try:
@@ -962,11 +974,15 @@ class SingleAuthor(APIView):
 
 class PostsList(ListCreateAPIView):
     permission_classes = [NodePermission, IsAuthenticated]
-
     pagination_class = customPaginator
     serializer_class = PostsSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
+
+    @extend_schema(
+        description = "get the recent posts from author ID (paginated)",
+        tags = ["Posts"],  
+    )
 
     def get_queryset(self):
         id = self.kwargs.get(self.lookup_url_kwarg)
@@ -975,6 +991,11 @@ class PostsList(ListCreateAPIView):
         posts = Post.objects.filter(author_id=id).all()
         return posts
 
+
+    @extend_schema(
+        description = "create a new post but generate a new id ",
+        tags = ["Posts"]
+    )
     def perform_create(self, serializer):
 
         id = self.kwargs.get(self.lookup_url_kwarg)
@@ -996,12 +1017,19 @@ class PostsList(ListCreateAPIView):
 '''api/authors/<str:id>/posts/<str:pid>'''
 class SinglePost(GenericAPIView):
     permission_classes = [NodePermission, IsAuthenticated]
-
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     lookup_url_kwarg = "id"
 
-
+    @extend_schema(
+        description = "get the public post whose id is PID",
+        tags = ["Posts"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+    )
     def get(self, request, id, pid):
         # uri = request.build_absolute_uri('?')
         posts = Post.objects.get(id=pid)
@@ -1012,6 +1040,16 @@ class SinglePost(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+    @extend_schema(
+        description = "update the post whose id is PID (must be authenticated)",
+        tags = ["Posts"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+        
+    )
     def post(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         try:
@@ -1024,6 +1062,15 @@ class SinglePost(GenericAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        description = "create a post where its id is PID",
+        tags = ["Posts"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u PUT https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+    )
     def put(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         if Post.objects.filter(id=pid).exists():
@@ -1046,7 +1093,15 @@ class SinglePost(GenericAPIView):
             )
             return Response(status=status.HTTP_200_OK)
 
-
+    @extend_schema(
+        description = "remove the post whose id is PID",
+        tags = ["Posts"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u DELETE https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}",
+        request_only=True,
+        )],
+    )
     def delete(self, request, id, pid):
         uri = request.build_absolute_uri('?')
         Post.objects.get(id=pid).delete()
@@ -1057,10 +1112,19 @@ class SinglePost(GenericAPIView):
 
 class ImagePostsList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
-    # serializer_class = PostImageSerializer
+    serializer_class = PostImageSerializer # DON"T ACTUALLY NEED THIS JUST SO DRF SPECTACULAR DOESN"T YELL AT US
     # queryset = Post.objects.all()
     # lookup_url_kwarg = "id"
-
+    
+    @extend_schema(
+        description = "get the public post converted to binary as an image ",
+        tags = ["Posts"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/image/",
+        request_only=True,
+        )],
+    )
     def get(self, request,id,pid):
         
         post = Post.objects.get(id=pid)
@@ -1076,6 +1140,17 @@ class ImagePostsList(APIView):
 
 class FollowerList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = FollowerSerializer
+
+    @extend_schema(
+        description = "get a list of authors who are ID's followers",
+        tags = ["Followers"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/",
+        request_only=True,
+        )],
+    )
     def get(self, request, id):
 
         author = Profile.objects.get(id=id)
@@ -1090,7 +1165,19 @@ class singleFollowerList(APIView):
     '''
     Check if foreign id is a follower of this author
     '''
+
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = FollowerSerializer
+
+    @extend_schema(
+        description = "check if FID is a follower of ID",
+        tags = ["Followers"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/{fid}",
+        request_only=True,
+        )],
+    )
     def get(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         author = Profile.objects.get(id=id)
@@ -1106,6 +1193,17 @@ class singleFollowerList(APIView):
             }
             return Response(data, status=status.HTTP_200_OK)
 
+
+    @extend_schema(
+        description = "Add FID as a follower of ID ",
+        tags = ["Followers"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/{fid}",
+        request_only=True,
+        )],
+        
+    )
     def post(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         foreign_host = foreign_id.split('authors')[0]
@@ -1119,6 +1217,15 @@ class singleFollowerList(APIView):
             author.save()
             return Response(status=status.HTTP_200_OK)
 
+    @extend_schema(
+        description = "remove FID as a follower of ID",
+        tags = ["Followers"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u DELETE https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/followers/{fid}",
+        request_only=True,
+        )],
+    )
     def delete(self, request, id, fid):
         foreign_id = urllib.parse.unquote(fid)
         foreign_host = foreign_id.split('/authors')[0]
@@ -1137,21 +1244,53 @@ class singleFollowerList(APIView):
 
 class Commentlist(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = CommentListSerializer
+
+    @extend_schema(
+        description = "get the list of comments of the post whose id is PID (paginated)",
+        tags = ["Comments"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/comments/",
+        request_only=True,
+        )],
+    )
     def get(self, request, id, pid):
         post = Post.objects.get(id=pid)
-        serializer = CommentListSerializer(post)
-
-        # print(serializer.data)
+        # paginator= customPaginator()
+        # paginated = paginator.paginate_queryset(post, request)
+        serializer = CommentListSerializer(post) 
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        description = " if you post an object of “type”:”comment”, it will add your comment to the post whose id is PID",
+        tags = ["Comments"],
+         examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/comments/",
+        request_only=True,
+        )],
+    )
     def post(self,request,id,pid):
-        # TODO: Add this
+        # TODO: Add this :( 
         return Response(status=status.HTTP_200_OK)
+
 
 
 class postLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = PostLikeSerializer
+
+    @extend_schema(
+        description = "a list of likes from other authors on ID's post PID",
+        tags = ["Likes"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/likes/",
+        request_only=True,
+        )],
+    )
     def get(self, request, id,pid):
         post = Post.objects.get(id=pid)
         serializer = PostLikeSerializer(post)
@@ -1160,6 +1299,17 @@ class postLikes(APIView):
 
 class commentLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = CommentLikeSerializer
+
+    @extend_schema(
+        description = " a list of likes from other authors on ID’s post PID comment CID",
+        tags = ["Likes"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}/comment/{cid}likes/",
+        request_only=True,
+        )],
+    )
     def get(self,request,id,pid,cid):
         comment = Comment.objects.get(id=cid)
         serializer = CommentLikeSerializer(comment)
@@ -1169,6 +1319,17 @@ class commentLikes(APIView):
 
 class authorLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = AuthorLikeSerializer
+
+    @extend_schema(
+        description = "list what public things Author ID liked",
+        tags = ["Likes"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/liked/",
+        request_only=True,
+        )],
+    )
     def get(self,request,id):
         author = Profile.objects.get(id=id)
         serializer = AuthorLikeSerializer(author)
@@ -1177,7 +1338,21 @@ class authorLikes(APIView):
 
 
 class InboxList(APIView):
-    # permission_classes = [NodePermission, IsAuthenticated]
+
+    permission_classes = [NodePermission, IsAuthenticated]
+    serializer_class = InboxSerializer
+
+    @extend_schema(
+        description = "if authenticated get a list of posts sent to ID ",
+        tags = ["Inbox"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u GET https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/",
+        request_only=True,
+        )],
+        
+    )
+
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
         serializer = InboxSerializer(profile)
@@ -1185,6 +1360,15 @@ class InboxList(APIView):
 
         return Response(updated_data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        description = "send a object to the author ID, object can be of type like, comment, post, follow ",
+        tags = ["Inbox"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/",
+        request_only=True,
+        )],
+    )
     def post(self,request,id):
         profile = Profile.objects.get(id=id)
         data = request.data
@@ -1277,7 +1461,16 @@ class InboxList(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_200_OK)
-
+    
+    @extend_schema(
+        description = "clear the inbox",
+        tags = ["Inbox"],
+        examples=[OpenApiExample(
+        name="request",
+        value="curl -u DELETE https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/",
+        request_only=True,
+        )],
+    )
     def delete(self,request,id):
         # clear the inbox
         profile = Profile.objects.get(id=id)

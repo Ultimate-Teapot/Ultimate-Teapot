@@ -1,22 +1,29 @@
 openapi: 3.0.3
 info:
-  title: Your Project API
+  title: Ultimate Teapot API
   version: 1.0.0
-  description: Your project description
+  description: This API documentation describes the requests that can be made to our
+    social media platform "Ultimate Teapot"
 paths:
   /main/api/authors/:
     get:
       operationId: main_api_authors_retrieve
+      description: retrieve all profiles on the server (paginated)
       tags:
-      - authors
+      - Authors
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
   /main/api/authors/{id}/:
     get:
       operationId: main_api_authors_retrieve_2
+      description: ' retrieve ID’s profile'
       parameters:
       - in: path
         name: id
@@ -24,14 +31,19 @@ paths:
           type: string
         required: true
       tags:
-      - author
+      - Authors
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
     post:
       operationId: main_api_authors_create
+      description: update ID’s profile
       parameters:
       - in: path
         name: id
@@ -39,15 +51,36 @@ paths:
           type: string
         required: true
       tags:
-      - author
+      - Authors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+            examples:
+              Request:
+                value: curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}
+                summary: request
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+        required: true
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
   /main/api/authors/{id}/followers/:
     get:
       operationId: main_api_authors_followers_retrieve
+      description: get a list of authors who are ID's followers
       parameters:
       - in: path
         name: id
@@ -55,7 +88,7 @@ paths:
           type: string
         required: true
       tags:
-      - followers
+      - Followers
       security:
       - basicAuth: []
       responses:
@@ -64,7 +97,7 @@ paths:
   /main/api/authors/{id}/followers/{fid}/:
     get:
       operationId: main_api_authors_followers_retrieve_2
-      description: Check if foreign id is a follower of this author
+      description: check if FID is a follower of ID
       parameters:
       - in: path
         name: fid
@@ -77,7 +110,7 @@ paths:
           type: string
         required: true
       tags:
-      - followers
+      - Followers
       security:
       - basicAuth: []
       responses:
@@ -85,7 +118,7 @@ paths:
           description: No response body
     post:
       operationId: main_api_authors_followers_create
-      description: Check if foreign id is a follower of this author
+      description: 'Add FID as a follower of ID '
       parameters:
       - in: path
         name: fid
@@ -98,7 +131,7 @@ paths:
           type: string
         required: true
       tags:
-      - followers
+      - Followers
       security:
       - basicAuth: []
       responses:
@@ -106,7 +139,7 @@ paths:
           description: No response body
     delete:
       operationId: main_api_authors_followers_destroy
-      description: Check if foreign id is a follower of this author
+      description: remove FID as a follower of ID
       parameters:
       - in: path
         name: fid
@@ -119,7 +152,7 @@ paths:
           type: string
         required: true
       tags:
-      - followers
+      - Followers
       security:
       - basicAuth: []
       responses:
@@ -128,6 +161,7 @@ paths:
   /main/api/authors/{id}/inbox/:
     get:
       operationId: main_api_authors_inbox_retrieve
+      description: 'if authenticated get a list of posts sent to ID '
       parameters:
       - in: path
         name: id
@@ -135,14 +169,20 @@ paths:
           type: string
         required: true
       tags:
-      - inbox
+      - Inbox
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inbox'
+          description: ''
     post:
       operationId: main_api_authors_inbox_create
+      description: 'send a object to the author ID, object can be of type like, comment,
+        post, follow '
       parameters:
       - in: path
         name: id
@@ -150,14 +190,34 @@ paths:
           type: string
         required: true
       tags:
-      - inbox
+      - Inbox
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Inbox'
+            examples:
+              Request:
+                value: curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/inbox/
+                summary: request
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Inbox'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Inbox'
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inbox'
+          description: ''
     delete:
       operationId: main_api_authors_inbox_destroy
+      description: clear the inbox
       parameters:
       - in: path
         name: id
@@ -165,7 +225,7 @@ paths:
           type: string
         required: true
       tags:
-      - main
+      - Inbox
       security:
       - basicAuth: []
       responses:
@@ -174,6 +234,7 @@ paths:
   /main/api/authors/{id}/liked/:
     get:
       operationId: main_api_authors_liked_retrieve
+      description: list what public things Author ID liked
       parameters:
       - in: path
         name: id
@@ -181,7 +242,7 @@ paths:
           type: string
         required: true
       tags:
-      - liked
+      - Likes
       security:
       - basicAuth: []
       responses:
@@ -202,8 +263,14 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
-      - posts
+      - main
       security:
       - basicAuth: []
       responses:
@@ -222,7 +289,7 @@ paths:
           type: string
         required: true
       tags:
-      - posts
+      - main
       requestBody:
         content:
           application/json:
@@ -247,6 +314,7 @@ paths:
   /main/api/authors/{id}/posts/{pid}/:
     get:
       operationId: main_api_authors_posts_retrieve
+      description: get the public post whose id is PID
       parameters:
       - in: path
         name: id
@@ -259,7 +327,7 @@ paths:
           type: string
         required: true
       tags:
-      - posts
+      - Posts
       security:
       - basicAuth: []
       responses:
@@ -271,6 +339,7 @@ paths:
           description: ''
     post:
       operationId: main_api_authors_posts_create_2
+      description: update the post whose id is PID (must be authenticated)
       parameters:
       - in: path
         name: id
@@ -283,13 +352,17 @@ paths:
           type: string
         required: true
       tags:
+      - Posts
 
-      - posts
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Post'
+            examples:
+              Request:
+                value: curl -u POST https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}
+                summary: request
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Post'
@@ -308,6 +381,7 @@ paths:
           description: ''
     put:
       operationId: main_api_authors_posts_update
+      description: create a post where its id is PID
       parameters:
       - in: path
         name: id
@@ -320,12 +394,16 @@ paths:
           type: string
         required: true
       tags:
-      - posts
+      - Posts
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Post'
+            examples:
+              Request:
+                value: curl -u PUT https://ultimate-teapot.herokuapp.com/main/api/authors/{id}/posts/{pid}
+                summary: request
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Post'
@@ -344,6 +422,7 @@ paths:
           description: ''
     delete:
       operationId: main_api_authors_posts_destroy
+      description: remove the post whose id is PID
       parameters:
       - in: path
         name: id
@@ -356,7 +435,7 @@ paths:
           type: string
         required: true
       tags:
-      - posts
+      - Posts
       security:
       - basicAuth: []
       responses:
@@ -365,6 +444,7 @@ paths:
   /main/api/authors/{id}/posts/{pid}/comments/:
     get:
       operationId: main_api_authors_posts_comments_retrieve
+      description: get the list of comments of the post whose id is PID (paginated)
       parameters:
       - in: path
         name: id
@@ -377,7 +457,7 @@ paths:
           type: string
         required: true
       tags:
-      - comments
+      - Comments
       security:
       - basicAuth: []
       responses:
@@ -385,6 +465,8 @@ paths:
           description: No response body
     post:
       operationId: main_api_authors_posts_comments_create
+      description: ' if you post an object of “type”:”comment”, it will add your comment
+        to the post whose id is PID'
       parameters:
       - in: path
         name: id
@@ -397,7 +479,7 @@ paths:
           type: string
         required: true
       tags:
-      - comments
+      - Comments
       security:
       - basicAuth: []
       responses:
@@ -406,6 +488,7 @@ paths:
   /main/api/authors/{id}/posts/{pid}/comments/{cid}/likes/:
     get:
       operationId: main_api_authors_posts_comments_likes_retrieve
+      description: ' a list of likes from other authors on ID’s post PID comment CID'
       parameters:
       - in: path
         name: cid
@@ -423,7 +506,7 @@ paths:
           type: string
         required: true
       tags:
-      - likes
+      - Likes
       security:
       - basicAuth: []
       responses:
@@ -432,6 +515,7 @@ paths:
   /main/api/authors/{id}/posts/{pid}/image/:
     get:
       operationId: main_api_authors_posts_image_retrieve
+      description: 'get the public post converted to binary as an image '
       parameters:
       - in: path
         name: id
@@ -444,7 +528,7 @@ paths:
           type: string
         required: true
       tags:
-      - image post
+      - Posts
       security:
       - basicAuth: []
       responses:
@@ -457,6 +541,7 @@ paths:
   /main/api/authors/{id}/posts/{pid}/likes/:
     get:
       operationId: main_api_authors_posts_likes_retrieve
+      description: a list of likes from other authors on ID's post PID
       parameters:
       - in: path
         name: id
@@ -469,14 +554,26 @@ paths:
           type: string
         required: true
       tags:
-      - likes
+      - Likes
       security:
       - basicAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostLike'
+          description: ''
 components:
   schemas:
+    Inbox:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+      required:
+      - type
     PaginatedPostsList:
       type: object
       properties:
@@ -561,9 +658,16 @@ components:
       properties:
         content:
           type: string
-          readOnly: true
       required:
       - content
+    PostLike:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+      required:
+      - type
     Posts:
       type: object
       properties:
@@ -663,3 +767,8 @@ components:
     basicAuth:
       type: http
       scheme: basic
+tags:
+- Post
+- Author
+- Like
+- Comment
