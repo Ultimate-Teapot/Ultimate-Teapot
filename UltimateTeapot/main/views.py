@@ -44,6 +44,7 @@ from django.conf import settings
 from .paginations import NewPaginator
 import base64
 from django.core.files.base import ContentFile
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
 def teapot(request):
     return render(request, 'teapot.html', status=418)
@@ -60,21 +61,22 @@ def post(request, id):
 
     new_post = Post.objects.get(id=id)
     current_user = request.user.profile
-    print("onasfnsafnonoisafinosafinofsaninsafnsaflnsainfnioafsoinafsopasfonpfspo")
-    print(new_post)
-    # if current_user == new_post.author:
-    #     messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
-    #     return render(request, "post.html", {"post": new_post})
-    #
-    # elif current_user not in new_post.author.friends.all():
-    #     # User is not authorized to view this post.
-    #     # Redirect to a login page or display an error message.
-    #     messages.add_message(request, messages.INFO,
-    #                          'You cannot view this post. This is a friend posts. Only author and his/her friends can see.')
-    #     return render(request, "not_friend.html")
-    # else:
-    #     # User is authorized to view this post.
-    #     # return render(request, 'view_post.html', {'post': post})
+
+    if current_user == new_post.author:
+        messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
+        return render(request, "post.html", {"post": new_post})
+
+    elif current_user not in new_post.author.friends.all():
+        # User is not authorized to view this post.
+        # Redirect to a login page or display an error message.
+        messages.add_message(request, messages.INFO,
+                             'You cannot view this post. This is a friend posts. Only author and his/her friends can see.')
+        return render(request, "not_friend.html")
+    else:
+        # User is authorized to view this post.
+        # return render(request, 'view_post.html', {'post': post})
+        return render(request, "post.html", {"post": new_post})
+
     return render(request, "post.html", {"post": new_post})
 
 def foreign_post(request, id):
@@ -110,38 +112,6 @@ def foreign_post(request, id):
 
     return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_list, "comment_form":comment_form})
 
-
-# def signup(request):
-#     if request.method == 'POST':
-#         username = request.POST['username']
-#         email = request.POST['email']
-#         password = request.POST['password']
-#         confirmpassword = request.POST['confirmpassword']
-        
-#         if password == confirmpassword:
-#             if User.objects.filter(email=email).exists():
-#                 messages.info(request, 'Email Taken')
-#                 return redirect('signup')
-#             elif User.objects.filter(username=username).exists():
-#                 messages.info(request, 'Username Taken')
-#                 return redirect('signup')
-#             else:
-#                 user = User.objects.create_user(username=username, email=email, password=password)
-#                 user.save()
-                
-#                 #log user in and redirect to settings page
-                
-#                 #create a Profile object for the new user
-#                 user_model = User.objects.get(username=username)
-#                 new_profile = Profile.objects.create(user=user_model)
-#                 new_profile.save()
-#                 return redirect('login')
-                
-#         else:
-#             messages.info(request, 'Password Not Matching')
-#             return redirect('signup')
-#     else:
-#         return render(request, 'signup.html')
 
 def delete_post(request, id):
     uuid = id.split("posts/")[1]
@@ -188,6 +158,8 @@ def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
+    
+
             form.save()
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
@@ -198,10 +170,16 @@ def signup(request):
             authorID = str(uniqueID) # settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" +
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
-            profileImage = form.cleaned_data.get('profileImage')
+
+
+            # if form.fields['profile_image']=="":
+            #     form.fields['profile_image'].initial = "https://i.imgur.com/lu0eCzU.jpeg"
+
+            profileImage = form.cleaned_data.get('profile_image')
             
             if profileImage == None:
                 profileImage = "https://camo.githubusercontent.com/eb6a385e0a1f0f787d72c0b0e0275bc4516a261b96a749f1cd1aa4cb8736daba/68747470733a2f2f612e736c61636b2d656467652e636f6d2f64663130642f696d672f617661746172732f6176615f303032322d3531322e706e67"
+
 
             new_profile = Profile.objects.create(
                 user=user_model,
@@ -257,7 +235,8 @@ def posts(request):
 
             contentType = request.POST['contentType']
             image = request.FILES.get('image')
-
+            # image = request.POST('image')
+            content = request.POST['content']
 
             # See what to set content type to #
             if image:
@@ -272,8 +251,14 @@ def posts(request):
 
             if (contentType == "image/png;base64") or (contentType == "image/jpeg;base64") or (contentType == "application/base64"):
                 image = request.FILES.get('image')
-                b_64 = base64.b64encode(image.file.read())
-                content = b_64
+
+
+                # how to decode base 64 taken from
+                #  https://stackoverflow.com/questions/6375942/how-do-you-base-64-encode-a-png-image-for-use-in-a-data-uri-in-a-css-file
+                b_64 = base64.b64encode(image.file.read()).decode('ascii')
+                content = "data:"+ contentType + "," + b_64
+
+               
             else:
                 content = request.POST['content']
 
@@ -842,6 +827,7 @@ def like_create(request, post_id):
 
 
 ################################################################################################################################################################
+
 class NodePermission(BasePermission):
     def has_permission(self, request, view):
         if request.user.groups.filter(name='node').exists():
@@ -859,6 +845,16 @@ class AuthorList(APIView):
         updated_data = {"type": "authors", "items": serializer.data}
 
         return Response(updated_data, status=status.HTTP_200_OK)
+    
+# @extend_schema(
+#     examples=[OpenApiExample(
+#         value=[
+#             {'title': 'A title'},
+#             {'title': 'Another title'},
+#         ],
+#     )],
+# )
+    
 
 
 class SingleAuthor(APIView):
@@ -1005,11 +1001,9 @@ class ImagePostsList(GenericAPIView):
     def get(self, request, id, pid):
         # uri = request.build_absolute_uri('?')
         post = Post.objects.get(id=pid)
-        serializer = PostImageSerializer(post)
-        if(post.contentType!="application/base64"):
-            return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
+        return Response(base64.b64decode(post.content), status=status.HTTP_200_OK)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class FollowerList(APIView):

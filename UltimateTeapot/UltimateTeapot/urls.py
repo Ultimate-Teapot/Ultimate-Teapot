@@ -37,5 +37,4 @@ urlpatterns = [
         name="swagger-ui",
     ),
     #path('api_schema',get_schema_view(title="API Schema",description="Guide for the REST API"), name="api_schema"),
-    
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
