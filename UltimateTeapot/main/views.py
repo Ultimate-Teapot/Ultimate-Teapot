@@ -447,26 +447,31 @@ def home(request):
                 all_authors_posts = []
                 nodes = Node.objects.all()
                 for node in nodes:
-                    try:
-                        foreign_authors = get_request(node.host + "authors/?page=1&size=2", node)
-                    except json.JSONDecodeError:
-                        None
+                    if node.host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
+                        for local_post in Post.objects.filter(visibility="PUBLIC"):
+                            print(PostSerializer(local_post).data)
+                            all_authors_posts.append(PostSerializer(local_post).data)
                     else:
-                        if isinstance(foreign_authors, dict):
-                            foreign_author_list = foreign_authors['items']
+                        try:
+                            foreign_authors = get_request(node.host + "authors/?page=1&size=2", node)
+                        except json.JSONDecodeError:
+                            None
                         else:
-                            foreign_author_list = foreign_authors
-                            
-                        for author in foreign_author_list:
-                            try:
-                                author_posts = get_request(author['id'] + "/posts/", node)
-                            except json.JSONDecodeError:
-                                None
+                            if isinstance(foreign_authors, dict):
+                                foreign_author_list = foreign_authors['items']
                             else:
-                                if isinstance(author_posts, dict):
-                                    all_authors_posts.extend(author_posts['items'])
+                                foreign_author_list = foreign_authors
+
+                            for author in foreign_author_list:
+                                try:
+                                    author_posts = get_request(author['id'] + "/posts/", node)
+                                except json.JSONDecodeError:
+                                    None
                                 else:
-                                    all_authors_posts.extend(author_posts)
+                                    if isinstance(author_posts, dict):
+                                        all_authors_posts.extend(author_posts['items'])
+                                    else:
+                                        all_authors_posts.extend(author_posts)
 
                 for post in all_authors_posts:
                     if post['visibility'] == "PUBLIC":
