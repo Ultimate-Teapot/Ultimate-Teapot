@@ -41,8 +41,6 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, GenericAPIView
 from urllib.parse import urlparse
 from django.conf import settings
-from .paginations import NewPaginator
-import base64
 from django.core.files.base import ContentFile
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework import viewsets
@@ -316,20 +314,6 @@ def like(request):
     return redirect('home')
 
 
-
-
-# @login_required(login_url='signin')
-# def myprofile(request):
-
-#       current_user = User.objects.get(username=request.user)
-#       author_profile = Profile.objects.get(user=current_user)
-
-
-
-#       return render(request, 'myprofile.html', {"author":author_profile})
-
-
-# DOUBLE CHECK THIS LINE FROM 343 to 359 
 def make_post(request):
     upload_form = UploadForm()
     #return render(request, 'home.html', {"posts":posts, "form":form})
@@ -337,38 +321,7 @@ def make_post(request):
 
 
 def home(request):
-        # form = UploadForm(request.POST or None, request.FILES)
-        # if request.method == "POST":
-        #     if form.is_valid():
-        #         # if form.data['image'] is not None:
-        #         #     form.contentType = "application/base64"
-                
-        #         # if form.data['content'] is not None:
-        #         #     form.contentType = "text/plain"
-
-        #         # if form.data['markdown_content'] is not None:
-        #         #     form.contentType = "text/markdown"
-                
-        #         post = form.save(commit=False)
-        #         post.author = request.user.profile
-        #         post.save()
-
-        #         messages.success(request, ("You Successfully Posted!"))
-        #         return redirect('home')
-
-        # posts = Post.objects.all().order_by("-pub_date")
-        #return render(request, 'home.html', {"posts":posts, "form":form})
         
-        # form = PostForm(request.POST or None, request.FILES)
-        # if request.method == "POST":
-        #     if form.is_valid():
-        #         post = form.save(commit=False)
-        #         post.user = request.user
-        #         post.save()
-        #         messages.success(request, ("You Successfully Posted!"))
-        #         return redirect('home')
-
-        # posts = Post.objects.all().order_by("-pub_date")
         current_user_posts = None
 
         viewable_posts = []
@@ -843,15 +796,6 @@ class SinglePost(GenericAPIView):
 
     def put(self, request, id, pid):
         uri = request.build_absolute_uri('?')
-        # try:
-        #     postobj = Post.objects.get(id=pid)
-        # except postobj.DoesNotExist:
-        #     serializer = PostSerializer(postobj,data=request.data)
-        #     if serializer.is_valid():
-        #         serializer.save()
-        #         return Response(serializer.data)
-        # else:
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
         if Post.objects.filter(id=pid).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -881,26 +825,28 @@ class SinglePost(GenericAPIView):
 
 '''api/authors/<str:id>/posts/<str:pid>/image'''
 
-class ImagePostsList(GenericAPIView):
+class ImagePostsList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
-    serializer_class = PostImageSerializer
-    queryset = Post.objects.all()
-    lookup_url_kwarg = "id"
+    # serializer_class = PostImageSerializer
+    # queryset = Post.objects.all()
+    # lookup_url_kwarg = "id"
 
- # TODO check if this works
-    def get(self, request, id, pid):
-        # uri = request.build_absolute_uri('?')
+    def get(self, request,id,pid):
+        
         post = Post.objects.get(id=pid)
-        return Response(base64.b64decode(post.content), status=status.HTTP_200_OK)
-
-
-
+        
+        # serializer = PostImageSerializer(post)
+        try:
+             if (post.contentType == "image/png;base64") or (post.contentType == "image/jpeg;base64") or (post.contentType == "application/base64"):
+                 return render(request, 'singleImage.html', {"mypost":post})
+        except:
+            raise Http404
+        
+       
 
 class FollowerList(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
     def get(self, request, id):
-        #uri = request.build_absolute_uri('?')
-        #uri = uri.replace("/followers", "")
 
         author = Profile.objects.get(id=id)
         
@@ -980,6 +926,7 @@ class postLikes(APIView):
         post = Post.objects.get(id=pid)
         serializer = PostLikeSerializer(post)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class commentLikes(APIView):
     permission_classes = [NodePermission, IsAuthenticated]
