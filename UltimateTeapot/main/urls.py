@@ -24,13 +24,14 @@ urlpatterns = [
   path('home/', views.home, name="home"),
   path('<str:post_id>/like/', views.like_create, name='like_create'),
   # ('authors/<str:author_id>')
-  path('post/<str:id>', views.post, name='post'),
+  path('posts/<str:id>', views.post, name='post'),
   path('posts/', views.posts, name='posts'),
   path('posts/delete/<path:id>/', views.delete_post, name='delete_post'),
   path('posts/<path:id>/editpost/', views.edit_post, name='edit_post'),
   path('make_post/', views.make_post, name='make_post'),
   path('make_comment/<path:id>', views.make_comment, name='make_comment'),
   path('like_post/<path:id>', views.like_post, name='like_post'),
+  path('like_comment/<path:id>', views.like_comment, name='like_comment'),
   # For testing posts and comments from other servers
   path('foreign_post/<path:id>/', views.foreign_post, name='foreign_post'),
   path('authors/<str:author_id>/posts/<str:post_id>', views.singlePost, name='singlePost'),
