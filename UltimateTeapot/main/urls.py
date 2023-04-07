@@ -46,6 +46,7 @@ urlpatterns = [
   path('inbox/', views.inbox, name='inbox'),
   path("myprofile/",views.myprofile, name = "user_profile2"),
   path('follow_response/', views.follow_response, name='follow_response'),
+  path('send_unlisted_post/', views.send_unlisted_post, name='send_unlisted_post'),
   
 #--- below for the rest frame work ---#
   # path('', include(router.urls)),
