@@ -100,7 +100,7 @@ class PostsSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['type'] = "author"
+        representation['type'] = "post"
         representation['id'] = settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/authors/" + instance.author.id + "/posts/" + instance.id
         return representation
 
