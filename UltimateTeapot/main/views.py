@@ -504,10 +504,18 @@ def home(request):
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         
-        date_string = viewable_posts[0]['published']
-        dt = datetime.fromisoformat(date_string[:-1])
-        viewable_posts[0]['published'] = dt
-        
+        # date_string = viewable_posts[0]['published']
+        # dt = datetime.fromisoformat(date_string[:-1])
+        # viewable_posts[0]['published'] = dt
+
+        for post in viewable_posts:
+            try:
+                date_string = post['published']
+                dt = datetime.fromisoformat(date_string[:-1])
+                post['published'] = dt
+            except ValueError:
+                pass
+
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
         
@@ -604,7 +612,7 @@ def profile(request, id):
 
             author_node = Node.objects.get(host=host)
 
-            post_json = get_request(id + '/posts/', author_node)
+            post_list = get_request(id + '/posts/', author_node)
 
             if request.user.profile.id == id:
                 can_follow = False
@@ -664,19 +672,22 @@ def profile(request, id):
         
         #profile github
         if github != "":
-            github_username = profile.github.split(".com/")[1]
+            github_username = github.split(".com/")[1]
             url = f"https://api.github.com/users/{github_username}/events"
             response = requests.get(url)
             events = response.json()
         else:
             events = None
 
-        if len(post_json) > 0:
-            date_string = post_json[0]['published']
-            dt = datetime.fromisoformat(date_string[:-1])
-            post_json[0]['published'] = dt
+        for post in post_list:
+            try:
+                date_string = post['published']
+                dt = datetime.fromisoformat(date_string[:-1])
+                post['published'] = dt
+            except ValueError:
+                pass
         
-        return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
+        return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_list, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
