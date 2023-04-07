@@ -384,6 +384,37 @@ def like_post(request, id):
     return redirect('foreign_post', id)
 
 @login_required(login_url='signin')
+def like_comment(request, id):
+    if request.method == 'POST':
+        profile = request.user.profile
+        author_data = ProfileSerializer(profile).data
+        # comment_instance = Comment.objects.get(id=id)
+        # comment_author_id = comment_instance.author_id
+
+
+        obj_json = {
+            "@context":"https://wwww.w3.org/ns/activitystreams",
+            "summary":profile.displayName + " likes the comments",
+            "type":"Like",
+            "author":author_data,
+            "object":id,
+        }
+
+        print(obj_json)
+
+
+        author_id = id.split("/posts/")[0]
+        host = author_id.split("authors/")[0]
+        
+
+        node = Node.objects.get(host=host)
+        post_request(author_id + "/inbox/", node, obj_json)
+
+    post_id = id.split("/comments/")[0]
+
+    return redirect('foreign_post', post_id)
+
+@login_required(login_url='signin')
 def like(request):
     return redirect('home')
 
@@ -1123,14 +1154,17 @@ class InboxList(APIView):
             return Response(status=status.HTTP_200_OK)
 
         elif (type == "Like") or (type == "like"):
+            isComment = False
+            if "/comments/" in data["object"]:
+                isComment = True
             object = Object.objects.create(
                 type="like",
                 object_id=data["object"],
-                actor = data["author"]["id"]
+                actor = data["author"]["id"],
+                whether_comment_like=isComment
             )
             profile.inbox.add(object)
             profile.save()
-
             like = Like.objects.create(
                 object_id=data["object"],
                 author_id=data["author"]["id"]
