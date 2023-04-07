@@ -18,14 +18,11 @@ class UploadForm(forms.ModelForm):
                               ),
                               label="",
                               )
-    # markdown_content = forms.CharField(required=False,
-    #                           widget=forms.widgets.Textarea(
-    #                           ))
-    
+
     title = forms.CharField()
     visibility = forms.CharField(label='Choose your post visibilty?', widget=forms.RadioSelect(choices=VISIBILITY))
     unlisted = forms.BooleanField(label='Unlisted?', required=False)
-    image = forms.ImageField() #turned of required = False
+    image = forms.ImageField(required=False) #turned of required = False
   
 
     contentType = forms.CharField(widget=forms.HiddenInput(), required=False)
