@@ -504,9 +504,17 @@ def home(request):
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
         
-        date_string = viewable_posts[0]['published']
-        dt = datetime.fromisoformat(date_string[:-1])
-        viewable_posts[0]['published'] = dt
+        date_string = None  
+
+        if len(viewable_posts) > 0:
+            date_string = viewable_posts[0]['published']
+
+        if date_string is not None:
+            dt = datetime.fromisoformat(date_string[:-1])
+            viewable_posts[0]['published'] = dt
+        else:
+            print("viewable_posts is empty")
+          
         
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
@@ -588,6 +596,11 @@ def edit_profile(request, id):
         
 def profile(request, id):
     if request.user.is_authenticated:
+        current_user = request.user.profile
+        print("aaaaaaaaaaaaaaaaaaaaaaaa")
+        print(current_user)
+        print(current_user.id)
+        
         host = id.split('authors')[0]
         if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
             # This is local
@@ -595,9 +608,39 @@ def profile(request, id):
             uuid = id.split('authors/')[1]
             profile = Profile.objects.get(id=uuid)
 
-            friends = profile.friend_list.all()
+            #friends = profile.friend_list.all()
             followers = profile.follower_list.all()
-
+            friends = None
+                 
+            # current user is viewing his own page     
+            if current_user.id == uuid:
+                print("current user is viewing his own page")
+                friends = current_user.friend_list.all()
+            else:
+                for fl in followers:
+                    fl.uuid = fl.id.split('authors/')[1]
+                    # current user is in this user follower list
+                    if current_user.id == fl.uuid:
+                        print("current user is in this user follower list")
+                        print(followers)
+                        print(fl)
+                        print(Follower.objects.get(id=current_user.url, host=host))
+                        try:
+                            follower = Follower.objects.get(id=current_user.url, host=host)
+                            profile.friend_list.add(follower)
+                            print("AA")
+                            friends = profile.friend_list.all()
+                            print(friends)
+                        except Follower.DoesNotExist:
+                            # If the follower doesn't exist, create a new one
+                            follower = Follower.objects.create(id=current_user.url, host=host)
+                            profile.friend_list.add(follower)
+                            print("BB")
+                            friends = profile.friend_list.all()
+                        
+                    else:
+                        print("Unknown error if-else in def profile")
+            
             author_node = Node.objects.get(host=host)
 
             post_json = get_request(id + '/posts/', author_node)
@@ -606,11 +649,14 @@ def profile(request, id):
                 can_follow = False
             else:
                 can_follow = True
-
-            for fr in friends:
-                temp_profile = Profile.objects.filter(url=fr.id)[0]
-                fr.displayName = temp_profile.displayName
-
+                
+            if friends is not None:
+                for fr in friends:
+                    temp_profile = Profile.objects.filter(url=fr.id)[0]
+                    fr.displayName = temp_profile.displayName
+            else:
+                friends = None
+                
             for fl in followers:
                 temp_profile = Profile.objects.filter(url=fl.id)[0]
                 fl.displayName = temp_profile.displayName
@@ -634,7 +680,7 @@ def profile(request, id):
             profile = get_request(author_id, author_node)
             post_json = get_request(author_id + 'posts/', author_node)
             followers = None
-            friends = None
+            # friends = None
 
             post_list = []
 
@@ -663,9 +709,16 @@ def profile(request, id):
         response = requests.get(url)
         events = response.json()
         
-        date_string = post_json[0]['published']
-        dt = datetime.fromisoformat(date_string[:-1])
-        post_json[0]['published'] = dt
+        date_string = None
+
+        if len(post_json) > 0:
+            date_string = post_json[0]['published']
+
+        if date_string is not None:
+            dt = datetime.fromisoformat(date_string[:-1])
+            post_json[0]['published'] = dt
+        else:
+            print("post_json is empty")
         
         return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
@@ -740,6 +793,7 @@ def follow_response(request):
                 # following_user.follower_list.clear()
                 # follower_list = current_user.follower_list.all()
 
+                # accept and add follower into your list
                 try:
                     follower = Follower.objects.get(id=follower_id, host=follower_host)
                     current_user.follower_list.add(follower)
@@ -750,11 +804,6 @@ def follow_response(request):
                 else:
                     print("Unknown error")
 
-                # accept and add follower into your list uncomment these 2 lines makesure dont accept twice because rn request doesnt disappear yet
-                # follower = Follower.objects.create(id=follower_id, host=follower_host)
-                # current_user.follower_list.add(follower)
-                # follower.delete()
-
                 followers_object = get_request(follower_id + '/followers/', author_node)
                 # check before adding to friend list
                 for follower in followers_object['items']:
@@ -763,8 +812,8 @@ def follow_response(request):
                         friends_to_current_user = Follower.objects.get(id=follower_id)
                         current_user.friend_list.add(friends_to_current_user)
 
-                        friends_to_following_user = Follower.objects.get(id=current_user.url)
-                        following_user.friend_list.add(friends_to_following_user)
+                        # friends_to_following_user = Follower.objects.get(id=current_user.url)
+                        # following_user.friend_list.add(friends_to_following_user)
 
             elif action == "decline":
                 # declined dont do anything
