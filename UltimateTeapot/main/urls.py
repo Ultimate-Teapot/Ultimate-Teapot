@@ -24,7 +24,7 @@ urlpatterns = [
   path('home/', views.home, name="home"),
   path('<str:post_id>/like/', views.like_create, name='like_create'),
   # ('authors/<str:author_id>')
-  path('post/<str:id>', views.post, name='post'),
+  path('posts/<str:id>', views.post, name='post'),
   path('posts/', views.posts, name='posts'),
   path('posts/delete/<path:id>/', views.delete_post, name='delete_post'),
   path('posts/<path:id>/editpost/', views.edit_post, name='edit_post'),

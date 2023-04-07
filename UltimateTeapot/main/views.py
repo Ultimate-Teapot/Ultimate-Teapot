@@ -20,7 +20,7 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission, IsAdminUser
 
 from .models import Post, Profile, Comment, Like, FollowRequest, Node, Object, Follower
-
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from .forms import SignUpForm, UploadForm, CommentForm
 from django.contrib import messages
@@ -61,6 +61,7 @@ def post(request, id):
 
     new_post = Post.objects.get(id=id)
     current_user = request.user.profile
+
     if current_user == new_post.author:
         messages.add_message(request, messages.INFO, 'You are seeing this post because you are the author.')
         return render(request, "post.html", {"post": new_post})
@@ -76,17 +77,40 @@ def post(request, id):
         # return render(request, 'view_post.html', {'post': post})
         return render(request, "post.html", {"post": new_post})
 
+    return render(request, "post.html", {"post": new_post})
+
 def foreign_post(request, id):
     # Pass in the full URL of a post, make a get request and display it on a page
     # Make comments
     comment_form = CommentForm(request.POST or None)
 
-    host = id.split("authors")[0]
-    node = Node.objects.get(host=host)
-    post_json = get_request(id + '/', node)
-    post_comments_json = get_request(id + '/comments/', node)
 
-    return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_json['comments'], "comment_form":comment_form})
+    host = id.split("authors/")[0]
+    if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
+        # Local
+        post_uuid = id.split("/posts/")[1]
+        try:
+            post = Post.objects.get(id=post_uuid)
+        except Post.DoesNotExist:
+            return Http404
+
+        post_json = PostSerializer(post).data
+        post_comments_list = CommentListSerializer(post).data['comments']
+
+    else:
+        # Remote
+        node = Node.objects.get(host=host)
+        post_json = get_request(id + '/', node)
+        try:
+            post_comments_json = get_request(id + '/comments/', node)
+        except json.JSONDecodeError:
+            try:
+                post_comments = get_request(id + '/comments', node)
+                post_comments_list = post_comments['comments']
+            except json.JSONDecodeError:
+                post_comments_json = None
+
+    return render(request, "foreign_post.html", {"post":post_json, "comments":post_comments_list, "comment_form":comment_form})
 
 
 def delete_post(request, id):
@@ -147,10 +171,15 @@ def signup(request):
             display_name = form.cleaned_data.get('display_name')
             github = form.cleaned_data.get('github')
 
+
             # if form.fields['profile_image']=="":
             #     form.fields['profile_image'].initial = "https://i.imgur.com/lu0eCzU.jpeg"
 
-            profile_image = form.cleaned_data.get('profile_image')
+            profileImage = form.cleaned_data.get('profile_image')
+            
+            if profileImage == None:
+                profileImage = "https://camo.githubusercontent.com/eb6a385e0a1f0f787d72c0b0e0275bc4516a261b96a749f1cd1aa4cb8736daba/68747470733a2f2f612e736c61636b2d656467652e636f6d2f64663130642f696d672f617661746172732f6176615f303032322d3531322e706e67"
+
 
             new_profile = Profile.objects.create(
                 user=user_model,
@@ -159,7 +188,7 @@ def signup(request):
                 host= settings.APP_HTTP + settings.APP_DOMAIN + "/",
                 displayName=display_name,
                 github=github,
-                profileImage=profile_image,
+                profileImage=profileImage,
             )
 
             new_profile.followers.clear()
@@ -232,11 +261,35 @@ def posts(request):
                
             else:
                 content = request.POST['content']
-            
-            
+
 
 
             visibility = request.POST['visibility']
+
+            if visibility == "FRIENDS":
+                current_user = request.user.profile
+                actor = ProfileSerializer(current_user).data
+                print("INSIDE FRIEND POSTS")
+
+                for friend in current_user.friend_list.all():
+                    id = friend.id
+                    target_host = id.split("author")[0]
+                    target_node = Node.objects.get(host=target_host)
+
+                    object = requests.get(id + '/', auth=HTTPBasicAuth(target_node.username, target_node.password))
+                    object_json = object.json()
+                    data_to_send = {
+                        "type": "post",
+                        "summary": actor['displayName'] + " has posted a new friend post. ",
+                        # display the uRL later maybe?
+                        "author": actor,
+                        "object": object_json,
+                        "id": actor['id'] + "/posts/" + post_id,
+                    }
+
+                    requests.post(id + "/inbox/", json=data_to_send,
+                                  auth=HTTPBasicAuth(target_node.username, target_node.password))
+
             title = request.POST['title']
             if ('unlisted' in request.POST):
                 unlisted = request.POST['unlisted']
@@ -399,7 +452,12 @@ def home(request):
                     except json.JSONDecodeError:
                         None
                     else:
-                        for author in foreign_authors['items']:
+                        if isinstance(foreign_authors, dict):
+                            foreign_author_list = foreign_authors['items']
+                        else:
+                            foreign_author_list = foreign_authors
+                            
+                        for author in foreign_author_list:
                             try:
                                 author_posts = get_request(author['id'] + "/posts/", node)
                             except json.JSONDecodeError:
@@ -409,8 +467,6 @@ def home(request):
                                     all_authors_posts.extend(author_posts['items'])
                                 else:
                                     all_authors_posts.extend(author_posts)
-
-
 
                 for post in all_authors_posts:
                     if post['visibility'] == "PUBLIC":
@@ -432,6 +488,19 @@ def home(request):
         # else:
             #  posts = Post.objects.filter(is_public=True).order_by("-pub_date")
         upload_form = UploadForm()
+        
+        # date_string = viewable_posts[0]['published']
+        # dt = datetime.fromisoformat(date_string[:-1])
+        # viewable_posts[0]['published'] = dt
+
+        for post in viewable_posts:
+            try:
+                date_string = post['published']
+                dt = datetime.fromisoformat(date_string[:-1])
+                post['published'] = dt
+            except ValueError:
+                pass
+
         #return render(request, 'home.html', {"posts":posts, "form":form})
         return render(request, 'home.html', {"posts":viewable_posts, "upload_form":upload_form})
         
@@ -513,18 +582,22 @@ def edit_profile(request, id):
 def profile(request, id):
     if request.user.is_authenticated:
         host = id.split('authors')[0]
+        github = ""
         if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
             # This is local
             local = True
+
             uuid = id.split('authors/')[1]
             profile = Profile.objects.get(id=uuid)
+
+            github = profile.github
 
             friends = profile.friend_list.all()
             followers = profile.follower_list.all()
 
             author_node = Node.objects.get(host=host)
 
-            post_json = get_request(id + '/posts/', author_node)
+            post_list = get_request(id + '/posts/', author_node)
 
             if request.user.profile.id == id:
                 can_follow = False
@@ -541,16 +614,24 @@ def profile(request, id):
 
                 if (fl.id == request.user.profile.url):
                     can_follow = False
+                    
         else:
             # This is remote
             local = False
             can_follow = True
 
-            author_node = Node.objects.get(host=host)
+            if "/api" in host:
+                author_node = Node.objects.get(host=host)
+            else:
+                host = host+"api/"
+                author_node = Node.objects.get(host=host)
 
-            profile = get_request(id + '/', author_node)
-            post_json = get_request(id + '/posts/', author_node)
-            followers = get_request(id + '/followers/', author_node)['items']
+            author_id = host + "authors/" + id.split('authors/')[1] + "/"
+
+            profile = get_request(author_id, author_node)
+            post_json = get_request(author_id + 'posts/', author_node)
+            github = profile['github']
+            followers = None
             friends = None
 
             post_list = []
@@ -568,13 +649,30 @@ def profile(request, id):
                 all_authors.extend(foreign_authors['items'])
 
             this_user_id = profile['id']
+            
             # current_user = request.user.profile
             # user_this_page = Profile.objects.get(url=this_user_id)
             # print("lllll")
             # print(user_this_page)
-
         
-        return render(request, "profile.html", {"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
+        #profile github
+        if github != "":
+            github_username = github.split(".com/")[1]
+            url = f"https://api.github.com/users/{github_username}/events"
+            response = requests.get(url)
+            events = response.json()
+        else:
+            events = None
+
+        for post in post_list:
+            try:
+                date_string = post['published']
+                dt = datetime.fromisoformat(date_string[:-1])
+                post['published'] = dt
+            except ValueError:
+                pass
+        
+        return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_list, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
         messages.success(request, ("You must be logged in to view this page"))
         return redirect('home')
@@ -593,9 +691,15 @@ def follow(request, id):
     # Send a follow request to the specified id
     current_user = request.user.profile
     actor = ProfileSerializer(current_user).data
-    target_host = id.split("author")[0]
+    host = id.split("authors")[0]
+    if "/api" in host:
+        target_host = host
+    else:
+        target_host = host + "api/"
+
+    target_id = target_host + "authors/" + id.split("authors/")[1] + "/"
     target_node = Node.objects.get(host=target_host)
-    object_json = get_request(id + '/', target_node)
+    object_json = get_request(target_id, target_node)
     data_to_send = {
         "type": "Follow",
         "summary":actor['displayName'] + " wants to follow" + object_json['displayName'],
@@ -603,7 +707,7 @@ def follow(request, id):
         "object":object_json
     }
     
-    post_request(id + "/inbox/", target_node, data_to_send)
+    post_request(target_id + "inbox/", target_node, data_to_send)
 
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
@@ -1043,7 +1147,8 @@ class InboxList(APIView):
         elif (type == "post") or (type == "Post"):
             object = Object.objects.create(
                 type="post",
-                object_id=data["id"]
+                object_id=data["id"],
+                actor=data["author"]["id"]
             )
             profile.inbox.add(object)
             profile.save()
@@ -1052,7 +1157,8 @@ class InboxList(APIView):
         elif (type == "Like") or (type == "like"):
             object = Object.objects.create(
                 type="like",
-                object_id=data["object"]
+                object_id=data["object"],
+                actor = data["author"]["id"]
             )
             profile.inbox.add(object)
             profile.save()
@@ -1077,7 +1183,8 @@ class InboxList(APIView):
         elif (type == "comment") or (type == "Comment"):
             object = Object.objects.create(
                 type="comment",
-                object_id=data["id"]
+                object_id=data["id"],
+                actor = data["author"]["id"]
             )
             profile.inbox.add(object)
             profile.save()

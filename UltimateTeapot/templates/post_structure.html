@@ -8,8 +8,7 @@
     border-bottom: dotted;
     border-width: 0.1em;
     margin-bottom: 5%;
-    color: rgb(201, 198, 198);
-    
+    color: rgb(201, 198, 198);    
   }
 
   
@@ -25,7 +24,7 @@
 
             <div class="Title">
               <p><a href="{% url 'profile' post.author.id %}">{{ post.author.displayName }}</a> posted<p>
-              <p>Published: {{ post.published}}</p>
+              <p>Published at: {{ post.published }}</p>
             </div>
 
             {% if post.contentType == 'text/plain' %}
@@ -44,7 +43,6 @@
                 </script>
               </div> -->
 
-            
 
 
 
@@ -94,6 +92,7 @@
             
             <!-- <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid"> -->
             <!-- {% endif %} -->
+
             <br><br>
            
     </div>

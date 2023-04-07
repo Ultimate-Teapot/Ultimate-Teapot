@@ -283,6 +283,7 @@ paths:
           type: string
         required: true
       tags:
+
       - posts
       requestBody:
         content:
@@ -655,6 +656,7 @@ components:
       - github
       - host
       - id
+      - profileImage
       - type
       - url
   securitySchemes:

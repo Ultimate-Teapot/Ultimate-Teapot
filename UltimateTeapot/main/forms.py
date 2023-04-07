@@ -65,7 +65,9 @@ class SignUpForm(UserCreationForm):
 
     display_name = forms.CharField(max_length=100, required=True,)
     github = forms.URLField(max_length=100, required=False,)
+
     profile_image = forms.URLField(max_length=200, required=False, initial="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
+
     
 
     def clean_field(self):
