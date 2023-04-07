@@ -32,7 +32,7 @@ class Object(models.Model):
     # If the object is a follow request:
     actor = models.CharField(max_length=255)
     object = models.CharField(max_length=255)
-    whether_comment_like = models.BooleanField()
+    whether_comment_like = models.BooleanField(null=True)
 
 class Follower(models.Model):
     # id as url

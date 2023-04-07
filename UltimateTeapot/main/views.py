@@ -572,7 +572,7 @@ def profile(request, id):
         print("aaaaaaaaaaaaaaaaaaaaaaaa")
         print(current_user)
         print(current_user.id)
-        
+
         host = id.split('authors')[0]
         github = ""
         if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
@@ -645,6 +645,7 @@ def profile(request, id):
             # This is remote
             local = False
             can_follow = True
+            friends = None
 
             if "/api" in host:
                 author_node = Node.objects.get(host=host)
@@ -658,7 +659,6 @@ def profile(request, id):
             post_json = get_request(author_id + 'posts/', author_node)
             github = profile['github']
             followers = None
-            # friends = None
 
             post_list = []
 
@@ -735,6 +735,8 @@ def follow(request, id):
     }
     
     post_request(target_id + "inbox/", target_node, data_to_send)
+
+
 
     return render(request, "follow.html")
     # return render(request, 'home.html', {"display_name": displayName, "actor": actor})
@@ -1128,7 +1130,7 @@ class authorLikes(APIView):
 
 
 class InboxList(APIView):
-    permission_classes = [NodePermission, IsAuthenticated]
+    # permission_classes = [NodePermission, IsAuthenticated]
     def get(self,request,id):
         profile = Profile.objects.get(id=id)
         serializer = InboxSerializer(profile)
