@@ -589,11 +589,15 @@ def edit_profile(request, id):
 def profile(request, id):
     if request.user.is_authenticated:
         host = id.split('authors')[0]
+        github = ""
         if host == settings.APP_HTTP + settings.APP_DOMAIN + "/main/api/":
             # This is local
             local = True
+
             uuid = id.split('authors/')[1]
             profile = Profile.objects.get(id=uuid)
+
+            github = profile.github
 
             friends = profile.friend_list.all()
             followers = profile.follower_list.all()
@@ -633,6 +637,7 @@ def profile(request, id):
 
             profile = get_request(author_id, author_node)
             post_json = get_request(author_id + 'posts/', author_node)
+            github = profile['github']
             followers = None
             friends = None
 
@@ -658,14 +663,18 @@ def profile(request, id):
             # print(user_this_page)
         
         #profile github
-        github_username = profile.github.split(".com/")[1]
-        url = f"https://api.github.com/users/{github_username}/events"
-        response = requests.get(url)
-        events = response.json()
-        
-        date_string = post_json[0]['published']
-        dt = datetime.fromisoformat(date_string[:-1])
-        post_json[0]['published'] = dt
+        if github != "":
+            github_username = profile.github.split(".com/")[1]
+            url = f"https://api.github.com/users/{github_username}/events"
+            response = requests.get(url)
+            events = response.json()
+        else:
+            events = None
+
+        if len(post_json) > 0:
+            date_string = post_json[0]['published']
+            dt = datetime.fromisoformat(date_string[:-1])
+            post_json[0]['published'] = dt
         
         return render(request, "profile.html", {"events": events,"profile":profile, "posts":post_json, "friends":friends, "followers":followers, "can_follow": can_follow, "is_local":local})
     else:
