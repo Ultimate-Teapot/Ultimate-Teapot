@@ -39,3 +39,4 @@ Contributors:
 References: 
     
     https://stackoverflow.com/questions/59947314/how-to-allow-reject-api-permissions-based-on-user-group
+    https://www.youtube.com/watch?v=fk8seSR148E&list=PLCC34OHNcOtoQCR6K4RgBWNi3-7yGgg7b&index=6&ab_channel=Codemy.com
