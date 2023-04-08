@@ -1,20 +1,11 @@
-from django.contrib.auth.models import User
-from requests.auth import HTTPBasicAuth
-
-from .models import Profile, Post, Comment, FollowRequest, Object, Node, Like
+from .models import Profile, Post, Comment, Object, Node, Like
 from rest_framework import serializers
 
 from rest_framework.serializers import CharField, DateTimeField, IntegerField
-from .requestsHelper import get_request, post_request
+from .requestsHelper import get_request
 
 from rest_framework.serializers import CharField, DateTimeField
 from django.conf import settings
-from urllib.parse import urlparse
-import requests
-
-import uuid
-import base64
-
 
 
 
@@ -96,8 +87,6 @@ class PostSerializer(serializers.ModelSerializer):
     type = CharField(read_only=True)
     title = CharField(required=True)
     id = CharField(required=False,read_only=True)
-    # source = URLField(allow_blank=True)
-    # origin = URLField(allow_blank=True)
     description=CharField(allow_blank=True)
     contentType=CharField(allow_blank=True)
     content = CharField(allow_blank=True)
@@ -105,15 +94,11 @@ class PostSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField('get_categories')
     count = IntegerField(required=False,read_only=True)
     comments = serializers.SerializerMethodField('get_comments')
-    #unlisted = BooleanField(allow_blank=True)
-    #likes = IntegerField(required=False,read_only=True)
     published = DateTimeField(source="pub_date",read_only=True)
     source = serializers.SerializerMethodField("get_source",required=False)
     origin = serializers.SerializerMethodField("get_origin",required=False)
     
    
-
-
     def get_source(self,instance):
         return instance.id
         
@@ -210,20 +195,19 @@ class CommentListSerializer(serializers.ModelSerializer):
 
         return representation
 
-################################################################################################
 
 class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['content']
 
-################################################################################################################################
 
 class PostsPutSerializer(serializers.ModelSerializer):
     author = ProfileSerializer()
     class Meta:
         model = Post
         fields = ['type','title','id','source','origin','description','contentType','content','author','categories','count','pub_date','unlisted','likes'] # add back is_public
+
 
 class FollowRequestSerializer(serializers.ModelSerializer):
     # actor = ProfileSerializer()
@@ -236,7 +220,6 @@ class FollowRequestSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         actor_id = instance.actor
-        #actor_url = urlparse(actor_id)
         host = actor_id.split('authors')[0]
 
         node = Node.objects.get(host=host)
@@ -343,16 +326,14 @@ class InboxSerializer(serializers.ModelSerializer):
             if item.type == "Follow":
                 follow = FollowRequestSerializer(item).data
                 items.append(follow)
+
             elif item.type == "post":
                 id = item.object_id
-                # actor_url = urlparse(actor_id)
                 host = id.split('authors')[0]
-
-
                 node = Node.objects.get(host=host)
                 post_json = get_request(id + '/', node)
-
                 items.append(post_json)
+
             elif item.type == "comment":
                 id = item.object_id
                 comment = Comment.objects.get(id=id)
@@ -370,24 +351,3 @@ class InboxSerializer(serializers.ModelSerializer):
         representation['items'] = items
 
         return representation
-
-
-# from django.contrib.auth.models import User
-# from .models import Profile, Post, Comment, PostLike, CommentLike, Inbox
-# from rest_framework import serializers
-
-# class UserSerializer(serializers.HyperlinkedModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['url', 'username', 'password','email']
-
-# class ProfileSerializer(serializers.HyperlinkedModelSerializer):
-#     user = UserSerializer()
-#     class Meta:
-#         model = Profile
-#         fields = ['url','user','friends','followers']#'url', 'user', 'followers', 'friends']
-    
-# class PostSerializer(serializers.HyperlinkedModelSerializer):
-#     class Meta:
-#         model = Post
-#         fields = ['author']#'url','Post_id', 'Author', 'text', 'image', 'pub_date', 'likes']

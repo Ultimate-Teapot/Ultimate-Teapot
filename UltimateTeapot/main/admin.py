@@ -15,8 +15,6 @@ admin.site.register
 admin.site.register(Post)
 admin.site.register(Like)
 admin.site.register(Comment)
-# admin.site.register(PostLike)
-# admin.site.register(CommentLike)
 admin.site.register(Profile)
 admin.site.register(Node)
 admin.site.register(Object)
